@@ -25,7 +25,7 @@ struct DiscoverView: View {
     }
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 27) {
+            VStack(alignment: .leading, spacing: 22) {
                 greeting
                 if search.isEmpty && category == .all && !freeOnly {
                     CampusHero {
@@ -33,7 +33,6 @@ struct DiscoverView: View {
                     }
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared || reduceMotion ? 0 : 16)
-                    trustStrip
                 }
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(alignment: .bottom) {
@@ -60,6 +59,7 @@ struct DiscoverView: View {
                     }
                 }
                 if search.isEmpty {
+                    trustStrip
                     setupNudge
                     requestNudge
                     SponsorNudge()
@@ -92,14 +92,11 @@ struct DiscoverView: View {
         .task { withAnimation(reduceMotion ? nil : .easeOut(duration: 0.55)) { appeared = true } }
     }
     private var greeting: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 7) {
-                Image(systemName: "sun.max").foregroundStyle(RelayTheme.accent)
-                Eyebrow(text: "GOOD FINDS. GOOD PEOPLE.")
-            }.font(.caption)
-            Text("Your campus,\nin circulation.").font(RelayTheme.heading(33)).tracking(-1.5).foregroundStyle(RelayTheme.ink)
-            Text("Find your thing. Meet your people. Pass it on.")
-                .font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(3)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Find your next chapter.")
+                .font(RelayTheme.heading(28)).tracking(-0.9).foregroundStyle(RelayTheme.ink)
+            Text("Pre-loved. Re-loved. Right around you.")
+                .font(.subheadline).foregroundStyle(RelayTheme.secondary)
         }.accessibilityElement(children: .combine).accessibilityIdentifier("discovery-intro")
     }
     private var campusMenu: some View {
@@ -206,14 +203,13 @@ struct CampusHero: View {
     var action: () -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Eyebrow(text: "PRE-LOVED. RE-LOVED.")
             if typeSize.isAccessibilitySize {
                 copy
                 art.frame(maxWidth: .infinity).frame(height: 205)
             } else {
                 HStack(spacing: 0) {
                     copy.frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
-                    art.frame(width: 145, height: 195)
+                    art.frame(width: 145, height: 160)
                 }
             }
         }.padding(22).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 28))
