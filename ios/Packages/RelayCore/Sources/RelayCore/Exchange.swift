@@ -1,5 +1,39 @@
 import Foundation
 
+public enum MockPaymentMethod: String, Codable, Sendable, CaseIterable, Identifiable {
+    case visa, mastercard, applePay
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .visa: "Visa •••• 4242"
+        case .mastercard: "Mastercard •••• 4444"
+        case .applePay: "Apple Pay demo"
+        }
+    }
+    public var subtitle: String {
+        self == .applePay ? "Simulated wallet · no Wallet connection" : "Sample card · no real card details"
+    }
+}
+
+public enum MockPaymentOutcome: String, Sendable, CaseIterable, Identifiable {
+    case success, declined, unavailable
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .success: "Success"
+        case .declined: "Declined"
+        case .unavailable: "Connection failure"
+        }
+    }
+    func validate() throws {
+        switch self {
+        case .success: break
+        case .declined: throw ExchangeError.mockDeclined
+        case .unavailable: throw ExchangeError.mockUnavailable
+        }
+    }
+}
+
 public enum ExchangeStage: String, Codable, Sendable, CaseIterable {
     case reserved, fundsReady, identified, inspected, completed, caseOpen, refundPending, refunded, canceled
     public var title: String {
@@ -28,6 +62,8 @@ public enum ExchangeStage: String, Codable, Sendable, CaseIterable {
 }
 
 public enum ExchangeEvent: Sendable {
+    case authorizeMock(method: MockPaymentMethod, outcome: MockPaymentOutcome)
+    case captureMock(outcome: MockPaymentOutcome)
     case prepareFunds
     case identify(code: String)
     case inspect(checked: Set<String>)
@@ -39,13 +75,15 @@ public enum ExchangeEvent: Sendable {
 }
 
 public enum ExchangeError: Error, LocalizedError, Equatable {
-    case invalidTransition, invalidCode, incompleteInspection, freeItemRefund
+    case invalidTransition, invalidCode, incompleteInspection, freeItemRefund, mockDeclined, mockUnavailable
     public var errorDescription: String? {
         switch self {
         case .invalidTransition: "That action is not available at this stage."
         case .invalidCode: "That code doesn’t match. The sample code is 2418."
         case .incompleteInspection: "Check every inspection item before continuing."
         case .freeItemRefund: "Free items have no payment to refund."
+        case .mockDeclined: "Demo declined. This attempt did not complete. Choose Success to retry."
+        case .mockUnavailable: "Demo connection failed. This attempt did not complete. Choose Success to retry."
         }
     }
 }
@@ -55,11 +93,17 @@ public struct Exchange: Codable, Identifiable, Equatable, Sendable {
     public let listing: Listing
     public let meeting: Date
     public private(set) var stage: ExchangeStage
+    public private(set) var paymentMethod: MockPaymentMethod?
     public let createdAt: Date
     public init(id: UUID = UUID(), listing: Listing, meeting: Date = Date(), stage: ExchangeStage = .reserved, createdAt: Date = Date()) {
         self.id = id; self.listing = listing; self.meeting = meeting; self.stage = stage; self.createdAt = createdAt
     }
     public var isFree: Bool { listing.priceCents == 0 }
+    // Older saved exchanges predate method selection and used the default sample card.
+    public var fundingMethod: MockPaymentMethod? {
+        paymentMethod ?? (!isFree && ![.reserved, .canceled].contains(stage) ? .visa : nil)
+    }
+    public var mockReference: String { "DEMO-" + id.uuidString.prefix(8) }
     public var buyerMoneyLabel: String {
         if isFree { return "No payment required" }
         switch stage {
@@ -81,7 +125,16 @@ public struct Exchange: Codable, Identifiable, Equatable, Sendable {
     }
     public mutating func apply(_ event: ExchangeEvent) throws {
         switch (stage, event) {
-        case (.reserved, .prepareFunds): stage = .fundsReady
+        case (.reserved, .authorizeMock(let method, let outcome)) where !isFree:
+            try outcome.validate()
+            paymentMethod = method
+            stage = .fundsReady
+        case (.inspected, .captureMock(let outcome)) where !isFree:
+            try outcome.validate()
+            stage = .completed
+        case (.reserved, .prepareFunds):
+            if !isFree { paymentMethod = .visa }
+            stage = .fundsReady
         case (.fundsReady, .identify(let code)):
             guard code == "2418" else { throw ExchangeError.invalidCode }
             stage = .identified

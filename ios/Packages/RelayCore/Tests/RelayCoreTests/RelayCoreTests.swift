@@ -104,3 +104,60 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
     let restored = try JSONDecoder().decode(Exchange.self, from: JSONEncoder().encode(exchange))
     #expect(restored == exchange)
 }
+
+@Test func failedAuthorizationCanRetryWithAnotherMethod() throws {
+    var exchange = Exchange(listing: try paidListing())
+    #expect(throws: ExchangeError.mockDeclined) {
+        try exchange.apply(.authorizeMock(method: .visa, outcome: .declined))
+    }
+    #expect(exchange.stage == .reserved)
+    #expect(exchange.paymentMethod == nil)
+    #expect(exchange.buyerMoneyLabel == "No payment collected")
+    try exchange.apply(.authorizeMock(method: .applePay, outcome: .success))
+    #expect(exchange.stage == .fundsReady)
+    #expect(exchange.paymentMethod == .applePay)
+    #expect(throws: ExchangeError.invalidTransition) {
+        try exchange.apply(.authorizeMock(method: .mastercard, outcome: .success))
+    }
+}
+
+@Test func failedCapturePreservesHoldAndOriginalRefundMethod() throws {
+    var exchange = Exchange(listing: try paidListing())
+    #expect(throws: ExchangeError.invalidTransition) { try exchange.apply(.captureMock(outcome: .success)) }
+    try exchange.apply(.authorizeMock(method: .mastercard, outcome: .success))
+    try exchange.apply(.identify(code: "2418"))
+    try exchange.apply(.inspect(checked: Set(exchange.listing.checks)))
+    for outcome in [MockPaymentOutcome.declined, .unavailable] {
+        #expect(throws: (any Error).self) { try exchange.apply(.captureMock(outcome: outcome)) }
+        #expect(exchange.stage == .inspected)
+        #expect(exchange.buyerMoneyLabel.contains("temporary hold"))
+    }
+    try exchange.apply(.captureMock(outcome: .success))
+    #expect(throws: ExchangeError.invalidTransition) { try exchange.apply(.captureMock(outcome: .success)) }
+    try exchange.apply(.report)
+    try exchange.apply(.approveReturn)
+    try exchange.apply(.confirmRefund)
+    let restored = try JSONDecoder().decode(Exchange.self, from: JSONEncoder().encode(exchange))
+    #expect(restored.fundingMethod == .mastercard)
+    #expect(restored.stage == .refunded)
+    #expect(restored.mockReference == exchange.mockReference)
+}
+
+@Test func freeItemsRejectMockMoneyEvents() throws {
+    let listing = try #require(DemoCatalog.listings().first { $0.priceCents == 0 })
+    var exchange = Exchange(listing: listing)
+    #expect(throws: ExchangeError.invalidTransition) {
+        try exchange.apply(.authorizeMock(method: .visa, outcome: .success))
+    }
+    #expect(exchange.paymentMethod == nil)
+    #expect(exchange.stage == .reserved)
+}
+
+@Test func legacyExchangeDecodesWithoutPaymentMethod() throws {
+    let exchange = Exchange(listing: try paidListing(), stage: .fundsReady)
+    var json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(exchange)) as? [String: Any])
+    json.removeValue(forKey: "paymentMethod")
+    let restored = try JSONDecoder().decode(Exchange.self, from: JSONSerialization.data(withJSONObject: json))
+    #expect(restored.stage == .fundsReady)
+    #expect(restored.fundingMethod == .visa)
+}

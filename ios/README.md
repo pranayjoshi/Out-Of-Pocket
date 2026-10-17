@@ -57,6 +57,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 - **My plans:** editable budgets, persistent setup pieces, calculated totals, and budget progress.
 - **Campus:** sample event flyers, event saving, sponsorship concepts, and campus request creation.
 - **Exchanges:** reservations, partner identification, inspection checklists, explicit acceptance, cancellation, and refund tracking.
+- **Mock checkout:** select sample Visa, Mastercard, or Apple Pay; simulate success, decline, or connection failure at authorization and capture. Processing prevents duplicate taps. Failed attempts keep the current stage and can be retried. Receipts retain the original funding method through refunds. No Wallet connection or real card details are collected.
 - **You:** saved finds, locally created listing entry, campus preferences, accessibility information, and safety guidance.
 - **Listing creation:** selected-photo access through Photos Picker, local JPEG storage, validated monetary input, explicit condition, and honest descriptions. Without a selected photo, the sample image is labeled.
 
@@ -80,8 +81,8 @@ Future real payments must execute server-side with verified provider webhooks, a
 
 ## Checks and CI
 
-`RelayCore` has 11 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, and persistence round trips.
+`RelayCore` has 15 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, and persistence round trips.
 
-`RelayUITests` covers native navigation, setup creation, invalid partner codes, mandatory inspection, and cancellation. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
+`RelayUITests` covers native navigation, setup creation, invalid partner codes, mandatory inspection, cancellation, and mock payment decline/retry. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
 
 The SwiftUI app has no external dependencies. `RelayCore` is a local Swift package shared by the app and its domain tests. Product photography is bundled for offline use; see the repository README for source identifiers.

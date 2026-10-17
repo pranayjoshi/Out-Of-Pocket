@@ -43,6 +43,10 @@ struct ExchangeDetailView: View {
     @State private var code = ""
     @State private var checks: Set<String> = []
     @State private var error: String?
+    @State private var paymentMethod: MockPaymentMethod = .visa
+    @State private var paymentOutcome: MockPaymentOutcome = .success
+    @State private var isProcessing = false
+    @State private var paymentTask: Task<Void, Never>?
     @FocusState private var codeFocused: Bool
     private var exchange: Exchange? { store.exchange(exchangeID) }
     var body: some View {
@@ -63,6 +67,7 @@ struct ExchangeDetailView: View {
                             if exchange.stage.canCancel {
                                 Button(exchange.stage == .reserved ? "Cancel sample reservation" : "Reject item & cancel before payment") { advance(.cancel) }
                                     .font(.subheadline).foregroundStyle(RelayTheme.secondary).frame(maxWidth: .infinity, minHeight: 46)
+                                    .disabled(isProcessing)
                                     .accessibilityIdentifier("cancel-exchange")
                             }
                         }.padding(23).padding(.bottom, 15)
@@ -78,8 +83,10 @@ struct ExchangeDetailView: View {
                     }
             }
             .navigationTitle("Your exchange").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.disabled(isProcessing) } }
         }.presentationDragIndicator(.visible)
+            .interactiveDismissDisabled(isProcessing)
+            .onDisappear { paymentTask?.cancel() }
     }
     private func itemSummary(_ exchange: Exchange) -> some View {
         HStack(spacing: 14) {
@@ -110,6 +117,17 @@ struct ExchangeDetailView: View {
             VStack(alignment: .leading, spacing: 4) { Text("Your payment").font(.caption).foregroundStyle(RelayTheme.secondary); Text(exchange.buyerMoneyLabel).font(.subheadline.weight(.semibold)).foregroundStyle(RelayTheme.ink) }
             Divider().overlay(RelayTheme.line)
             VStack(alignment: .leading, spacing: 4) { Text("Seller’s funds").font(.caption).foregroundStyle(RelayTheme.secondary); Text(exchange.sellerMoneyLabel).font(.subheadline.weight(.medium)).foregroundStyle(RelayTheme.ink) }
+            if let method = exchange.fundingMethod {
+                Divider().overlay(RelayTheme.line)
+                Label(method.title, systemImage: method == .applePay ? "wallet.bifold" : "creditcard")
+                    .font(.subheadline.weight(.medium)).foregroundStyle(RelayTheme.ink)
+                Text("\(exchange.mockReference) · simulated receipt")
+                    .font(.caption2.monospaced()).foregroundStyle(RelayTheme.secondary)
+                if [.caseOpen, .refundPending, .refunded].contains(exchange.stage) {
+                    Text("Refund destination: original \(method.title). No alternate card or wallet.")
+                        .font(.caption).foregroundStyle(RelayTheme.secondary)
+                }
+            }
         }.padding(18).frame(maxWidth: .infinity, alignment: .leading).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 19))
     }
     @ViewBuilder private func stageContent(_ exchange: Exchange) -> some View {
@@ -117,7 +135,18 @@ struct ExchangeDetailView: View {
         case .reserved:
             actionHeading("FIRST, A LITTLE REASSURANCE", exchange.isFree ? "Kindness, passed on." : "Your money stays in your corner.")
             explanation(exchange.isFree ? "This find is free. Identify your partner and inspect the item. No card, payment, or transfer is needed." : "A card hold reserves funds near the meeting. It isn’t a completed payment, and the bank may take time to remove a canceled hold.")
-            Button(exchange.isFree ? "Start a free handoff" : "Simulate \(exchange.listing.price) authorization") { advance(.prepareFunds) }.buttonStyle(RelayPrimaryButton()).accessibilityIdentifier("prepare-exchange")
+            if !exchange.isFree {
+                paymentMethods
+                simulationControls
+                Text("Due now: $0 · mock hold: \(exchange.listing.price)\nMarketplace commission: $0. Payment is confirmed only after inspection and acceptance.")
+                    .font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
+            }
+            Button {
+                if exchange.isFree { advance(.prepareFunds) }
+                else { simulate(.authorizeMock(method: paymentMethod, outcome: paymentOutcome)) }
+            } label: {
+                paymentButtonLabel(exchange.isFree ? "Start a free handoff" : "Simulate \(exchange.listing.price) authorization")
+            }.buttonStyle(RelayPrimaryButton()).disabled(isProcessing).accessibilityIdentifier("prepare-exchange")
         case .fundsReady:
             actionHeading("RIGHT PERSON. RIGHT EXCHANGE.", "Say hello. Check the code.")
             explanation("Your partner’s sample code is 2418. This identifies the exchange; it does not accept the item or approve payment.")
@@ -146,7 +175,13 @@ struct ExchangeDetailView: View {
         case .inspected:
             actionHeading("YOUR CHOICE. YOUR CONFIRMATION.", "Ready for its next chapter?")
             explanation(exchange.isFree ? "You’ve inspected this free find. Confirm that you’re happy to accept it." : "You’ve inspected the item. In a real exchange, the seller keeps it until both screens show a successful payment.")
-            Button(exchange.isFree ? "Accept this free find" : "Accept & simulate \(exchange.listing.price) payment") { advance(.accept) }.buttonStyle(RelayPrimaryButton()).accessibilityIdentifier("accept-exchange")
+            if !exchange.isFree { simulationControls }
+            Button {
+                if exchange.isFree { advance(.accept) }
+                else { simulate(.captureMock(outcome: paymentOutcome)) }
+            } label: {
+                paymentButtonLabel(exchange.isFree ? "Accept this free find" : "Accept & simulate \(exchange.listing.price) payment")
+            }.buttonStyle(RelayPrimaryButton()).disabled(isProcessing).accessibilityIdentifier("accept-exchange")
         case .completed:
             RoundIcon(symbol: "checkmark", size: 62)
             actionHeading("AND JUST LIKE THAT", "A new story begins.")
@@ -174,6 +209,58 @@ struct ExchangeDetailView: View {
     }
     private func actionHeading(_ eyebrow: String, _ title: String) -> some View {
         VStack(alignment: .leading, spacing: 9) { Eyebrow(text: eyebrow); Text(title).font(RelayTheme.heading(25)).tracking(-0.7).foregroundStyle(RelayTheme.ink) }
+    }
+    private var paymentMethods: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Eyebrow(text: "CHOOSE A DEMO PAYMENT METHOD")
+            ForEach(MockPaymentMethod.allCases) { method in
+                Button {
+                    paymentMethod = method
+                    error = nil
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: method == .applePay ? "wallet.bifold" : "creditcard").font(.title3)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(method.title).font(.subheadline.weight(.semibold))
+                            Text(method.subtitle).font(.caption2).foregroundStyle(RelayTheme.secondary)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: paymentMethod == method ? "checkmark.circle.fill" : "circle")
+                    }.foregroundStyle(RelayTheme.ink).padding(14).frame(maxWidth: .infinity, minHeight: 62)
+                        .background(paymentMethod == method ? RelayTheme.lime : RelayTheme.soft, in: RoundedRectangle(cornerRadius: 15))
+                }.buttonStyle(.plain).disabled(isProcessing)
+                    .accessibilityIdentifier("payment-method-\(method.rawValue)")
+                    .accessibilityAddTraits(paymentMethod == method ? .isSelected : [])
+            }
+            Text("Use these sample methods only. No card number, expiry, security code, or Apple Wallet access is collected.")
+                .font(.caption).foregroundStyle(RelayTheme.secondary)
+        }
+    }
+    private var simulationControls: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Picker("Demo outcome", selection: $paymentOutcome) {
+                ForEach(MockPaymentOutcome.allCases) { outcome in Text(outcome.title).tag(outcome) }
+            }.pickerStyle(.menu).accessibilityIdentifier("payment-outcome").disabled(isProcessing)
+            Text("Try a decline or connection failure, then select Success to retry. A failed mock attempt never advances the exchange.")
+                .font(.caption).foregroundStyle(RelayTheme.secondary)
+        }.onChange(of: paymentOutcome) { _, _ in error = nil }
+    }
+    private func paymentButtonLabel(_ title: String) -> some View {
+        HStack(spacing: 10) {
+            if isProcessing { ProgressView().tint(RelayTheme.onForest) }
+            Text(isProcessing ? "Processing demo…" : title)
+        }
+    }
+    private func simulate(_ event: ExchangeEvent) {
+        guard !isProcessing else { return }
+        isProcessing = true
+        error = nil
+        paymentTask = Task { @MainActor in
+            do { try await Task.sleep(for: .milliseconds(650)) }
+            catch { isProcessing = false; return }
+            advance(event)
+            isProcessing = false
+        }
     }
     private func explanation(_ text: String) -> some View { Text(text).font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5) }
     private func advance(_ event: ExchangeEvent) {

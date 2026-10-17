@@ -35,6 +35,7 @@ final class RelayUITests: XCTestCase {
         app.launch()
         let authorize = app.buttons["prepare-exchange"]
         XCTAssertTrue(authorize.waitForExistence(timeout: 10))
+        scrollTo(authorize, in: app)
         authorize.tap()
         let code = app.textFields["partner-code"]
         XCTAssertTrue(code.waitForExistence(timeout: 5))
@@ -52,6 +53,39 @@ final class RelayUITests: XCTestCase {
         app.buttons["cancel-exchange"].tap()
         XCTAssertTrue(app.staticTexts["It’s okay to pass."].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["No payment captured"].exists)
+    }
+
+    @MainActor
+    func testMockPaymentDeclineAndRetry() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-open-exchange-demo"]
+        app.launch()
+        let method = app.buttons["payment-method-applePay"]
+        XCTAssertTrue(method.waitForExistence(timeout: 10))
+        scrollTo(method, in: app)
+        method.tap()
+        let outcome = app.buttons["payment-outcome"]
+        scrollTo(outcome, in: app)
+        outcome.tap()
+        app.buttons["Declined"].tap()
+        scrollTo(app.buttons["prepare-exchange"], in: app)
+        app.buttons["prepare-exchange"].tap()
+        XCTAssertTrue(app.staticTexts["exchange-error"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.textFields["partner-code"].exists)
+        outcome.tap()
+        app.buttons["Success"].tap()
+        app.buttons["prepare-exchange"].tap()
+        XCTAssertTrue(app.textFields["partner-code"].waitForExistence(timeout: 5))
+        saveScreenshot("05-mock-payment")
+    }
+
+    @MainActor
+    private func scrollTo(_ element: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<6 {
+            if element.isHittable { return }
+            app.swipeUp()
+        }
+        XCTAssertTrue(element.isHittable)
     }
 
     @MainActor
