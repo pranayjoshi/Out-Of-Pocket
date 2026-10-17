@@ -16,3 +16,6 @@ ios/DerivedData/
 *.xcuserstate
 *.xcresult
 ios/screenshots/
+
+# Local campaign records and uploaded/generated creative
+.relay-data/

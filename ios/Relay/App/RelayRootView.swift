@@ -4,6 +4,8 @@ import RelayCore
 struct RelayRootView: View {
     @Environment(RelayStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var demoConversation: ConversationDestination?
     @State private var demoExchange: ExchangeDestination?
     var body: some View {
         @Bindable var store = store
@@ -18,18 +20,42 @@ struct RelayRootView: View {
                 NavigationStack { CampusBoardView() }
             }
             Tab(RelayTab.exchanges.rawValue, systemImage: RelayTab.exchanges.symbol, value: RelayTab.exchanges) {
-                NavigationStack { ExchangesView() }
+                NavigationStack { InboxView() }.badge(store.unreadMessageCount)
             }
             Tab(RelayTab.you.rawValue, systemImage: RelayTab.you.symbol, value: RelayTab.you) {
                 NavigationStack { ProfileView() }
             }
         }
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await store.refreshMarketplace()
+            while !Task.isCancelled {
+                await store.refreshPromotions()
+                await store.refreshMarketplace()
+                try? await Task.sleep(for: .seconds(30))
+            }
+        }
+        .onOpenURL { store.open(url: $0) }
+        .sheet(item: $store.deepLink) { link in
+            if let listing = store.listings.first(where: { $0.id == link.id }) {
+                ListingDetailView(listing: listing)
+            } else {
+                Text("That listing isn’t available on this account.").padding()
+            }
+        }
         .sensoryFeedback(.selection, trigger: store.feedbackCount)
+        .sheet(item: $demoConversation) { target in
+            NavigationStack { ConversationView(conversationID: target.id) }
+        }
         .sheet(item: $demoExchange) { ExchangeDetailView(exchangeID: $0.id) }
         .task {
+            if ProcessInfo.processInfo.arguments.contains("-open-conversation-demo"), demoConversation == nil,
+               let listing = store.catalog.first(where: { $0.priceCents > 0 }) {
+                demoConversation = ConversationDestination(id: await store.openConversation(for: listing))
+            }
             if ProcessInfo.processInfo.arguments.contains("-open-exchange-demo"), demoExchange == nil,
                let listing = store.catalog.first(where: { $0.priceCents > 0 }) {
-                demoExchange = ExchangeDestination(id: store.reserve(listing, meeting: Date()))
+                if let id = try? await store.reserve(listing, meeting: Date()) { demoExchange = ExchangeDestination(id: id) }
             }
         }
         .overlay(alignment: .top) {

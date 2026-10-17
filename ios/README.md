@@ -58,7 +58,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 - **Discover:** an interactive campus switchboard with Find / Offer / Trade, six quick topics (books, dorm gear, lab supplies, tickets, tutoring, rides), category-aware matching, prefilled listing and campus-post forms, and an ask fallback when there are no matches. Also includes campus switching, native search, category chips, price sorting, free-item/cross-campus filters, product detail sheets, sharing, favorites, and responsive listing cards.
 - **My plans:** editable budgets, persistent setup pieces, calculated totals, and budget progress.
 - **Campus:** campus asks, service offers, and trades appear before sample event flyers. Posts include optional budgets, timing/rate details, and both sides of a trade. All posts are local to this device. Also includes event saving and sponsorship concepts.
-- **Exchanges:** reservations, partner identification, inspection checklists, explicit acceptance, cancellation, and refund tracking.
+- **Inbox:** persistent listing conversations, messages, unread counts, offers, counters, acceptance, decline, and withdrawal. Use the explicit demo participant switch to try both sides. Agreed prices carry into handoffs. Messages remain on this device.
+- **Inbox → Handoffs:** reservations, partner identification, inspection checklists, explicit acceptance, cancellation, and refund tracking.
 - **Mock checkout:** select sample Visa, Mastercard, or Apple Pay; simulate success, decline, or connection failure at authorization and capture. Processing prevents duplicate taps. Failed attempts keep the current stage and can be retried. Receipts retain the original funding method through refunds. No Wallet connection or real card details are collected.
 - **You:** saved finds, locally created listing entry, campus preferences, accessibility information, and safety guidance.
 - **Listing creation:** selected-photo access through Photos Picker, local JPEG storage, validated monetary input, explicit condition, and honest descriptions. Without a selected photo, the sample image is labeled.
@@ -67,7 +68,7 @@ State is Codable and persisted atomically in Application Support. Selected photo
 
 ## Safety boundaries
 
-This remains a local interactive prototype. Profiles and university affiliations are unverified. There is no university endorsement, server-side tenancy, messaging, live booking, real moderation, payment provider, escrow, or emergency monitoring.
+This remains a local interactive prototype. Profiles and university affiliations are unverified. There is no university endorsement, server-side tenancy, live message delivery, live booking, real moderation, payment provider, escrow, or emergency monitoring.
 
 Exchange transitions are enforced in `Packages/RelayCore`, not only by hiding UI buttons:
 
@@ -83,8 +84,22 @@ Future real payments must execute server-side with verified provider webhooks, a
 
 ## Checks and CI
 
-`RelayCore` has 17 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, and persistence round trips.
+`RelayCore` has 25 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, conversation validation, negotiation turns and stale offers, free-item negotiation, agreed prices, unread counts, and persistence round trips.
 
 `RelayUITests` covers native navigation, setup creation, invalid partner codes, mandatory inspection, cancellation, and mock payment decline/retry. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
 
 The SwiftUI app has no external dependencies. `RelayCore` is a local Swift package shared by the app and its domain tests. Product photography is bundled for offline use; see the repository README for source identifiers.
+
+## Campus promotions
+
+Discover, Campus, My plans and Exchanges now include a native, dismissible sponsored card. Both campuses have bundled sample event/research campaigns, so placements work on the first offline launch. Sample cards explain that they are examples; real campaign buttons open their validated HTTPS destination.
+
+For live local editing from the university web portal, run `npm run dev -- --port 5174 --strictPort` at the repository root and open `/admin/ads`. The simulator reads the shared campaign service every 30 seconds while active and caches the feed for offline use. Published ads appear; draft, paused, expired, other-campus and unselected-placement ads are excluded. The provider API key stays on the Mac server.
+
+For a physical phone or hosted API, configure the full HTTPS feed URL through the `RELAY_CAMPAIGNS_URL` scheme environment variable or `RelayCampaignsURL` Info.plist key. The default physical-device experience uses samples. Debug builds permit local networking for simulator development; Release builds keep standard ATS behavior. The local service has no university authentication or billing and must stay on loopback until a production backend is implemented.
+
+### Schedule screenshots
+
+Open **You → Your classes** or the link in Discover. Choose a schedule screenshot, allow processing through OpenRouter, review classes, then save. Manual selection works offline. Classes are stored locally by university and can be cleared. Listing creation includes an optional university course picker, and Discover's **For you** sort promotes relevant listings with an explanation.
+
+Run the Vite service on port 5174 with server-only `OPENROUTER_API_KEY`; the simulator imports through `/api/schedule/import`. Physical devices need a hosted HTTPS endpoint configured through `RELAY_SCHEDULE_URL` or `RelayScheduleURL` in Info.plist. `OPENROUTER_SCHEDULE_MODEL` defaults to `google/gemini-2.5-flash-lite`. Relay does not persist schedule images; the selected screenshot is sent to OpenRouter and its provider only after consent. The course catalog is a starter subset of Alabama/Auburn offerings; unsupported detected codes are reported rather than silently assigned to another course.

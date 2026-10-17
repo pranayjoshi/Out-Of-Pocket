@@ -39,20 +39,42 @@ import {
   LockKeyhole,
   PackageCheck,
   ReceiptText,
+  Megaphone,
+  MessageCircle,
 } from "lucide-react";
+import Schedule from "./Schedule";
+import type { CourseProfile } from "./Schedule";
+import { coursesFor, recommendationReason } from "./lib/courses.mjs";
+import Messages from "./Messages";
+import { createConversation, createSubjectConversation, agreedProduct, pendingOffer, unreadCount } from "./lib/messages.mjs";
+import { CampusShortcuts } from "./features/CampusShortcuts";
+import RidesView from "./features/RidesView";
+import TicketsView from "./features/TicketsView";
+import MyPosts from "./features/MyPosts";
+import ActivityPanel from "./features/ActivityPanel";
+import { cancelTrip, hydrateRides } from "./lib/rides.mjs";
+import { hydrateTickets, withdrawListing } from "./lib/tickets.mjs";
+import type { Conversation } from "./lib/messages.mjs";
+import { isAdVisible } from "./lib/ads.mjs";
+import AdsPortal, { AdPlacement, useAds } from "./AdsPortal";
 import { categories, products as initialProducts, flyers } from "./data";
 import type { Category, Product } from "./data";
 import { transitionExchange, moneyStatus } from "./lib/exchange.mjs";
 
 type View =
-  "Discover" | "My plans" | "Campus board" | "Exchanges" | "Saved finds";
+  "Discover" | "My plans" | "Campus board" | "Exchanges" | "Saved finds" | "Messages" | "Campus promotions";
 type Order = { product: Product; state: string; meeting: string };
 type Plan = { name: string; budget: number; items: string[] };
 type Need = { title: string; budget: string; person: string; category: string };
+type Destination =
+  | { name: "rides"; intent?: "offer"; destinationId?: string; tripId?: string }
+  | { name: "tickets"; intent?: "sell"; orderId?: string }
+  | { name: "posts" };
 const nav = [
   { name: "Discover", icon: Compass },
   { name: "My plans", icon: LayoutGrid },
   { name: "Campus board", icon: CalendarDays },
+  { name: "Messages", icon: MessageCircle },
   { name: "Exchanges", icon: ArrowLeftRight },
   { name: "Saved finds", icon: Heart },
 ] as const;
@@ -148,12 +170,14 @@ function ProductCard({
   onSave,
   onOpen,
   index = 0,
+  reason = "",
 }: {
   product: Product;
   saved: boolean;
   onSave: () => void;
   onOpen: () => void;
   index?: number;
+  reason?: string;
 }) {
   return (
     <motion.article
@@ -191,6 +215,8 @@ function ProductCard({
           <Heart size={17} fill={saved ? "currentColor" : "none"} />
         </motion.button>
       </div>
+      {product.courseCode && <p className="course-context">{product.courseCode} · {product.campus}</p>}
+      {reason && <p className="course-context">{reason}</p>}
       <div className="product-topline">
         <span>{product.category}</span>
         <span className="condition-dot" />
@@ -253,7 +279,13 @@ function Empty({
 }
 
 export default function App() {
-  const [view, setView] = useState<View>("Discover");
+  const [view, setView] = useState<View>(() => window.location.pathname === "/admin/ads" ? "Campus promotions" : "Discover");
+  const { ads, commit: commitAds, syncError: adsSyncError } = useAds();
+  useEffect(() => {
+    const update = () => setView(window.location.pathname === "/admin/ads" ? "Campus promotions" : "Discover");
+    window.addEventListener("popstate", update);
+    return () => window.removeEventListener("popstate", update);
+  }, []);
   const [category, setCategory] = useState<Category>("All finds");
   const [query, setQuery] = useState("");
   const [campus, setCampus] = useStored("relay-campus", "Alabama");
@@ -277,6 +309,8 @@ export default function App() {
     }
     menuWasOpen.current = mobileMenu;
   }, [isMobile, mobileMenu]);
+  const [courseProfiles, setCourseProfiles] = useStored<CourseProfile[]>("relay-courses-v1", []);
+  const courseCodes = courseProfiles.find(p => p.campus === campus)?.codes ?? [];
   const [saved, setSaved] = useStored<string[]>("relay-saved", []);
   const [customProducts, setCustomProducts] = useStored<Product[]>(
     "relay-listings",
@@ -284,6 +318,14 @@ export default function App() {
   );
   const [plan, setPlan] = useStored<Plan | null>("relay-plan", null);
   const [orders, setOrders] = useStored<Order[]>("relay-orders", []);
+  const [threads, setThreads] = useStored<Conversation[]>("relay-conversations-v1", []);
+  const [rideState, setRideState] = useStored<Parameters<typeof hydrateRides>[0]>("relay-rides-v1", null);
+  const [ticketState, setTicketState] = useStored<Parameters<typeof hydrateTickets>[0]>("relay-tickets-v1", null);
+  const rides = useMemo(() => hydrateRides(rideState), [rideState]);
+  const tickets = useMemo(() => hydrateTickets(ticketState), [ticketState]);
+  const [destination, setDestination] = useState<Destination | null>(null);
+  const [activityFilter, setActivityFilter] = useState<"all" | "items" | "rides" | "tickets">("all");
+  const [activeThread, setActiveThread] = useState<string | null>(null);
   const [rsvps, setRsvps] = useStored<string[]>("relay-rsvps", []);
   const [needs, setNeeds] = useStored<Need[]>("relay-needs", [
     {
@@ -302,7 +344,7 @@ export default function App() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [activeOrder, setActiveOrder] = useState<number | null>(null);
   const [modal, setModal] = useState<
-    "sell" | "plan" | "request" | "safety" | "notifications" | "settings" | null
+    "sell" | "plan" | "request" | "safety" | "notifications" | "settings" | "create" | null
   >(null);
   const [selectedFlyer, setSelectedFlyer] = useState<string | null>(null);
   const [toast, setToast] = useState("");
@@ -327,17 +369,19 @@ export default function App() {
         (category === "All finds" || p.category === category) &&
         (!freeOnly || p.price === 0) &&
         (!query ||
-          `${p.title} ${p.category} ${p.description}`
+          `${p.title} ${p.category} ${p.description} ${p.courseCode ?? ""}`
             .toLowerCase()
             .includes(query.toLowerCase())),
     );
     if (view === "Saved finds")
       items = items.filter((p) => saved.includes(p.id));
+    if (sort === "recommended") items.sort((a, b) => Number(Boolean(recommendationReason(b, campus, courseCodes))) - Number(Boolean(recommendationReason(a, campus, courseCodes))));
     if (sort === "low") items.sort((a, b) => a.price - b.price);
     if (sort === "high") items.sort((a, b) => b.price - a.price);
     return items;
   }, [
     customProducts,
+    courseProfiles,
     campus,
     crossCampus,
     category,
@@ -358,6 +402,12 @@ export default function App() {
     setPinError("");
   }, [activeOrder]);
   function navigate(next: View) {
+    setDestination(null);
+    const nextPath = next === "Campus promotions" ? "/admin/ads" : "/";
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, "", nextPath);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
     setView(next);
     setMobileMenu(false);
     setQuery("");
@@ -384,11 +434,34 @@ export default function App() {
     setToast("Added to your plan. A good start.");
     setSelected(null);
   }
-  function reserve() {
-    if (!selected) return;
+  function openConversation(product: Product) {
+    let thread = threads.find(t => t.product?.id === product.id);
+    if (!thread) {
+      thread = createConversation(product, product.seller === "You");
+      setThreads(prev => [...prev, thread!]);
+    }
+    setActiveThread(thread.id);
+    setSelected(null);
+    navigate("Messages");
+  }
+  function openSubject(subject: { kind: "ride_booking" | "ride_request" | "ticket_order"; id: string; tripId?: string; title: string; detail?: string }, open = false) {
+    const existing = threads.find((thread) => thread.subject?.kind === subject.kind && thread.subject.id === subject.id);
+    if (existing) setActiveThread(existing.id);
+    else {
+      const thread = createSubjectConversation(subject);
+      setThreads((prev) => [thread, ...prev]);
+      setActiveThread(thread.id);
+    }
+    if (open) navigate("Messages");
+  }
+  function reserve(product: Product | null = selected) {
+    if (!product) return;
+    if (product.seller === "You") { setToast("This is your listing. Handoffs start from a buyer’s conversation."); return; }
+    const thread = threads.find(t => t.product?.id === product.id);
+    const agreed = thread ? agreedProduct(thread) : product;
     const existing = orders.findIndex(
       (o) =>
-        o.product.id === selected.id &&
+        o.product.id === product.id &&
         !["canceled", "refunded"].includes(o.state),
     );
     if (existing >= 0) {
@@ -396,7 +469,12 @@ export default function App() {
       setActiveOrder(existing);
       return;
     }
-    const order = { product: selected, state: "reserved", meeting };
+    if (thread && pendingOffer(thread)) {
+      openConversation(product);
+      setToast("Resolve or withdraw the pending offer before planning a handoff.");
+      return;
+    }
+    const order = { product: agreed, state: "reserved", meeting };
     setOrders((prev) => [...prev, order]);
     setSelected(null);
     setActiveOrder(orders.length);
@@ -472,6 +550,7 @@ export default function App() {
               )}
               <Icon size={19} />
               <span>{name}</span>
+              {name === "Messages" && threads.some(t => unreadCount(t) > 0) && <span className="nav-count">{threads.reduce((n, t) => n + unreadCount(t), 0)}</span>}
               {name === "Saved finds" && saved.length > 0 && (
                 <span className="nav-count">{saved.length}</span>
               )}
@@ -484,7 +563,7 @@ export default function App() {
         </nav>
         <button
           className="sidebar-sell button primary"
-          onClick={() => setModal("sell")}
+          onClick={() => setModal("create")}
         >
           <Plus size={18} />
           Give something a next chapter
@@ -506,6 +585,9 @@ export default function App() {
             </span>
           </button>
           <div className="sidebar-links">
+            <button onClick={() => navigate("Campus promotions")} aria-current={view === "Campus promotions" ? "page" : undefined}>
+              <Megaphone size={16} /> University ads portal
+            </button>
             <button onClick={() => setModal("safety")}>
               <CircleHelp size={16} /> Help & safety
             </button>
@@ -625,13 +707,18 @@ export default function App() {
         <main id="main-content">
           <AnimatePresence mode="wait">
             <motion.div
-              key={view}
+              key={destination?.name ?? view}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25, ease }}
             >
-              {view === "Discover" && (
+              {destination?.name === "rides" && <RidesView campusLabel={campus} state={rides} opening={destination} onChange={setRideState} onBack={() => setDestination(null)} onConversation={openSubject} />}
+              {destination?.name === "tickets" && <TicketsView campusLabel={campus} state={tickets} opening={destination} onChange={setTicketState} onBack={() => setDestination(null)} onConversation={openSubject} onNeedRide={(destinationId) => setDestination({ name: "rides", destinationId })} />}
+              {destination?.name === "posts" && <MyPosts campusLabel={campus} products={products} rides={rides} tickets={tickets} onClose={() => setDestination(null)} onRemoveItem={(id) => setCustomProducts((prev) => prev.filter((item) => item.id !== id))} onOpenRide={(tripId) => setDestination({ name: "rides", tripId })} onCancelRide={(tripId) => { try { setRideState(cancelTrip(rides, { tripId, actorId: "you" }).state); setToast("Ride canceled."); } catch (error) { setToast(error instanceof Error ? error.message : "Couldn’t cancel that ride."); } }} onOpenTicket={(id) => { const listing = tickets.listings.find((item) => item.id === id); setDestination({ name: "tickets", orderId: undefined, intent: undefined }); setToast(listing ? "Open the listing from Tickets to review it." : ""); setDestination({ name: "tickets" }); }} onWithdrawTicket={(id) => { try { setTicketState(withdrawListing(tickets, { listingId: id, sellerId: "you" }).state); setToast("Listing withdrawn."); } catch (error) { setToast(error instanceof Error ? error.message : "Couldn’t withdraw that listing."); } }} />}
+              {!destination && view === "Campus promotions" && adsSyncError && <div className="ad-error" role="status">{adsSyncError}</div>}
+              {view === "Campus promotions" && !destination && <AdsPortal campus={campus} ads={ads} commit={commitAds} onPreview={placement => { navigate(placement as View); window.setTimeout(() => document.querySelector(".ad-banner:not(.is-preview)")?.scrollIntoView({ block: "center", behavior: reducedMotion ? "instant" : "smooth" }), 350); }} />}
+              {view === "Discover" && !destination && (
                 <>
                   <div className="page-heading">
                     <div>
@@ -652,6 +739,7 @@ export default function App() {
                       <ArrowUpRight size={16} />
                     </button>
                   </div>
+                  <CampusShortcuts current="shop" shop={() => document.getElementById("finds")?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" })} rides={() => setDestination({ name: "rides" })} tickets={() => setDestination({ name: "tickets" })} />
                   <div className="feature-grid">
                     <section className="hero">
                       <div className="hero-text">
@@ -833,7 +921,7 @@ export default function App() {
                   </div>
                 </>
               )}
-              {(view === "Discover" || view === "Saved finds") && (
+              {(view === "Discover" || view === "Saved finds") && !destination && (
                 <section className="finds-section" id="finds">
                   <div className="section-heading">
                     <div>
@@ -862,6 +950,7 @@ export default function App() {
                       </select>
                     </div>
                   </div>
+                  {view === "Discover" && <div className="semester-nudge"><div><strong>{courseCodes.length ? `Finds for your ${courseCodes.length} classes` : "Your classes. Your kind of finds."}</strong><p>{courseCodes.length ? courseCodes.join(" · ") : "Import a schedule screenshot to personalize your semester."}</p></div><button className="button secondary" onClick={() => setModal("settings")}>{courseCodes.length ? "Manage classes" : "Add your schedule"}</button></div>}
                   <div className="discovery-toolbar">
                     <div
                       className="category-list"
@@ -961,6 +1050,7 @@ export default function App() {
                         <ProductCard
                           key={p.id}
                           product={p}
+                              reason={recommendationReason(p, campus, courseCodes)}
                           index={i}
                           saved={saved.includes(p.id)}
                           onSave={() => save(p.id)}
@@ -996,7 +1086,7 @@ export default function App() {
                   )}
                 </section>
               )}
-              {view === "Discover" && (
+              {view === "Discover" && !destination && (
                 <>
                   <div className="community-grid">
                     <section className="needs-card">
@@ -1038,7 +1128,7 @@ export default function App() {
                         </div>
                       ))}
                     </section>
-                    <button
+                    {ads.some(ad => isAdVisible(ad, campus, "Discover")) ? <div className="ad-discover-slot"><AdPlacement ads={ads} campus={campus} placement="Discover" /></div> : <button
                       className="sponsor-card"
                       onClick={() => setSelectedFlyer("coffee")}
                     >
@@ -1064,7 +1154,7 @@ export default function App() {
                         Meet the campus partner idea
                         <ArrowUpRight size={18} />
                       </span>
-                    </button>
+                    </button>}
                   </div>
                   <div className="board-peek">
                     <div>
@@ -1085,13 +1175,14 @@ export default function App() {
                   </div>
                 </>
               )}
-              {view === "My plans" && (
+              {view === "My plans" && !destination && (
                 <>
                   <PageTitle
                     eyebrow="MAKE ROOM FOR WHAT’S NEXT"
                     title="A new chapter. A little plan."
                     description="Piece together the things you need, at a price that feels right."
                   />
+                  <AdPlacement ads={ads} campus={campus} placement="My plans" />
                   <div className="plans-layout">
                     <section className="plan-main">
                       <div className="plan-header">
@@ -1218,13 +1309,14 @@ export default function App() {
                   </div>
                 </>
               )}
-              {view === "Campus board" && (
+              {view === "Campus board" && !destination && (
                 <>
                   <PageTitle
                     eyebrow="MORE THAN A MARKETPLACE"
                     title="Good things are happening."
                     description="A campus noticeboard with a little more life in it."
                   />
+                  <CampusShortcuts shop={() => navigate("Discover")} rides={() => setDestination({ name: "rides" })} tickets={() => setDestination({ name: "tickets" })} />
                   <div className="board-banner">
                     <span>
                       <Ticket size={28} />
@@ -1240,8 +1332,9 @@ export default function App() {
                     </div>
                     <span className="sample-chip">SAMPLE EVENTS</span>
                   </div>
+                  <AdPlacement ads={ads} campus={campus} placement="Campus board" />
                   <div className="flyer-grid">
-                    {flyers.map((f, i) => (
+                    {flyers.filter(f => f.id !== "coffee" || !ads.some(ad => isAdVisible(ad, campus, "Campus board"))).map((f, i) => (
                       <motion.button
                         key={f.id}
                         className={`flyer ${f.theme}`}
@@ -1311,13 +1404,20 @@ export default function App() {
                   </section>
                 </>
               )}
-              {view === "Exchanges" && (
+              {view === "Messages" && !destination && <Messages threads={threads} activeId={activeThread} onSelect={setActiveThread}
+                onUpdate={thread => setThreads(prev => prev.map(t => t.id === thread.id ? thread : t))}
+                locked={id => orders.some(o => o.product.id === id && !["canceled", "refunded"].includes(o.state))}
+                onReserve={reserve} onExplore={() => navigate("Discover")} />}
+              {view === "Exchanges" && !destination && (
                 <>
                   <PageTitle
                     eyebrow="A THOUGHTFUL WAY TO HAND THINGS OVER"
                     title="From their hands to yours."
                     description="Clear steps. A little reassurance. Every exchange in one place."
                   />
+                  <ActivityPanel filter={activityFilter} onFilter={setActivityFilter} itemCount={orders.length} rides={rides} tickets={tickets} onOpenRide={(tripId) => setDestination({ name: "rides", tripId })} onOpenOrder={(orderId) => setDestination({ name: "tickets", orderId })} />
+                  {(activityFilter === "all" || activityFilter === "items") && <>
+                  <AdPlacement ads={ads} campus={campus} placement="Exchanges" />
                   <div className="demo-banner">
                     <LockKeyhole size={18} />
                     <span>
@@ -1361,6 +1461,7 @@ export default function App() {
                       label="Find something good"
                     />
                   )}
+                  </>}
                 </>
               )}
             </motion.div>
@@ -1467,7 +1568,10 @@ export default function App() {
                 payment.
               </span>
             </div>
-            <button className="button primary full" onClick={reserve}>
+            {selected.seller !== "You" && <button className="button primary full" onClick={() => openConversation(selected)}>
+              {selected.price > 0 ? "Message seller / make an offer" : "Message seller"} <MessageCircle size={17} />
+            </button>}
+            <button className="button secondary full" onClick={() => reserve()} disabled={selected.seller === "You"}>
               Try the exchange demo
               <ArrowUpRight size={17} />
             </button>
@@ -1479,6 +1583,7 @@ export default function App() {
               Add to my setup plan
             </button>
             <small className="disclosure">
+              {selected.courseCode && <span className="course-context">{selected.courseCode} · {selected.campus}<br /></span>}
               Sample listing · no live reservation or payment.
             </small>
           </div>
@@ -1548,6 +1653,18 @@ export default function App() {
         </Modal>
       )}
 
+      {modal === "create" && (
+        <Modal title="Create" onClose={() => setModal(null)}>
+          <span className="eyebrow">ADD SOMETHING</span>
+          <h2>What do you want to add?</h2>
+          <div className="rt-actions">
+            <button className="button primary full" type="button" onClick={() => setModal("sell")}>Sell an item</button>
+            <button className="button secondary full" type="button" onClick={() => { setModal(null); setDestination({ name: "rides", intent: "offer" }); }}>Offer a ride</button>
+            <button className="button secondary full" type="button" onClick={() => { setModal(null); setDestination({ name: "tickets", intent: "sell" }); }}>Sell a ticket</button>
+          </div>
+        </Modal>
+      )}
+
       {modal === "sell" && (
         <Modal title="Create a listing" onClose={() => setModal(null)}>
           <span className="modal-symbol">
@@ -1587,6 +1704,7 @@ export default function App() {
                   condition: String(d.get("condition")),
                   location: "Public location to be agreed",
                   campus,
+                  courseCode: String(d.get("courseCode") || "") || undefined,
                   description: String(d.get("description")),
                   checks: [
                     "Item matches the description",
@@ -1637,6 +1755,9 @@ export default function App() {
                 />
               </div>
             </div>
+            <label className="field-label" htmlFor="listing-course">Class number (optional) · {campus}</label>
+            <select key={campus} id="listing-course" name="courseCode"><option value="">Not tied to a class</option>{coursesFor(campus).map(c => <option key={c.code} value={c.code}>{c.code} — {c.title}</option>)}</select>
+            <p className="schedule-note">Starter catalog for this university. Only tag classes this item is relevant to.</p>
             <label className="field-label" htmlFor="condition">
               Condition
             </label>
@@ -1807,18 +1928,17 @@ export default function App() {
           <span className="eyebrow">A LITTLE HEADS-UP</span>
           <h2>You’re all caught up.</h2>
           <p className="modal-intro">
-            Real-time messages and match alerts are on the roadmap. Your saved
-            finds, plans, and sample exchanges are already kept in this browser.
+            Your messages, offers, saved finds, and sample exchanges are kept in this browser. Open Messages to plan a pickup or continue negotiating.
           </p>
           <button
             className="button primary full"
             onClick={() => {
               setModal(null);
-              navigate("Saved finds");
+              navigate("Messages");
             }}
           >
-            Revisit your saved finds
-            <Heart size={16} />
+            Open messages
+            <MessageCircle size={16} />
           </button>
         </Modal>
       )}
@@ -1830,6 +1950,7 @@ export default function App() {
           </span>
           <span className="eyebrow">MAKE YOURSELF AT HOME</span>
           <h2>Your campus. Your pace.</h2>
+          <Schedule key={campus} campus={campus} codes={courseCodes} onSave={codes => setCourseProfiles(previous => [...previous.filter(p => p.campus !== campus), { campus, codes }])} />
           <div className="preference-row">
             <div>
               <strong>Explore beyond your campus</strong>
@@ -1854,9 +1975,9 @@ export default function App() {
           </div>
           <div className="form-note">
             <LockKeyhole size={17} />
-            Your demo data stays in this browser. No sign-in or server storage
-            is connected.
+            Confirmed classes and demo data stay in this browser. Schedule images are sent for AI processing only when you allow it.
           </div>
+          <button className="button secondary full" type="button" onClick={() => { setModal(null); setDestination({ name: "posts" }); }}>My posts</button>
           <button
             className="button primary full"
             onClick={() => setModal(null)}

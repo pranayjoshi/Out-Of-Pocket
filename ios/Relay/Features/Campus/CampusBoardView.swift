@@ -5,17 +5,14 @@ struct CampusBoardView: View {
     @Environment(RelayStore.self) private var store
     @State private var selectedEvent: String?
     @State private var showRequest = false
-    @State private var showListing = false
+    @State private var relatedPost: CampusRequest?
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 SectionTitle(eyebrow: "MORE THAN A MARKETPLACE", title: "Good things\nare happening.")
                 Text("Less lost in the group chat.\nMore actually showing up.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5)
-                ForEach(DemoCatalog.events) { event in
-                    Button { selectedEvent = event.id } label: { FlyerCard(event: event) }.buttonStyle(.plain)
-                }
                 HStack {
-                    SectionTitle(eyebrow: "THE COMMUNITY ASK", title: "A little help goes a long way.")
+                    SectionTitle(eyebrow: "THE CAMPUS SWITCHBOARD", title: "A little give. A little take.")
                     Button { showRequest = true } label: { RoundIcon(symbol: "plus") }.accessibilityLabel("Post a campus request")
                 }
                 ForEach(store.campusRequests) { request in
@@ -23,11 +20,17 @@ struct CampusBoardView: View {
                         Text(String(request.person.prefix(1))).font(.subheadline).frame(width: 44, height: 44).background(RelayTheme.soft, in: Circle())
                         VStack(alignment: .leading, spacing: 7) {
                             Text(request.title).font(.subheadline.weight(.medium))
-                            Text("\(request.person) · Under \(Money.format(request.budgetCents))").font(.caption).foregroundStyle(RelayTheme.secondary)
+                            if let details = request.details, !details.isEmpty { Text(details).font(.caption).foregroundStyle(RelayTheme.secondary) }
+                            Text("\(request.postIntent.rawValue) · \(request.summary)").font(.caption).foregroundStyle(RelayTheme.secondary)
                         }
                         Spacer(minLength: 0)
-                        Button { showListing = true } label: { Image(systemName: "arrow.up.right").frame(width: 44, height: 44) }.accessibilityLabel("Respond to \(request.title)")
+                        Button { relatedPost = request } label: { Image(systemName: "arrow.up.right").frame(width: 44, height: 44) }.accessibilityLabel("Create a related post for \(request.title)")
                     }.padding(17).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 20))
+                }
+                CampusPromotionPlacement(placement: "Campus board")
+                SectionTitle(eyebrow: "AROUND CAMPUS", title: "Make a little time.")
+                ForEach(DemoCatalog.events.filter { $0.id != "coffee" }) { event in
+                    Button { selectedEvent = event.id } label: { FlyerCard(event: event) }.buttonStyle(.plain)
                 }
                 DemoNotice(text: "Sample events and campaigns. No live event bookings or sponsor-funded offers.")
             }.foregroundStyle(RelayTheme.ink).padding(20).padding(.bottom, 20)
@@ -38,7 +41,7 @@ struct CampusBoardView: View {
                 if let event = DemoCatalog.events.first(where: { $0.id == selectedEvent }) { EventDetailView(event: event) }
             }
             .sheet(isPresented: $showRequest) { RequestEditorView() }
-            .sheet(isPresented: $showListing) { CreateListingView() }
+            .sheet(item: $relatedPost) { CampusPostResponseView(post: $0) }
     }
 }
 struct FlyerCard: View {
@@ -101,32 +104,101 @@ struct RequestEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var budget = ""
-    @State private var category: RelayCore.Category = .dorm
-    private var valid: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && (Money.parse(budget) ?? 0) > 0 }
+    @State private var details = ""
+    @State private var exchangeFor = ""
+    @State private var category: RelayCore.Category = .all
+    let intent: CampusIntent
+
+    init(title: String = "", category: RelayCore.Category = .all, intent: CampusIntent = .find, exchangeFor: String = "", details: String = "") {
+        _title = State(initialValue: title)
+        _category = State(initialValue: category)
+        _exchangeFor = State(initialValue: exchangeFor)
+        _details = State(initialValue: details)
+        self.intent = intent
+    }
+    private var valid: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && details.count <= 1000 &&
+        (intent == .trade ? !exchangeFor.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && exchangeFor.count <= 100 : budget.isEmpty || Money.parse(budget) != nil)
+    }
+    private var heading: String {
+        switch intent {
+        case .find: "What’s your missing piece?"
+        case .offer: "Someone could use your help."
+        case .trade: "Your thing. Their thing."
+        }
+    }
+    private var titleLabel: String {
+        switch intent {
+        case .find: "I’m looking for…"
+        case .offer: "I’m offering…"
+        case .trade: "I can trade…"
+        }
+    }
+    private var actionLabel: String {
+        switch intent {
+        case .find: "Ask your campus"
+        case .offer: "Post my offer"
+        case .trade: "Post my trade"
+        }
+    }
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 25) {
-                    RoundIcon(symbol: "paperplane", size: 65)
-                    SectionTitle(eyebrow: "PUT A LITTLE ASK OUT THERE", title: "What’s your\nmissing piece?")
-                    Text("Someone on campus might have just the thing. Give them a little nudge.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
-                    FormField(label: "I’m looking for…", placeholder: "A desk that fits a tiny dorm", text: $title)
-                    FormField(label: "Budget up to ($)", placeholder: "50", text: $budget).keyboardType(.decimalPad)
+                VStack(alignment: .leading, spacing: 23) {
+                    RoundIcon(symbol: intent.symbol, size: 60)
+                    SectionTitle(eyebrow: "\(intent.rawValue.uppercased()) · \(store.campus.shortName) CAMPUS BOARD", title: heading)
+                    FormField(label: titleLabel, placeholder: intent == .trade ? "My chemistry textbook" : "A little help with Calculus", text: $title)
+                        .accessibilityIdentifier("campus-post-title")
+                    if intent == .trade {
+                        FormField(label: "In exchange for…", placeholder: "A desk lamp, another book, or a skill", text: $exchangeFor)
+                            .accessibilityIdentifier("campus-post-wanted")
+                    } else {
+                        FormField(label: intent == .find ? "Budget up to ($) · optional" : "Asking price ($) · optional", placeholder: "Leave blank to agree later", text: $budget).keyboardType(.decimalPad)
+                        Text(intent == .offer ? "For a service or ride, add the rate, availability, and what’s included below." : "Add a preferred time below for tutoring, rides, or tickets.")
+                            .font(.caption).foregroundStyle(RelayTheme.secondary)
+                    }
                     HStack {
                         Text("Category").font(.subheadline)
                         Spacer()
-                        Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }
+                        Picker("Category", selection: $category) {
+                            ForEach(RelayCore.Category.allCases) { Text($0 == .all ? "Anything on campus" : $0.rawValue).tag($0) }
+                        }.tint(RelayTheme.forest)
                     }
-                    DemoNotice(text: "Your sample request stays on this device. It isn’t posted to a shared server.")
-                    Button("Ask your campus") {
-                        guard let cents = Money.parse(budget), valid else { return }
-                        store.postRequest(CampusRequest(title: title.trimmingCharacters(in: .whitespacesAndNewlines), budgetCents: cents, category: category, campus: store.campus))
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text("A few useful details · optional").font(.subheadline.weight(.medium))
+                        TextField("When, where, condition, rate, or what you have in mind…", text: $details, axis: .vertical)
+                            .lineLimit(3...6).padding(15).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+                            .accessibilityIdentifier("campus-post-details")
+                        Text("Keep contact details private. Up to 1,000 characters.").font(.caption).foregroundStyle(RelayTheme.secondary)
+                    }
+                    DemoNotice(text: "Your sample post stays on this device. It isn’t shared with other students.")
+                    Button(actionLabel) {
+                        guard valid else { return }
+                        store.postRequest(CampusRequest(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                            budgetCents: intent == .trade ? 0 : Money.parse(budget) ?? 0, category: category, campus: store.campus,
+                            intent: intent, exchangeFor: intent == .trade ? exchangeFor.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
+                            details: details.trimmingCharacters(in: .whitespacesAndNewlines)))
                         store.selectedTab = .campus; dismiss()
-                    }.buttonStyle(RelayPrimaryButton()).disabled(!valid)
+                    }.buttonStyle(RelayPrimaryButton()).disabled(!valid).accessibilityIdentifier("campus-post-submit")
                 }.foregroundStyle(RelayTheme.ink).padding(24)
-            }.background(RelayTheme.paper).navigationTitle("The community ask").navigationBarTitleDisplayMode(.inline)
+            }.background(RelayTheme.paper).navigationTitle(intent == .find ? "The community ask" : "\(intent.rawValue) on campus").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
                 .scrollDismissesKeyboard(.interactively)
         }.presentationDragIndicator(.visible)
+    }
+}
+
+struct CampusPostResponseView: View {
+    let post: CampusRequest
+    var body: some View {
+        if post.postIntent == .find && [.dorm, .books, .tech, .lab, .free].contains(post.category) {
+            CreateListingView(title: post.title, category: post.category)
+        } else {
+            RequestEditorView(title: post.postIntent == .trade ? post.exchangeFor ?? "" : post.title,
+                              category: post.postIntent == .trade ? .all : post.category,
+                              intent: post.postIntent == .find ? .offer : post.postIntent == .offer ? .find : .trade,
+                              exchangeFor: post.postIntent == .trade ? post.title : "",
+                              details: "Related to \(post.person)’s campus \(post.postIntent.rawValue.lowercased()): \(post.title).")
+        }
     }
 }

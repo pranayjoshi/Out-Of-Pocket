@@ -95,8 +95,8 @@ public struct Exchange: Codable, Identifiable, Equatable, Sendable {
     public private(set) var stage: ExchangeStage
     public private(set) var paymentMethod: MockPaymentMethod?
     public let createdAt: Date
-    public init(id: UUID = UUID(), listing: Listing, meeting: Date = Date(), stage: ExchangeStage = .reserved, createdAt: Date = Date()) {
-        self.id = id; self.listing = listing; self.meeting = meeting; self.stage = stage; self.createdAt = createdAt
+    public init(id: UUID = UUID(), listing: Listing, meeting: Date = Date(), stage: ExchangeStage = .reserved, paymentMethod: MockPaymentMethod? = nil, createdAt: Date = Date()) {
+        self.id = id; self.listing = listing; self.meeting = meeting; self.stage = stage; self.paymentMethod = paymentMethod; self.createdAt = createdAt
     }
     public var isFree: Bool { listing.priceCents == 0 }
     // Older saved exchanges predate method selection and used the default sample card.

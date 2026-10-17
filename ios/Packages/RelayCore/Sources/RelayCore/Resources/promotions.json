@@ -1,0 +1,82 @@
+[
+  {
+    "campus": "Alabama",
+    "status": "live",
+    "start": "",
+    "end": "",
+    "prompt": "",
+    "url": "https://www.ua.edu/",
+    "cta": "Explore campus",
+    "sample": true,
+    "id": "sample-alabama-reuse",
+    "title": "Good things get another go.",
+    "description": "A campus repair afternoon for well-loved things. Sample event, ready to make your own.",
+    "sponsor": "University of Alabama · sample campus partner",
+    "image": "/images/chair.jpg",
+    "kind": "Campus event",
+    "placements": [
+      "Discover",
+      "Exchanges"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "status": "live",
+    "start": "",
+    "end": "",
+    "prompt": "",
+    "url": "https://www.ua.edu/",
+    "cta": "Explore campus",
+    "sample": true,
+    "id": "sample-alabama-research",
+    "title": "Your perspective could shape what’s next.",
+    "description": "Make a little time for campus research. Sample opportunity; no live study enrollment.",
+    "sponsor": "University of Alabama · sample research partner",
+    "image": "/images/books.jpg",
+    "kind": "Research study",
+    "placements": [
+      "Campus board",
+      "My plans"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "status": "live",
+    "start": "",
+    "end": "",
+    "prompt": "",
+    "url": "https://www.auburn.edu/",
+    "cta": "Explore campus",
+    "sample": true,
+    "id": "sample-auburn-reuse",
+    "title": "Good things get another go.",
+    "description": "A campus repair afternoon for well-loved things. Sample event, ready to make your own.",
+    "sponsor": "Auburn University · sample campus partner",
+    "image": "/images/chair.jpg",
+    "kind": "Campus event",
+    "placements": [
+      "Discover",
+      "Exchanges"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "status": "live",
+    "start": "",
+    "end": "",
+    "prompt": "",
+    "url": "https://www.auburn.edu/",
+    "cta": "Explore campus",
+    "sample": true,
+    "id": "sample-auburn-research",
+    "title": "Your perspective could shape what’s next.",
+    "description": "Make a little time for campus research. Sample opportunity; no live study enrollment.",
+    "sponsor": "Auburn University · sample research partner",
+    "image": "/images/books.jpg",
+    "kind": "Research study",
+    "placements": [
+      "Campus board",
+      "My plans"
+    ]
+  }
+]

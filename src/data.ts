@@ -18,6 +18,7 @@ export type Product = {
   condition: string;
   location: string;
   campus: string;
+  courseCode?: string;
   tag?: string;
   description: string;
   checks: string[];

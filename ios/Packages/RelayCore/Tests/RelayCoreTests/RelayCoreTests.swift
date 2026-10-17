@@ -161,3 +161,48 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
     #expect(restored.stage == .fundsReady)
     #expect(restored.fundingMethod == .visa)
 }
+
+@Test func legacyCampusRequestsKeepTheirMeaning() throws {
+    let legacy = Data(#"{"id":"old-ask","title":"A small desk","budgetCents":5000,"person":"Jamie","category":"Dorm & living","campus":"Alabama"}"#.utf8)
+    let restored = try JSONDecoder().decode(CampusRequest.self, from: legacy)
+    #expect(restored.postIntent == .find)
+    #expect(restored.summary == "Up to $50")
+    #expect(restored.exchangeFor == nil)
+    #expect(restored.details == nil)
+}
+
+@Test func campusTradesAndServiceOffersSurvivePersistence() throws {
+    let posts = [
+        CampusRequest(title: "Chemistry textbook", budgetCents: 0, category: .books, campus: .alabama,
+                      intent: .trade, exchangeFor: "A desk lamp", details: "Available after lab on Monday."),
+        CampusRequest(title: "Calculus tutoring", budgetCents: 2000, category: .tutoring, campus: .alabama,
+                      intent: .offer, details: "$20 per hour at the library."),
+        CampusRequest(title: "A ride home", budgetCents: 0, category: .transport, campus: .alabama, intent: .find)
+    ]
+    let restored = try JSONDecoder().decode([CampusRequest].self, from: JSONEncoder().encode(posts))
+    #expect(restored == posts)
+    #expect(restored[0].summary == "For: A desk lamp")
+    #expect(restored[1].summary == "Asking $20")
+    #expect(restored[2].summary == "Budget flexible")
+}
+
+@Test func courseCatalogSeparatesUniversitiesAndExplainsRelevantFinds() throws {
+    #expect(UniversityCourse.courses(for: .alabama).contains { $0.code == "CS 100" })
+    #expect(!UniversityCourse.courses(for: .auburn).contains { $0.code == "CS 100" })
+    var listing = try paidListing()
+    listing.campus = .alabama; listing.courseCode = "CS 100"
+    #expect(UniversityCourse.reason(for: listing, campus: .alabama, codes: ["CS 100"])?.contains("For your CS 100") == true)
+    #expect(UniversityCourse.reason(for: listing, campus: .auburn, codes: ["CS 100"]) == nil)
+    #expect(UniversityCourse.reason(for: listing, campus: .alabama, codes: []) == nil)
+    listing.isOwnListing = true
+    #expect(UniversityCourse.reason(for: listing, campus: .alabama, codes: ["CS 100"]) == nil)
+}
+@Test func courseTagsPersistAndOldListingsRemainReadable() throws {
+    var listing = try paidListing()
+    listing.courseCode = "MATH 125"
+    let data = try JSONEncoder().encode(listing)
+    #expect(try JSONDecoder().decode(Listing.self, from: data).courseCode == "MATH 125")
+    var old = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    old.removeValue(forKey: "courseCode")
+    #expect(try JSONDecoder().decode(Listing.self, from: JSONSerialization.data(withJSONObject: old)).courseCode == nil)
+}

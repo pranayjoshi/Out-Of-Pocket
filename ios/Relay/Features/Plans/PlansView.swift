@@ -47,6 +47,7 @@ struct PlansView: View {
                         Text("When you’re ready, pass it on with fresh photos and an updated condition.").font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
                     }
                 }.padding(21).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 24))
+                CampusPromotionPlacement(placement: "My plans")
             }.foregroundStyle(RelayTheme.ink).padding(20).padding(.bottom, 20)
         }.background(RelayTheme.paper)
             .navigationTitle("My plans").navigationBarTitleDisplayMode(.inline)

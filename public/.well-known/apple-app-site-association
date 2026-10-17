@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.pranayjoshi.relay"],
+        "components": [
+          { "/": "/listing/*" },
+          { "/": "/profile/*" },
+          { "/": "/post/*" },
+          { "/": "/orders" },
+          { "/": "/orders/*" }
+        ]
+      }
+    ]
+  }
+}

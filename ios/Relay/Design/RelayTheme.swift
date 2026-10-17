@@ -115,7 +115,14 @@ struct ListingImage: View {
     let name: String
     var body: some View {
         Group {
-            if name.hasPrefix("local:"), let image = UIImage(contentsOfFile: RelayStore.photosDirectory.appending(path: String(name.dropFirst(6))).path) {
+            if name.hasPrefix("remote:"), let url = URL(string: String(name.dropFirst(7))) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image): image.resizable().scaledToFill()
+                    default: RelayTheme.soft
+                    }
+                }
+            } else if name.hasPrefix("local:"), let image = UIImage(contentsOfFile: RelayStore.photosDirectory.appending(path: String(name.dropFirst(6))).path) {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
                 Image(name).resizable().scaledToFill()

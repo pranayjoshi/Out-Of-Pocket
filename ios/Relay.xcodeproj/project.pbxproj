@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        AACC11000000000000000001 /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC11000000000000000002 /* MessagesView.swift */; };
+		AADD11000000000000000001 /* CampusPromotionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADD11000000000000000002 /* CampusPromotionView.swift */; };
 		17E33641F92C9450A5832240 /* RelayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */; };
 		1CD781CBDE070AB1DC90FDF9 /* ExchangesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B830ADEF91C6F0BDD11276E0 /* ExchangesView.swift */; };
 		3CD0EB069D059BC0ADFD5EAC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C9E5E90E859EA6BB468705F /* Assets.xcassets */; };
@@ -34,6 +36,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+        AACC11000000000000000002 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MessagesView.swift; path = Relay/Features/Messages/MessagesView.swift; sourceTree = SOURCE_ROOT; };
+		AADD11000000000000000002 /* CampusPromotionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CampusPromotionView.swift; path = Relay/Features/Promotions/CampusPromotionView.swift; sourceTree = SOURCE_ROOT; };
 		36C393911B87D9E64B2167E7 /* RelayTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayTheme.swift; sourceTree = "<group>"; };
 		4BA30EC96EF0AF2BD8DA9556 /* RelayRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayRootView.swift; sourceTree = "<group>"; };
 		5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayStore.swift; sourceTree = "<group>"; };
@@ -97,6 +101,8 @@
 			isa = PBXGroup;
 			children = (
 				36C393911B87D9E64B2167E7 /* RelayTheme.swift */,
+				AADD11000000000000000002 /* CampusPromotionView.swift */,
+                AACC11000000000000000002 /* MessagesView.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -317,6 +323,8 @@
 				58864E26CED4FC009148FA9B /* RelayRootView.swift in Sources */,
 				17E33641F92C9450A5832240 /* RelayStore.swift in Sources */,
 				9568D8186615CD87D281C0CA /* RelayTheme.swift in Sources */,
+				AADD11000000000000000001 /* CampusPromotionView.swift in Sources */,
+                AACC11000000000000000001 /* MessagesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -471,6 +479,7 @@
 		7CB4F2CB7DAEE9752ED1E360 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				INFOPLIST_FILE = LocalNetworking.plist;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;

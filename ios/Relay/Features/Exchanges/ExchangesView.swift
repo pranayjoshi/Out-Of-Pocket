@@ -9,11 +9,11 @@ struct ExchangesView: View {
             VStack(alignment: .leading, spacing: 24) {
                 SectionTitle(eyebrow: "FROM THEIR HANDS TO YOURS", title: "A little trust.\nA good exchange.")
                 Text("Clear steps. No guesswork. Your next handoff, all in one place.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
-                DemoNotice()
-                if store.snapshot.exchanges.isEmpty {
+                DemoNotice(text: store.usesSharedMarket ? "Shared reservations. Sandbox holds do not charge a bank." : "Sample handoffs stay on this device.")
+                if store.exchanges.isEmpty {
                     EmptyContent(symbol: "arrow.left.arrow.right", title: "It starts with a good find.", message: "Reserve a sample listing to explore the complete handoff, inspection, and payment journey.", actionTitle: "Find your next thing") { store.selectedTab = .discover }
                 }
-                ForEach(store.snapshot.exchanges) { exchange in
+                ForEach(store.exchanges) { exchange in
                     Button { selected = ExchangeDestination(id: exchange.id) } label: {
                         HStack(spacing: 15) {
                             ListingImage(name: exchange.listing.imageName).frame(width: 86, height: 107).clipped().clipShape(RoundedRectangle(cornerRadius: 17))
@@ -29,6 +29,7 @@ struct ExchangesView: View {
                             .background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 23))
                     }.buttonStyle(.plain)
                 }
+                CampusPromotionPlacement(placement: "Exchanges")
             }.padding(20).padding(.bottom, 20)
         }.background(RelayTheme.paper).navigationTitle("Exchanges").navigationBarTitleDisplayMode(.inline)
             .sheet(item: $selected) { ExchangeDetailView(exchangeID: $0.id) }
@@ -56,7 +57,7 @@ struct ExchangeDetailView: View {
                     if let exchange {
                         VStack(alignment: .leading, spacing: 23) {
                             SectionTitle(eyebrow: "THE RELAY HANDOFF", title: "A good find.\nA thoughtful exchange.")
-                            DemoNotice(text: "Payment playground. All money movements are simulated.")
+                            DemoNotice(text: store.usesSharedMarket ? "Sandbox payment. A hold is recorded here and does not charge a bank." : "Payment playground. All money movements are simulated.")
                             itemSummary(exchange)
                             progress(exchange)
                             moneySummary(exchange)
@@ -65,7 +66,7 @@ struct ExchangeDetailView: View {
                                 .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 10)))
                             if let error { Text(error).font(.subheadline).foregroundStyle(.red).accessibilityIdentifier("exchange-error") }
                             if exchange.stage.canCancel {
-                                Button(exchange.stage == .reserved ? "Cancel sample reservation" : "Reject item & cancel before payment") { advance(.cancel) }
+                                Button(store.usesSharedMarket ? "Cancel reservation" : (exchange.stage == .reserved ? "Cancel sample reservation" : "Reject item & cancel before payment")) { advance(.cancel) }
                                     .font(.subheadline).foregroundStyle(RelayTheme.secondary).frame(maxWidth: .infinity, minHeight: 46)
                                     .disabled(isProcessing)
                                     .accessibilityIdentifier("cancel-exchange")
@@ -135,27 +136,36 @@ struct ExchangeDetailView: View {
         case .reserved:
             actionHeading("FIRST, A LITTLE REASSURANCE", exchange.isFree ? "Kindness, passed on." : "Your money stays in your corner.")
             explanation(exchange.isFree ? "This find is free. Identify your partner and inspect the item. No card, payment, or transfer is needed." : "A card hold reserves funds near the meeting. It isn’t a completed payment, and the bank may take time to remove a canceled hold.")
-            if !exchange.isFree {
+            if !exchange.isFree && !store.usesSharedMarket {
                 paymentMethods
                 simulationControls
                 Text("Due now: $0 · mock hold: \(exchange.listing.price)\nMarketplace commission: $0. Payment is confirmed only after inspection and acceptance.")
                     .font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
             }
+            if store.usesSharedMarket && !exchange.isFree {
+                Text("Due now: $0 · sandbox hold: \(exchange.listing.price). The student fee is $0. Capture happens only after you inspect and accept.")
+                    .font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
+            }
             Button {
-                if exchange.isFree { advance(.prepareFunds) }
+                if exchange.isFree || store.usesSharedMarket { advance(.prepareFunds) }
                 else { simulate(.authorizeMock(method: paymentMethod, outcome: paymentOutcome)) }
             } label: {
-                paymentButtonLabel(exchange.isFree ? "Start a free handoff" : "Simulate \(exchange.listing.price) authorization")
-            }.buttonStyle(RelayPrimaryButton()).disabled(isProcessing).accessibilityIdentifier("prepare-exchange")
+                paymentButtonLabel(sharedReserveTitle(exchange))
+            }.buttonStyle(RelayPrimaryButton()).disabled(isProcessing || store.sharedReserveLocked(exchangeID)).accessibilityIdentifier("prepare-exchange")
         case .fundsReady:
             actionHeading("RIGHT PERSON. RIGHT EXCHANGE.", "Say hello. Check the code.")
-            explanation("Your partner’s sample code is 2418. This identifies the exchange; it does not accept the item or approve payment.")
-            TextField("Partner’s exchange code", text: $code).keyboardType(.numberPad).textContentType(.oneTimeCode)
-                .font(.system(size: 26, weight: .medium, design: .monospaced)).tracking(9).padding(17)
-                .background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14)).focused($codeFocused)
-                .accessibilityIdentifier("partner-code")
-                .onChange(of: code) { _, value in code = String(value.filter(\.isNumber).prefix(4)); error = nil }
-            Button("Identify this exchange") { advance(.identify(code: code)) }.buttonStyle(RelayPrimaryButton()).accessibilityIdentifier("identify-exchange")
+            if store.usesSharedMarket && store.isSeller(exchangeID) {
+                explanation("Issue a 6-digit code for this order. The buyer enters it. The code does not charge anyone.")
+                Button("Issue handoff code") { advance(.identify(code: "")) }.buttonStyle(RelayPrimaryButton()).accessibilityIdentifier("identify-exchange")
+            } else {
+                explanation(store.usesSharedMarket ? "Enter the seller’s 6-digit code. This identifies your partner and does not charge anyone." : "Your partner’s sample code is 2418. This identifies the exchange; it does not accept the item or approve payment.")
+                TextField("Partner’s exchange code", text: $code).keyboardType(.numberPad).textContentType(.oneTimeCode)
+                    .font(.system(size: 26, weight: .medium, design: .monospaced)).tracking(9).padding(17)
+                    .background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14)).focused($codeFocused)
+                    .accessibilityIdentifier("partner-code")
+                    .onChange(of: code) { _, value in code = String(value.filter(\.isNumber).prefix(store.usesSharedMarket ? 6 : 4)); error = nil }
+                Button("Identify this exchange") { advance(.identify(code: code)) }.buttonStyle(RelayPrimaryButton()).accessibilityIdentifier("identify-exchange")
+            }
         case .identified:
             actionHeading("TAKE YOUR TIME. LOOK IT OVER.", "Does it feel like the right find?")
             explanation("Test the item and compare it with the original listing. It’s okay to walk away before payment.")
@@ -175,12 +185,12 @@ struct ExchangeDetailView: View {
         case .inspected:
             actionHeading("YOUR CHOICE. YOUR CONFIRMATION.", "Ready for its next chapter?")
             explanation(exchange.isFree ? "You’ve inspected this free find. Confirm that you’re happy to accept it." : "You’ve inspected the item. In a real exchange, the seller keeps it until both screens show a successful payment.")
-            if !exchange.isFree { simulationControls }
+            if !exchange.isFree && !store.usesSharedMarket { simulationControls }
             Button {
-                if exchange.isFree { advance(.accept) }
+                if exchange.isFree || store.usesSharedMarket { advance(.accept) }
                 else { simulate(.captureMock(outcome: paymentOutcome)) }
             } label: {
-                paymentButtonLabel(exchange.isFree ? "Accept this free find" : "Accept & simulate \(exchange.listing.price) payment")
+                paymentButtonLabel(store.usesSharedMarket ? (exchange.isFree ? "Accept this free find" : "Accept and capture sandbox payment") : (exchange.isFree ? "Accept this free find" : "Accept & simulate \(exchange.listing.price) payment"))
             }.buttonStyle(RelayPrimaryButton()).disabled(isProcessing).accessibilityIdentifier("accept-exchange")
         case .completed:
             RoundIcon(symbol: "checkmark", size: 62)
@@ -251,6 +261,13 @@ struct ExchangeDetailView: View {
             Text(isProcessing ? "Processing demo…" : title)
         }
     }
+    private func sharedReserveTitle(_ exchange: Exchange) -> String {
+        guard store.usesSharedMarket else { return exchange.isFree ? "Start a free handoff" : "Simulate \(exchange.listing.price) authorization" }
+        if store.isSeller(exchangeID) { return store.sharedReserveLocked(exchangeID) ? "Waiting for the buyer" : "Confirm reservation" }
+        if store.sharedReserveLocked(exchangeID) { return "Waiting for the seller" }
+        if exchange.isFree { return "Continue to the pickup code" }
+        return "Authorize sandbox hold"
+    }
     private func simulate(_ event: ExchangeEvent) {
         guard !isProcessing else { return }
         isProcessing = true
@@ -264,7 +281,11 @@ struct ExchangeDetailView: View {
     }
     private func explanation(_ text: String) -> some View { Text(text).font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5) }
     private func advance(_ event: ExchangeEvent) {
-        do { try store.advance(exchangeID, event: event); error = nil }
-        catch { self.error = error.localizedDescription }
+        Task {
+            isProcessing = true
+            defer { isProcessing = false }
+            do { try await store.advance(exchangeID, event: event); error = nil }
+            catch { self.error = error.localizedDescription }
+        }
     }
 }

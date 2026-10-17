@@ -9,10 +9,16 @@ struct CreateListingView: View {
     @State private var price = ""
     @State private var details = ""
     @State private var category: RelayCore.Category = .dorm
+    @State private var courseCode = ""
     @State private var condition = "Good"
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
     @State private var photoError: String?
+    init(title: String = "", category: RelayCore.Category = .dorm) {
+        _title = State(initialValue: title)
+        _category = State(initialValue: category == .all ? .dorm : category)
+        _price = State(initialValue: category == .free ? "0" : "")
+    }
     private var valid: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && details.trimmingCharacters(in: .whitespacesAndNewlines).count >= 15 && Money.parse(price) != nil && (category != .free || Money.parse(price) == 0) }
     private var fallbackImage: String {
         switch category { case .tech: "headphones"; case .books: "books"; case .transport: "bike"; case .free: "plant"; default: "chair" }
@@ -39,8 +45,15 @@ struct CreateListingView: View {
                     FormField(label: "What are you passing on?", placeholder: "A chair with a lot of good stories…", text: $title)
                     HStack {
                         Text("Category").font(.subheadline.weight(.medium)); Spacer()
-                        Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }.tint(RelayTheme.forest)
+                        Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { ![.all, .tickets, .tutoring].contains($0) }) { Text($0.rawValue).tag($0) } }.tint(RelayTheme.forest)
                     }
+                    Picker("Class number (optional)", selection: $courseCode) {
+                        Text("Not tied to a class").tag("")
+                        ForEach(UniversityCourse.courses(for: store.campus)) { course in
+                            Text("\(course.code) — \(course.title)").tag(course.code)
+                        }
+                    }.tint(RelayTheme.forest)
+                    Text("Starter course catalog for \(store.campus.name).").font(.caption).foregroundStyle(RelayTheme.secondary)
                     FormField(label: "Price ($) · zero means free", placeholder: "35.00", text: $price).keyboardType(.decimalPad).disabled(category == .free)
                     HStack {
                         Text("Condition").font(.subheadline.weight(.medium)); Spacer()
@@ -53,8 +66,8 @@ struct CreateListingView: View {
                         Text("At least 15 characters. Leave personal contact details out.").font(.caption).foregroundStyle(RelayTheme.secondary)
                     }
                     if let photoError { Text(photoError).font(.caption).foregroundStyle(.red) }
-                    DemoNotice(text: photoData == nil ? "Saved only on this device. Without a photo, a sample image is used and labeled." : "Your photo and sample listing stay on this device. They are not uploaded.")
-                    Button("Publish sample listing") { publish() }.buttonStyle(RelayPrimaryButton()).disabled(!valid)
+                    DemoNotice(text: store.account == nil ? "Saved only on this device until you sign in." : "This publishes to the shared campus marketplace for other signed-in students.")
+                    Button(store.account == nil ? "Publish sample listing" : "Publish listing") { publish() }.buttonStyle(RelayPrimaryButton()).disabled(!valid)
                         .accessibilityIdentifier("publish-listing")
                 }.foregroundStyle(RelayTheme.ink).padding(22)
             }.background(RelayTheme.paper)
@@ -76,15 +89,24 @@ struct CreateListingView: View {
     }
     private func publish() {
         guard valid, let cents = Money.parse(price) else { return }
+        let listingTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let description = details.trimmingCharacters(in: .whitespacesAndNewlines)
+        let chosen = cents == 0 ? Category.free : category
+        if store.account != nil {
+            Task {
+                await store.publishRemote(title: listingTitle, category: chosen, priceCents: cents, description: description, photo: photoData)
+                dismiss()
+            }
+            return
+        }
         var imageName = fallbackImage
         if let photoData {
             do { imageName = try store.savePhoto(photoData) }
             catch { photoError = "This device couldn’t save the photo. Try again before publishing."; return }
         }
-        let listing = Listing(title: title.trimmingCharacters(in: .whitespacesAndNewlines), category: cents == 0 ? .free : category,
-                              priceCents: cents, imageName: imageName, condition: condition, campus: store.campus,
-                              tag: photoData == nil ? "Sample photo" : nil,
-                              description: details.trimmingCharacters(in: .whitespacesAndNewlines), isOwnListing: true)
+        let listing = Listing(title: listingTitle, category: chosen, priceCents: cents, imageName: imageName, condition: condition, campus: store.campus,
+                              tag: photoData == nil ? "Sample photo" : nil, description: description, isOwnListing: true,
+                              courseCode: UniversityCourse.courses(for: store.campus).contains(where: { $0.code == courseCode }) ? courseCode : nil)
         store.publish(listing); dismiss()
     }
 }

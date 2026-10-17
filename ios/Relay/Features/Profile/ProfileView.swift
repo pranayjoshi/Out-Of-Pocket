@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import RelayCore
 
 struct ProfileView: View {
@@ -6,6 +7,7 @@ struct ProfileView: View {
     @State private var showSafety = false
     @State private var showSaved = false
     @State private var showCreate = false
+    @State private var showSignIn = false
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
@@ -20,6 +22,8 @@ struct ProfileView: View {
                     stat("Exchanges", "\(store.snapshot.exchanges.count)", "arrow.left.arrow.right")
                 }
                 VStack(spacing: 0) {
+                    NavigationLink { ScheduleView() } label: { profileRow("Your classes", "Import a schedule. Find what fits.", "calendar") }
+                    Divider().padding(.leading, 59)
                     Button { showSaved = true } label: { profileRow("Your saved finds", "Worth coming back for.", "heart") }
                     Divider().padding(.leading, 59)
                     Button { showCreate = true } label: { profileRow("Pass something on", "Someone’s next favorite thing.", "plus.circle") }
@@ -41,10 +45,16 @@ struct ProfileView: View {
                 }.padding(21).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 23))
                 VStack(alignment: .leading, spacing: 13) {
                     Label("Made for your pace", systemImage: "hand.raised").font(.subheadline.weight(.semibold))
-                    Text("Relay follows your device’s light and dark appearance, Dynamic Type, and Reduce Motion settings. Photos you choose stay on this device.")
+                    Text("Relay follows your device’s light and dark appearance, Dynamic Type, and Reduce Motion settings. Listing photos stay on this device. Schedule screenshots are sent for AI processing only when you allow it.")
                         .font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
                 }.padding(21).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 23))
-                DemoNotice(text: "Local prototype · no sign-in, shared server, university verification, or real payments. Sample affiliations are not verified.")
+                if let account = store.account {
+                    DemoNotice(text: "Signed in as \(account.displayName). \(account.badge) The campus picker below is a browsing preference and does not change this membership.")
+                    Button("Sign out") { store.signOut() }.buttonStyle(RelayPrimaryButton())
+                } else {
+                    Button("Sign in with your university email") { showSignIn = true }.buttonStyle(RelayPrimaryButton())
+                    DemoNotice(text: "Unsigned, this app keeps a local sample catalog. Sign in to see the shared campus marketplace. Payments in the pilot are sandbox only.")
+                }
                 HStack { Spacer(); RelayWordmark(); Spacer() }.padding(.top, 5)
                 Text("A little less new. A little more you.").font(.caption).foregroundStyle(RelayTheme.secondary).frame(maxWidth: .infinity)
             }.foregroundStyle(RelayTheme.ink).padding(20).padding(.bottom, 25)
@@ -52,6 +62,7 @@ struct ProfileView: View {
             .navigationDestination(isPresented: $showSaved) { SavedFindsView() }
             .sheet(isPresented: $showSafety) { SafetyView() }
             .sheet(isPresented: $showCreate) { CreateListingView() }
+            .sheet(isPresented: $showSignIn) { SignInSheet() }
     }
     private func stat(_ name: String, _ value: String, _ symbol: String) -> some View {
         VStack(alignment: .leading, spacing: 11) {
@@ -124,5 +135,136 @@ struct SafetyView: View {
             }.background(RelayTheme.paper).navigationTitle("The Relay way").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }.presentationDragIndicator(.visible)
+    }
+}
+
+private struct ScheduleImportResult: Decodable {
+    var courses: [String]?
+    var unmatched: [String]?
+    var error: String?
+}
+struct ScheduleView: View {
+    @Environment(RelayStore.self) private var store
+    @State private var draft: Set<String> = []
+    @State private var photo: PhotosPickerItem?
+    @State private var imageData: Data?
+    @State private var consent = false
+    @State private var busy = false
+    @State private var message = ""
+    @State private var unmatched: [String] = []
+    @State private var importTask: Task<Void, Never>?
+    @State private var editingCampus: Campus = .alabama
+    var body: some View {
+        Form {
+            Section {
+                Text("Add classes at \(editingCampus.name) to personalize your finds. Review detected classes before saving.")
+                PhotosPicker("Choose schedule screenshot", selection: $photo, matching: .images).disabled(busy)
+                if imageData != nil { Label("Screenshot ready", systemImage: "checkmark.circle") }
+                Toggle("Allow sending this screenshot to OpenRouter and its model provider", isOn: $consent).disabled(busy)
+                Text("Crop out personal details first. Relay does not save this image. Only confirmed class codes stay on your device. Provider data policies apply to the uploaded image.").font(.caption).foregroundStyle(.secondary)
+                Button(busy ? "Reading schedule…" : "Read screenshot") {
+                    importTask = Task { await readSchedule() }
+                }.disabled(busy || imageData == nil || !consent)
+                if busy { ProgressView() }
+                if !message.isEmpty { Text(message).font(.subheadline).accessibilityIdentifier("schedule-status") }
+                if !unmatched.isEmpty { Text("Outside this starter catalog: " + unmatched.joined(separator: ", ")).font(.caption) }
+            } header: { Text("Your semester, sorted") }
+            Section("Review classes · starter catalog") {
+                ForEach(UniversityCourse.courses(for: editingCampus)) { course in
+                    Toggle(isOn: Binding(get: { draft.contains(course.code) }, set: { if $0 { draft.insert(course.code) } else { draft.remove(course.code) } })) {
+                        VStack(alignment: .leading) { Text(course.code).font(.subheadline.weight(.semibold)); Text(course.title).font(.caption) }
+                    }.disabled(busy)
+                }
+                Button("Save classes") { store.saveCourses(Array(draft), for: editingCampus); message = "Classes saved. Your For you finds now use these classes." }.disabled(busy)
+                Button("Clear classes", role: .destructive) { draft = []; store.saveCourses([], for: editingCampus); imageData = nil; consent = false; message = "Saved classes removed." }.disabled(busy)
+            }
+            Section { Text("Suggestions use course tags and listing keywords. Check your syllabus for required books, editions and supplies.").font(.caption) }
+        }.navigationTitle("Your classes").tint(RelayTheme.forest)
+            .onAppear { editingCampus = store.campus; draft = Set(store.courseCodes) }
+            .onDisappear { importTask?.cancel(); imageData = nil }
+            .task(id: photo) {
+                imageData = nil; consent = false
+                guard let photo else { return }
+                do {
+                    guard let data = try await photo.loadTransferable(type: Data.self), data.count <= 25 * 1024 * 1024,
+                          let image = UIImage(data: data), let jpeg = image.jpegData(compressionQuality: 0.75), jpeg.count <= 5 * 1024 * 1024 else {
+                        message = "Choose an image that can fit within 5 MB."; return
+                    }
+                    guard !Task.isCancelled else { return }
+                    imageData = jpeg; message = "Screenshot ready. Allow processing to read it."
+                } catch { message = "Could not open that screenshot." }
+            }
+    }
+    @MainActor private func readSchedule() async {
+        guard let imageData, consent else { return }
+        let configured = ProcessInfo.processInfo.environment["RELAY_SCHEDULE_URL"] ?? Bundle.main.object(forInfoDictionaryKey: "RelayScheduleURL") as? String
+        #if targetEnvironment(simulator)
+        let address = configured ?? "http://127.0.0.1:5174/api/schedule/import"
+        #else
+        guard let address = configured else { message = "Connect an HTTPS schedule service using RelayScheduleURL. You can choose classes manually."; return }
+        #endif
+        guard let url = URL(string: address), url.scheme == "https" || (url.scheme == "http" && ["localhost", "127.0.0.1"].contains(url.host ?? "")) else { message = "Configure a valid schedule service URL."; return }
+        busy = true; message = ""; unmatched = []
+        defer { busy = false }
+        do {
+            var request = URLRequest(url: url, timeoutInterval: 55)
+            request.httpMethod = "POST"; request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: ["campus": editingCampus.rawValue, "consent": true, "image": "data:image/jpeg;base64," + imageData.base64EncodedString()])
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard !Task.isCancelled else { return }
+            let result = try JSONDecoder().decode(ScheduleImportResult.self, from: data)
+            guard (response as? HTTPURLResponse)?.statusCode == 200, let codes = result.courses else { message = result.error ?? "Could not read this schedule."; return }
+            let allowed = Set(UniversityCourse.courses(for: editingCampus).map(\.code))
+            draft = Set(codes).intersection(allowed); unmatched = result.unmatched ?? []
+            self.imageData = nil; consent = false
+            message = draft.isEmpty ? "No supported classes found. Choose from the list below." : "Review the detected classes below, then save."
+        } catch { if !Task.isCancelled { message = "Schedule service unavailable. Try again or choose classes manually." } }
+    }
+}
+
+private struct SignInSheet: View {
+    @Environment(RelayStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var email = ""
+    @State private var code = ""
+    @State private var preview: String?
+    @State private var codeSent = false
+    @State private var message = "Use an approved university address, such as name@ua.edu or name@auburn.edu."
+    @State private var busy = false
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(message).font(.subheadline).foregroundStyle(RelayTheme.secondary)
+                TextField("University email", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(14).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+                if codeSent {
+                    TextField("6-digit code", text: $code).keyboardType(.numberPad)
+                        .padding(14).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+                    if let preview { Text("Local preview code: \(preview)").font(.caption).foregroundStyle(RelayTheme.secondary) }
+                }
+                Button(codeSent ? "Verify" : "Email a code") { submit() }
+                    .buttonStyle(RelayPrimaryButton()).disabled(busy || email.isEmpty || (codeSent && code.count < 6))
+                Spacer()
+            }.padding(22).background(RelayTheme.paper)
+                .navigationTitle("Sign in").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+        }
+    }
+    private func submit() {
+        busy = true
+        Task {
+            defer { busy = false }
+            do {
+                let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !codeSent {
+                    preview = try await store.requestCode(email: address)
+                    codeSent = true
+                    message = "Enter the code. On this computer it also appears here when the app is talking to localhost."
+                } else {
+                    try await store.verifyCode(email: address, code: code)
+                    dismiss()
+                }
+            } catch { message = error.localizedDescription }
+        }
     }
 }

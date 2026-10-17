@@ -14,6 +14,9 @@ public enum Category: String, CaseIterable, Codable, Identifiable, Sendable {
     case books = "Textbooks"
     case tech = "Tech"
     case transport = "Getting around"
+    case lab = "Lab supplies"
+    case tickets = "Tickets"
+    case tutoring = "Tutoring"
     case free = "Free stuff"
     public var id: String { rawValue }
     public var symbol: String {
@@ -23,7 +26,22 @@ public enum Category: String, CaseIterable, Codable, Identifiable, Sendable {
         case .books: "books.vertical"
         case .tech: "headphones"
         case .transport: "bicycle"
+        case .lab: "flask"
+        case .tickets: "ticket"
+        case .tutoring: "person.crop.rectangle.badge.plus"
         case .free: "gift"
+        }
+    }
+}
+
+public enum CampusIntent: String, CaseIterable, Codable, Identifiable, Sendable {
+    case find = "Find", offer = "Offer", trade = "Trade"
+    public var id: String { rawValue }
+    public var symbol: String {
+        switch self {
+        case .find: "magnifyingglass"
+        case .offer: "plus"
+        case .trade: "arrow.left.arrow.right"
         }
     }
 }
@@ -40,6 +58,7 @@ public struct Listing: Codable, Identifiable, Equatable, Sendable {
     public var condition: String
     public var location: String
     public var campus: Campus
+    public var courseCode: String?
     public var tag: String?
     public var description: String
     public var checks: [String]
@@ -52,7 +71,8 @@ public struct Listing: Codable, Identifiable, Equatable, Sendable {
                 initials: String = "Y", condition: String = "Good", location: String = "Public place to be agreed",
                 campus: Campus = .alabama, tag: String? = nil, description: String,
                 checks: [String] = ["Item matches the listing", "Condition and parts checked", "Comfortable accepting this item"],
-                isOwnListing: Bool = false) {
+                isOwnListing: Bool = false, courseCode: String? = nil) {
+        self.courseCode = courseCode
         self.id = id; self.title = title; self.category = category; self.priceCents = max(0, priceCents)
         self.originalPriceCents = originalPriceCents; self.imageName = imageName; self.seller = seller
         self.initials = initials; self.condition = condition; self.location = location; self.campus = campus
@@ -96,8 +116,22 @@ public struct CampusRequest: Codable, Identifiable, Equatable, Sendable {
     public var person: String
     public var category: Category
     public var campus: Campus
-    public init(id: String = UUID().uuidString, title: String, budgetCents: Int, person: String = "You", category: Category, campus: Campus) {
+    // Optional fields preserve requests saved before the campus switchboard existed.
+    public var intent: CampusIntent?
+    public var exchangeFor: String?
+    public var details: String?
+    public var postIntent: CampusIntent { intent ?? .find }
+    public var summary: String {
+        switch postIntent {
+        case .find: budgetCents == 0 ? "Budget flexible" : "Up to \(Money.format(budgetCents))"
+        case .offer: budgetCents == 0 ? "Price to agree" : "Asking \(Money.format(budgetCents))"
+        case .trade: "For: \(exchangeFor ?? "Open to offers")"
+        }
+    }
+    public init(id: String = UUID().uuidString, title: String, budgetCents: Int, person: String = "You", category: Category, campus: Campus,
+                intent: CampusIntent? = nil, exchangeFor: String? = nil, details: String? = nil) {
         self.id = id; self.title = title; self.budgetCents = budgetCents; self.person = person; self.category = category; self.campus = campus
+        self.intent = intent; self.exchangeFor = exchangeFor; self.details = details
     }
 }
 
@@ -136,12 +170,35 @@ public struct ListingQuery: Sendable {
             (category == .all || item.category == category) &&
             (!freeOnly || item.priceCents == 0) &&
             (!savedOnly || savedIDs.contains(item.id)) &&
-            (search.isEmpty || "\(item.title) \(item.category.rawValue) \(item.description)".localizedCaseInsensitiveContains(search))
+            (search.isEmpty || "\(item.title) \(item.category.rawValue) \(item.description) \(item.courseCode ?? "")".localizedCaseInsensitiveContains(search))
         }
         switch sort {
         case .recommended: return filtered
         case .priceLow: return filtered.sorted { $0.priceCents == $1.priceCents ? $0.id < $1.id : $0.priceCents < $1.priceCents }
         case .priceHigh: return filtered.sorted { $0.priceCents == $1.priceCents ? $0.id < $1.id : $0.priceCents > $1.priceCents }
         }
+    }
+}
+
+
+public struct UniversityCourse: Codable, Identifiable, Sendable {
+    public var campus: Campus
+    public var code: String
+    public var title: String
+    public var keywords: [String]
+    public var id: String { campus.rawValue + ":" + code }
+    public static let catalog: [UniversityCourse] = {
+        guard let url = Bundle.module.url(forResource: "courses", withExtension: "json"),
+              let data = try? Data(contentsOf: url), let courses = try? JSONDecoder().decode([UniversityCourse].self, from: data) else { return [] }
+        return courses
+    }()
+    public static func courses(for campus: Campus) -> [UniversityCourse] { catalog.filter { $0.campus == campus } }
+    public static func reason(for listing: Listing, campus: Campus, codes: [String]) -> String? {
+        guard listing.campus == campus, !listing.isOwnListing else { return nil }
+        let courses = courses(for: campus).filter { codes.contains($0.code) }
+        if let exact = courses.first(where: { $0.code == listing.courseCode }) { return "For your \(exact.code) class · check edition and requirements" }
+        let text = (listing.title + " " + listing.description).lowercased()
+        if let related = courses.first(where: { $0.keywords.contains(where: { text.contains($0) }) }) { return "May help with \(related.code) · based on listing details" }
+        return nil
     }
 }

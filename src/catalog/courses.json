@@ -1,0 +1,114 @@
+[
+  {
+    "campus": "Alabama",
+    "code": "CS 100",
+    "title": "CS I for Majors",
+    "keywords": [
+      "programming",
+      "computer",
+      "laptop"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "CS 101",
+    "title": "CS II for Majors",
+    "keywords": [
+      "programming",
+      "computer",
+      "laptop"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "MATH 112",
+    "title": "Precalculus Algebra",
+    "keywords": [
+      "algebra",
+      "calculator"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "MATH 125",
+    "title": "Calculus I",
+    "keywords": [
+      "calculus",
+      "calculator"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "MATH 126",
+    "title": "Calculus II",
+    "keywords": [
+      "calculus",
+      "calculator"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "EN 101",
+    "title": "English Composition",
+    "keywords": [
+      "writing",
+      "composition"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "code": "COMP 1210",
+    "title": "Fundamentals of Computing I",
+    "keywords": [
+      "programming",
+      "computer",
+      "laptop"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "code": "COMP 1220",
+    "title": "Introduction to Computing with Python",
+    "keywords": [
+      "python",
+      "programming",
+      "laptop"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "code": "MATH 1610",
+    "title": "Calculus I",
+    "keywords": [
+      "calculus",
+      "calculator"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "code": "MATH 1620",
+    "title": "Calculus II",
+    "keywords": [
+      "calculus",
+      "calculator"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "code": "ENGL 1100",
+    "title": "English Composition I",
+    "keywords": [
+      "writing",
+      "composition"
+    ]
+  },
+  {
+    "campus": "Auburn",
+    "code": "ENGL 1120",
+    "title": "English Composition II",
+    "keywords": [
+      "writing",
+      "composition"
+    ]
+  }
+]

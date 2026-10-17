@@ -1,0 +1,13 @@
+.schedule-panel { background: #f1f3e9; border: 1px solid #dce2cf; border-radius: 20px; padding: 22px; margin: 20px 0; color: #263f31; }
+.schedule-panel h3 { font-size: 24px; margin: 10px 0; }
+.schedule-panel p { line-height: 1.6; margin: 10px 0; }
+.schedule-panel input[type=file] { width: 100%; margin: 8px 0 14px; }
+.schedule-consent, .course-options label { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; margin: 12px 0; }
+.schedule-panel input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; accent-color: #365844; }
+.course-options { border: 1px solid #d4dacb; border-radius: 12px; margin: 18px 0; padding: 12px 16px; }
+.course-options legend { padding: 0 6px; font-size: 13px; }
+.schedule-note { font-size: 12px; color: #596953; }
+.schedule-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.schedule-preview { max-width: 100%; max-height: 160px; object-fit: contain; margin-bottom: 12px; }
+.course-context { color: #466b3d; font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.semester-nudge { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-radius: 18px; padding: 20px; background: #edf0e4; margin-bottom: 22px; }
