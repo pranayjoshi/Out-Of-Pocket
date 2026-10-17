@@ -36,7 +36,8 @@ struct DiscoverView: View {
                         }.buttonStyle(RelayPressStyle()).accessibilityIdentifier("home-\(service.rawValue)").relayEntrance(index + 1)
                     }
                 }
-                spotlight.relayEntrance(3)
+                BigAlEntryCard().relayEntrance(3)
+                spotlight.relayEntrance(4)
                 Button {
                     if store.unreadMessageCount > 0 { store.inboxPane = "messages"; store.selectedTab = .exchanges }
                     else { store.openActivity() }

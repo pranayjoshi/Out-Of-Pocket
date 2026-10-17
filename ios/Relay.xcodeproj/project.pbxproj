@@ -7,13 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-        AACC11000000000000000001 /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC11000000000000000002 /* MessagesView.swift */; };
-		BB11000000000000000001 /* RidesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11000000000000000002 /* RidesDemoView.swift */; };
-		AADD11000000000000000001 /* CampusPromotionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADD11000000000000000002 /* CampusPromotionView.swift */; };
+        BB11000000000000000001 /* RidesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11000000000000000002 /* RidesDemoView.swift */; };
+		1164B3EFB5F662C29F6486BF /* RelayStore+BigAl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */; };
 		17E33641F92C9450A5832240 /* RelayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */; };
 		1CD781CBDE070AB1DC90FDF9 /* ExchangesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B830ADEF91C6F0BDD11276E0 /* ExchangesView.swift */; };
+		2DECEF8E5E8F2436AD9DD65D /* BigAlSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1020BEFF116FCB9EE4A2D4C /* BigAlSheets.swift */; };
 		3CD0EB069D059BC0ADFD5EAC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C9E5E90E859EA6BB468705F /* Assets.xcassets */; };
+		445C6DC33544834F14B13A7E /* CampusPromotionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEB1E99AEC56A420E0B0212A /* CampusPromotionView.swift */; };
 		4900F6EF78F8F5B2F3228ECA /* RelayCore in Frameworks */ = {isa = PBXBuildFile; productRef = 34A01BA37C866FB0D8B61E8F /* RelayCore */; };
+		54B296BF82E8221115009F44 /* BigAlChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497B425814B6A3B6BCDD678D /* BigAlChatView.swift */; };
 		58864E26CED4FC009148FA9B /* RelayRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA30EC96EF0AF2BD8DA9556 /* RelayRootView.swift */; };
 		68CF540FCC1B65AEF0DB87FC /* ListingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64020BDC9D2CBB9DB9A26FCC /* ListingDetailView.swift */; };
 		8FA786DFC1BE92D673B6C986 /* CampusBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A709D9B9273767192FA4B757 /* CampusBoardView.swift */; };
@@ -21,8 +23,11 @@
 		9568D8186615CD87D281C0CA /* RelayTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C393911B87D9E64B2167E7 /* RelayTheme.swift */; };
 		9A4BB634D3E171AD7A825B65 /* RelayUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E7A997B5D969E134813EF8 /* RelayUITests.swift */; };
 		B5059A51D144C468B1843122 /* RelayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C54FA6D0E67AA81510F66A /* RelayApp.swift */; };
+		BDD076B618035F17DE4118CC /* BigAlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E0E70BD38AA0857AF84F73 /* BigAlView.swift */; };
 		C8F00FB386EA544863B2EB9C /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F00DD6B00F12E85AD8087E5 /* DiscoverView.swift */; };
+		CE4D35E3C4AEAB962D14D23C /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9E03FA1AEBCCE47ACE771D /* MessagesView.swift */; };
 		F066431F7409548F7B337187 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E327143A84D4C62FFA1190D /* ProfileView.swift */; };
+		F6EC9D8A91509ABEC8AE2EA3 /* AgentTradeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7AF48DEE59A258326F1A95 /* AgentTradeDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,10 +41,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-        AACC11000000000000000002 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MessagesView.swift; path = Relay/Features/Messages/MessagesView.swift; sourceTree = SOURCE_ROOT; };
-		BB11000000000000000002 /* RidesDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RidesDemoView.swift; path = Relay/Features/Rides/RidesDemoView.swift; sourceTree = SOURCE_ROOT; };
-		AADD11000000000000000002 /* CampusPromotionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CampusPromotionView.swift; path = Relay/Features/Promotions/CampusPromotionView.swift; sourceTree = SOURCE_ROOT; };
+        BB11000000000000000002 /* RidesDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RidesDemoView.swift; path = Relay/Features/Rides/RidesDemoView.swift; sourceTree = SOURCE_ROOT; };
+		007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RelayStore+BigAl.swift"; sourceTree = "<group>"; };
 		36C393911B87D9E64B2167E7 /* RelayTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayTheme.swift; sourceTree = "<group>"; };
+		497B425814B6A3B6BCDD678D /* BigAlChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigAlChatView.swift; sourceTree = "<group>"; };
 		4BA30EC96EF0AF2BD8DA9556 /* RelayRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayRootView.swift; sourceTree = "<group>"; };
 		5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayStore.swift; sourceTree = "<group>"; };
 		55B94FFD6C9EC54D8AE979C5 /* CreateListingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateListingView.swift; sourceTree = "<group>"; };
@@ -50,10 +55,15 @@
 		78E3AAA9D17440E2BC308FC0 /* RelayUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RelayUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F00DD6B00F12E85AD8087E5 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		A709D9B9273767192FA4B757 /* CampusBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CampusBoardView.swift; sourceTree = "<group>"; };
+		AE9E03FA1AEBCCE47ACE771D /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
+		AEB1E99AEC56A420E0B0212A /* CampusPromotionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CampusPromotionView.swift; sourceTree = "<group>"; };
+		B1020BEFF116FCB9EE4A2D4C /* BigAlSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigAlSheets.swift; sourceTree = "<group>"; };
 		B2640FB004F58617990C7498 /* Relay.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Relay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B830ADEF91C6F0BDD11276E0 /* ExchangesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangesView.swift; sourceTree = "<group>"; };
+		D1E0E70BD38AA0857AF84F73 /* BigAlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigAlView.swift; sourceTree = "<group>"; };
 		E33500C216AA29B911116E37 /* RelayCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RelayCore; path = Packages/RelayCore; sourceTree = SOURCE_ROOT; };
 		F8E7A997B5D969E134813EF8 /* RelayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayUITests.swift; sourceTree = "<group>"; };
+		FD7AF48DEE59A258326F1A95 /* AgentTradeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTradeDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,17 +78,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		01214BE75C45C2E1AD2E58F4 /* Promotions */ = {
+			isa = PBXGroup;
+			children = (
+				AEB1E99AEC56A420E0B0212A /* CampusPromotionView.swift */,
+			);
+			path = Promotions;
+			sourceTree = "<group>";
+		};
 		03B050AAD059E85D4F11F06C /* Features */ = {
 			isa = PBXGroup;
 			children = (
+                BB11000000000000000002 /* RidesDemoView.swift */,
 				AE4E3EB1FAA1EFE1564AF7F2 /* Campus */,
 				52C8CA1015D47708B8B65F0B /* Discover */,
 				A9015DF95D400524E1E6514C /* Exchanges */,
 				F0E08F1949F85D3C2C346182 /* Listing */,
+				1836BCC518F5DA8FA8774F41 /* Messages */,
 				90B5FB92E0039A35F49876E5 /* Profile */,
-				BB11000000000000000002 /* RidesDemoView.swift */,
+				01214BE75C45C2E1AD2E58F4 /* Promotions */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		1836BCC518F5DA8FA8774F41 /* Messages */ = {
+			isa = PBXGroup;
+			children = (
+				AE9E03FA1AEBCCE47ACE771D /* MessagesView.swift */,
+			);
+			path = Messages;
 			sourceTree = "<group>";
 		};
 		1BFBA766DE2B33272BBB2645 /* Resources */ = {
@@ -89,13 +117,10 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-
 		4A6CF1B679DBE375A82713FF /* Design */ = {
 			isa = PBXGroup;
 			children = (
 				36C393911B87D9E64B2167E7 /* RelayTheme.swift */,
-				AADD11000000000000000002 /* CampusPromotionView.swift */,
-                AACC11000000000000000002 /* MessagesView.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -139,6 +164,7 @@
 				75C54FA6D0E67AA81510F66A /* RelayApp.swift */,
 				4BA30EC96EF0AF2BD8DA9556 /* RelayRootView.swift */,
 				5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */,
+				007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -154,6 +180,10 @@
 		AE4E3EB1FAA1EFE1564AF7F2 /* Campus */ = {
 			isa = PBXGroup;
 			children = (
+				FD7AF48DEE59A258326F1A95 /* AgentTradeDetailView.swift */,
+				497B425814B6A3B6BCDD678D /* BigAlChatView.swift */,
+				B1020BEFF116FCB9EE4A2D4C /* BigAlSheets.swift */,
+				D1E0E70BD38AA0857AF84F73 /* BigAlView.swift */,
 				A709D9B9273767192FA4B757 /* CampusBoardView.swift */,
 			);
 			path = Campus;
@@ -305,19 +335,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+                BB11000000000000000001 /* RidesDemoView.swift in Sources */,
+				F6EC9D8A91509ABEC8AE2EA3 /* AgentTradeDetailView.swift in Sources */,
+				54B296BF82E8221115009F44 /* BigAlChatView.swift in Sources */,
+				2DECEF8E5E8F2436AD9DD65D /* BigAlSheets.swift in Sources */,
+				BDD076B618035F17DE4118CC /* BigAlView.swift in Sources */,
 				8FA786DFC1BE92D673B6C986 /* CampusBoardView.swift in Sources */,
+				445C6DC33544834F14B13A7E /* CampusPromotionView.swift in Sources */,
 				956136FAE2B2BDF9DDD1C5DF /* CreateListingView.swift in Sources */,
 				C8F00FB386EA544863B2EB9C /* DiscoverView.swift in Sources */,
 				1CD781CBDE070AB1DC90FDF9 /* ExchangesView.swift in Sources */,
 				68CF540FCC1B65AEF0DB87FC /* ListingDetailView.swift in Sources */,
+				CE4D35E3C4AEAB962D14D23C /* MessagesView.swift in Sources */,
 				F066431F7409548F7B337187 /* ProfileView.swift in Sources */,
 				B5059A51D144C468B1843122 /* RelayApp.swift in Sources */,
 				58864E26CED4FC009148FA9B /* RelayRootView.swift in Sources */,
+				1164B3EFB5F662C29F6486BF /* RelayStore+BigAl.swift in Sources */,
 				17E33641F92C9450A5832240 /* RelayStore.swift in Sources */,
 				9568D8186615CD87D281C0CA /* RelayTheme.swift in Sources */,
-				AADD11000000000000000001 /* CampusPromotionView.swift in Sources */,
-                AACC11000000000000000001 /* MessagesView.swift in Sources */,
-				BB11000000000000000001 /* RidesDemoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -472,10 +507,10 @@
 		7CB4F2CB7DAEE9752ED1E360 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = LocalNetworking.plist;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocalNetworking.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Relay;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

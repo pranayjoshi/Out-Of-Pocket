@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import { createCampaignHandler } from "./server/campaigns-api.mjs";
 import { createAdsHandler } from "./server/ads-api.mjs";
 import { createScheduleHandler } from "./server/schedule-api.mjs";
+import { createAgentHandler } from "./server/agent-api.mjs";
 
 let apiProcess: ChildProcess | null = null;
 let spawnedApi = false;
@@ -32,6 +33,7 @@ export default defineConfig(({ mode }) => {
   const install = async (server: { middlewares: { use: (handler: ReturnType<typeof createAdsHandler>) => void } }) => {
     await ensureMarketplaceApi();
     server.middlewares.use(createScheduleHandler({ apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_SCHEDULE_MODEL || "google/gemini-2.5-flash-lite" }));
+    server.middlewares.use(createAgentHandler({ apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_AGENT_MODEL || "openai/gpt-4.1-mini" }));
     server.middlewares.use(createCampaignHandler());
     server.middlewares.use(createAdsHandler({ apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_IMAGE_MODEL || "black-forest-labs/flux.2-klein-4b" }));
     const http = "httpServer" in server ? (server as { httpServer?: { on: (event: string, listener: () => void) => void } }).httpServer : undefined;

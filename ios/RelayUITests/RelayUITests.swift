@@ -6,6 +6,65 @@ final class RelayUITests: XCTestCase {
     }
 
     @MainActor
+    func testBigAlTradeFromHomePreservesExploreServices() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        let entry = app.buttons["bigal-entry"]
+        XCTAssertTrue(entry.waitForExistence(timeout: 10))
+        entry.tap()
+        XCTAssertTrue(app.buttons["bigal-open-trade"].waitForExistence(timeout: 5))
+        app.buttons["bigal-open-trade"].tap()
+        let item = app.textFields["bigal-item"]
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        item.tap(); item.typeText("Artificial Intelligence: A Modern Approach")
+        app.buttons["bigal-submit-trade"].tap()
+        XCTAssertTrue(app.staticTexts["Ready for you"].waitForExistence(timeout: 15))
+        let trade = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "bigal-trade-")).firstMatch
+        scrollTo(trade, in: app); trade.tap()
+        let lock = app.buttons["bigal-lock"]
+        scrollTo(lock, in: app)
+        XCTAssertTrue(lock.isEnabled)
+        saveScreenshot("bigal-deal-ready")
+        lock.tap()
+        let confirm = app.buttons["bigal-confirm-lock"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(app.buttons["Undo lock-in"].waitForExistence(timeout: 5))
+        let messages = app.buttons["bigal-message-seller"]
+        scrollTo(messages, in: app); messages.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["message-input"].firstMatch.waitForExistence(timeout: 5))
+        app.tabBars.buttons["Explore"].tap()
+        XCTAssertTrue(app.buttons["service-Tutoring"].waitForExistence(timeout: 5))
+        app.buttons["service-Tickets"].tap()
+        XCTAssertTrue(app.staticTexts["Your way in."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.tabBars.buttons["My plans"].exists)
+    }
+
+    @MainActor
+    func testBigAlAvailableFromMarketAndScheduleReview() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        app.tabBars.buttons["Explore"].tap()
+        app.buttons["service-Market"].tap()
+        app.buttons["bigal-entry"].tap()
+        app.buttons["bigal-schedule"].tap()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap(); search.typeText("CS 465")
+        let course = app.buttons.containing(.staticText, identifier: "CS 465").firstMatch
+        XCTAssertTrue(course.waitForExistence(timeout: 5))
+        course.tap()
+        app.buttons["Find materials for 1 class"].tap()
+        XCTAssertTrue(app.staticTexts["1 item for 1 class"].waitForExistence(timeout: 5))
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["bigal-chat"].waitForExistence(timeout: 5))
+        app.buttons["bigal-chat"].tap()
+        XCTAssertTrue(app.staticTexts["Your buying agent · same rules for every student"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testCampusPromotionSampleAndDismissal() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]

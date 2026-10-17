@@ -162,6 +162,7 @@ struct MarketplaceView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 ServiceHeading(service: .market, title: "Good finds. Close by.", subtitle: "A new chapter for someone’s old favorite.")
+                BigAlEntryCard()
                 RelaySearchField(placeholder: "Search campus finds", text: $search)
                 HStack {
                     Menu {

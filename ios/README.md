@@ -57,7 +57,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 
 The app has four destinations, each with one purpose:
 
-- **Home:** a campus hub with direct entry to tutoring, tickets, and rides, a ticket spotlight, activity shortcut, tutor preview, classes, and a secondary marketplace entry.
+- **Home:** Big Al’s campus buying agent plus a campus hub with direct entry to tutoring, tickets, and rides, a ticket spotlight, activity shortcut, tutor preview, classes, and a secondary marketplace entry.
 - **Explore:** a persistent service selector for **Tutoring / Tickets / Rides / Market**. Tutoring supports course/name search, subject filters, saved tutor profiles, conversations, and local study requests/offers. Tickets show event cards, available inventory, reservation and transfer progress. Rides include pickup/destination selection, departure windows, seat requests, driver responses, ride posting, and an Uber handoff. Market retains item search, categories, sorting, free/cross-campus filters, asks, and trades.
 - **Inbox:** Messages, Activity, and Handoffs. Ride and ticket activity opens the corresponding trip or order. Tutor conversations discuss sessions without item handoff or checkout controls.
 - **You:** saved tutors and finds, classes, your posts, campus preferences, sign-in, and safety information.
@@ -88,9 +88,9 @@ Future real payments must execute server-side with verified provider webhooks, a
 
 ## Checks and CI
 
-`RelayCore` has 34 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, conversation validation, negotiation turns and stale offers, free-item negotiation, agreed prices, unread counts, and persistence round trips.
+`RelayCore` has 40 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, conversation validation, negotiation turns and stale offers, free-item negotiation, agreed prices, unread counts, and persistence round trips.
 
-`RelayUITests` covers service navigation, tutor search/save/messaging, study requests, activity shortcuts, promotions, offer negotiation, mandatory inspection, cancellation, and mock payment decline/retry. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
+`RelayUITests` covers Big Al entry points, course-material review, trade approval and conversations, service navigation, tutor search/save/messaging, study requests, activity shortcuts, promotions, offer negotiation, mandatory inspection, cancellation, and mock payment decline/retry. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
 
 The SwiftUI app has no external dependencies. `RelayCore` is a local Swift package shared by the app and its domain tests. Product photography is bundled for offline use; see the repository README for source identifiers.
 
@@ -107,3 +107,9 @@ For a physical phone or hosted API, configure the full HTTPS feed URL through th
 Open **You → Your classes** or the classes link on Home. Choose a schedule screenshot, allow processing through OpenRouter, review classes, then save. Manual selection works offline. Classes are stored locally by university and can be cleared. Listing creation includes an optional university course picker, and Tutoring supports course search, and marketplace listings retain their optional course tags.
 
 Run the Vite service on port 5174 with server-only `OPENROUTER_API_KEY`; the simulator imports through `/api/schedule/import`. Physical devices need a hosted HTTPS endpoint configured through `RELAY_SCHEDULE_URL` or `RelayScheduleURL` in Info.plist. `OPENROUTER_SCHEDULE_MODEL` defaults to `google/gemini-2.5-flash-lite`. Relay does not persist schedule images; the selected screenshot is sent to OpenRouter and its provider only after consent. The course catalog is a starter subset of Alabama/Auburn offerings; unsupported detected codes are reported rather than silently assigned to another course.
+
+## Big Al campus buying agent
+
+Open **Buy with Big Al** on Home or in **Explore → Market**. It includes course-material review, item requests, simulated price negotiations, approval, local conversation transcripts, and trade management. The four main destinations and tutoring/tickets/rides service selector are preserved; My Plan remains removed. Buying-agent negotiation and meetup data are demos, and schedule-photo selection currently loads the labeled sample schedule rather than extracting the image. Select courses manually for your actual schedule.
+
+Optional AI chat uses the server-only `OPENROUTER_API_KEY` and `OPENROUTER_AGENT_MODEL` through `/api/agent/chat`. Set `RELAY_AGENT_URL` / `RelayAgentURL` for a hosted service; the simulator defaults to localhost port 5174. Without the chat service, manual requests and local negotiations still work. Tutor and ticket listings are excluded from the item-buying pool.

@@ -110,5 +110,66 @@
       "writing",
       "composition"
     ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "CS 495",
+    "title": "Capstone Computing",
+    "keywords": [
+      "capstone",
+      "architecture",
+      "web",
+      "design"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "CS 460",
+    "title": "Intro to Autonomous Robotics",
+    "keywords": [
+      "robotics",
+      "arduino",
+      "robot",
+      "sensor"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "CS 465",
+    "title": "Artificial Intelligence",
+    "keywords": [
+      "artificial",
+      "intelligence",
+      "ai"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "CS 470",
+    "title": "Computer Algorithms",
+    "keywords": [
+      "algorithms",
+      "algorithm"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "GES 255",
+    "title": "Engineering Statistics I",
+    "keywords": [
+      "statistics",
+      "probability",
+      "calculator"
+    ]
+  },
+  {
+    "campus": "Alabama",
+    "code": "AY 101",
+    "title": "Intro To Astronomy",
+    "keywords": [
+      "astronomy",
+      "cosmic",
+      "telescope"
+    ]
   }
 ]

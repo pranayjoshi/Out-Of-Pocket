@@ -54,6 +54,21 @@ The iOS app keeps its local sample catalog until you sign in. After sign-in it r
 
 Product and room imagery is sourced from Unsplash and stored locally for reliable preview rendering. Images are illustrative, not evidence of actual student inventory. Original image identifiers: `photo-1598300042247-d088f8ab3a91`, `photo-1507473885765-e6ed057f782c`, `photo-1543002588-bfa74002ed7e`, `photo-1546435770-a3e426bf472b`, `photo-1485965120184-e220f721d03e`, `photo-1485955900006-10f4d324d411`, `photo-1516035069371-29a1b244cc32`, and `photo-1616486338812-3dadae4b4ace`.
 
+Big Al sample listings and avatar in the iOS app (`ios/Relay/Resources/Assets.xcassets/bigal-*`):
+
+- `bigal-avatar`: The Redstone Rocket (US Army), public domain, [Flickr](https://www.flickr.com/photos/198124246@N07/54947655430)
+- `bigal-ti84`: Asimzb, CC BY, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:TI-84_Plus_graphing.jpg)
+- `bigal-arduino`: Snootlab, CC BY 2.0, [Flickr](https://www.flickr.com/photos/snootlab/6052455554)
+- `bigal-hfweb`: steakpinball, CC BY 2.0, [Flickr](https://www.flickr.com/photos/steakpinball/2218263580)
+- `bigal-clrs`: katalicia1, CC BY 2.0, [Flickr](https://www.flickr.com/photos/56352515@N00/5013251461)
+- `bigal-aima`: cowlet, CC BY 2.0, [Flickr](https://www.flickr.com/photos/17189662@N00/354911838)
+- `bigal-stats`: basykes, CC BY 2.0, [Flickr](https://www.flickr.com/photos/11399912@N00/12509097)
+- `bigal-cosmic`: alexbrn, CC BY 2.0, [Flickr](https://www.flickr.com/photos/alexbrn/4631428861)
+
+## Big Al campus buying agent
+
+Open **Buy with Big Al** from iOS Home or **Explore → Market**. The four destinations and tutoring/tickets/rides navigation remain available. Select a schedule screenshot to try the labeled sample Alabama schedule (the image is not processed), or pick your actual classes manually, approve the listed materials with optional per-item maxes or a total budget, or open a trade for anything. Big Al picks the best listing and negotiates under your max on the phone (`RelayCore/BigAl.swift`), mirrors the negotiation into an Inbox thread, and waits for you to lock it in. The chat calls `POST /api/agent/chat` on the Vite server, which uses `OPENROUTER_API_KEY` and `OPENROUTER_AGENT_MODEL` (default `openai/gpt-4.1-mini`).
+
 ## University ads portal
 
 Open `/admin/ads` in the React app, or choose **University ads portal** in the sidebar. The portal follows Relay’s paper-and-green design and supports events, studies, university services, and campus opportunities.
