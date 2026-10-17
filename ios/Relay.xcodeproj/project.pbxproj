@@ -10,9 +10,11 @@
 		1164B3EFB5F662C29F6486BF /* RelayStore+BigAl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */; };
 		17E33641F92C9450A5832240 /* RelayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */; };
 		1CD781CBDE070AB1DC90FDF9 /* ExchangesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B830ADEF91C6F0BDD11276E0 /* ExchangesView.swift */; };
+		1DE41A4806FB2625E38F964F /* TradeCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5065D0CC00090B610263A9 /* TradeCircleView.swift */; };
 		2DECEF8E5E8F2436AD9DD65D /* BigAlSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1020BEFF116FCB9EE4A2D4C /* BigAlSheets.swift */; };
 		3CD0EB069D059BC0ADFD5EAC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C9E5E90E859EA6BB468705F /* Assets.xcassets */; };
 		445C6DC33544834F14B13A7E /* CampusPromotionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEB1E99AEC56A420E0B0212A /* CampusPromotionView.swift */; };
+		46E80D3F1AEAEEF59F1F850A /* RelayStore+Circles.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3DA40BA48F3A66D15A1D05B /* RelayStore+Circles.swift */; };
 		4900F6EF78F8F5B2F3228ECA /* RelayCore in Frameworks */ = {isa = PBXBuildFile; productRef = 34A01BA37C866FB0D8B61E8F /* RelayCore */; };
 		54B296BF82E8221115009F44 /* BigAlChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497B425814B6A3B6BCDD678D /* BigAlChatView.swift */; };
 		57CBD6AC4B28C8F30D6D47CD /* PlansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCAB9FDC93C86D54C999573 /* PlansView.swift */; };
@@ -61,6 +63,8 @@
 		B2640FB004F58617990C7498 /* Relay.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Relay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B830ADEF91C6F0BDD11276E0 /* ExchangesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangesView.swift; sourceTree = "<group>"; };
 		D1E0E70BD38AA0857AF84F73 /* BigAlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigAlView.swift; sourceTree = "<group>"; };
+		D3DA40BA48F3A66D15A1D05B /* RelayStore+Circles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RelayStore+Circles.swift"; sourceTree = "<group>"; };
+		DE5065D0CC00090B610263A9 /* TradeCircleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeCircleView.swift; sourceTree = "<group>"; };
 		E33500C216AA29B911116E37 /* RelayCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RelayCore; path = Packages/RelayCore; sourceTree = SOURCE_ROOT; };
 		F8E7A997B5D969E134813EF8 /* RelayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayUITests.swift; sourceTree = "<group>"; };
 		FD7AF48DEE59A258326F1A95 /* AgentTradeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTradeDetailView.swift; sourceTree = "<group>"; };
@@ -173,6 +177,7 @@
 				4BA30EC96EF0AF2BD8DA9556 /* RelayRootView.swift */,
 				5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */,
 				007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */,
+				D3DA40BA48F3A66D15A1D05B /* RelayStore+Circles.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -193,6 +198,7 @@
 				B1020BEFF116FCB9EE4A2D4C /* BigAlSheets.swift */,
 				D1E0E70BD38AA0857AF84F73 /* BigAlView.swift */,
 				A709D9B9273767192FA4B757 /* CampusBoardView.swift */,
+				DE5065D0CC00090B610263A9 /* TradeCircleView.swift */,
 			);
 			path = Campus;
 			sourceTree = "<group>";
@@ -359,8 +365,10 @@
 				B5059A51D144C468B1843122 /* RelayApp.swift in Sources */,
 				58864E26CED4FC009148FA9B /* RelayRootView.swift in Sources */,
 				1164B3EFB5F662C29F6486BF /* RelayStore+BigAl.swift in Sources */,
+				46E80D3F1AEAEEF59F1F850A /* RelayStore+Circles.swift in Sources */,
 				17E33641F92C9450A5832240 /* RelayStore.swift in Sources */,
 				9568D8186615CD87D281C0CA /* RelayTheme.swift in Sources */,
+				1DE41A4806FB2625E38F964F /* TradeCircleView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

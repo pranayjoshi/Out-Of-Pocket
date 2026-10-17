@@ -21,6 +21,7 @@ struct AppSnapshot: Codable {
     var agentTrades: [AgentTrade]?
     var agentBudgetCents: Int?
     var agentChat: [AgentChatMessage]?
+    var agentSwaps: [AgentSwap]?
 }
 
 enum RelayTab: String, CaseIterable, Identifiable {
