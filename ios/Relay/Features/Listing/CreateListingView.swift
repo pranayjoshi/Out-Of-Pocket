@@ -13,7 +13,7 @@ struct CreateListingView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
     @State private var photoError: String?
-    private var valid: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && details.trimmingCharacters(in: .whitespacesAndNewlines).count >= 15 && Money.parse(price) != nil }
+    private var valid: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && details.trimmingCharacters(in: .whitespacesAndNewlines).count >= 15 && Money.parse(price) != nil && (category != .free || Money.parse(price) == 0) }
     private var fallbackImage: String {
         switch category { case .tech: "headphones"; case .books: "books"; case .transport: "bike"; case .free: "plant"; default: "chair" }
     }
@@ -41,7 +41,7 @@ struct CreateListingView: View {
                         Text("Category").font(.subheadline.weight(.medium)); Spacer()
                         Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }.tint(RelayTheme.forest)
                     }
-                    FormField(label: "Price ($) · zero means free", placeholder: "35.00", text: $price).keyboardType(.decimalPad)
+                    FormField(label: "Price ($) · zero means free", placeholder: "35.00", text: $price).keyboardType(.decimalPad).disabled(category == .free)
                     HStack {
                         Text("Condition").font(.subheadline.weight(.medium)); Spacer()
                         Picker("Condition", selection: $condition) { ForEach(["Like new", "Good", "Well-loved", "Needs repair"], id: \.self) { Text($0) } }.tint(RelayTheme.forest)
@@ -61,6 +61,7 @@ struct CreateListingView: View {
                 .navigationTitle("Pass something on").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
                 .scrollDismissesKeyboard(.interactively)
+                .onChange(of: category) { _, value in if value == .free { price = "0" } }
                 .task(id: photoItem) {
                     guard let photoItem else { return }
                     do {

@@ -217,7 +217,8 @@ struct CampusHero: View {
                 }
             }
         }.padding(22).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 28))
-        .task {
+        .task(id: reduceMotion) {
+            withAnimation(nil) { float = false }
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) { float = true }
         }

@@ -17,7 +17,17 @@ enum RelayTheme {
     static let onForest = adaptive(0xFCFFF4, 0x18321F)
     static let accent = adaptive(0x7C9459, 0xB4D08D)
     static func eventColor(_ theme: String) -> Color { theme == "peach" ? peach : theme == "lavender" ? lavender : lime }
-    static func heading(_ size: CGFloat) -> Font { .system(size: size, weight: .semibold, design: .rounded) }
+    static func heading(_ size: CGFloat) -> Font {
+        let style: Font.TextStyle
+        switch size {
+        case 32...: style = .largeTitle
+        case 28..<32: style = .title
+        case 24..<28: style = .title2
+        case 20..<24: style = .title3
+        default: style = .headline
+        }
+        return .system(style, design: .rounded, weight: .semibold)
+    }
     static func adaptive(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(uiColor: UIColor { trait in
             let hex = trait.userInterfaceStyle == .dark ? dark : light

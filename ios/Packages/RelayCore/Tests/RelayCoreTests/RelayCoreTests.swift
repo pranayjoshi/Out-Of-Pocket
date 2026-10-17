@@ -93,6 +93,10 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
     #expect(Money.parse("19.95") == 1995)
     #expect(Money.parse("19.999") == nil)
     #expect(Money.parse("-1") == nil)
+    #expect(Money.parse("19oops") == nil)
+    #expect(Money.parse("19,95") == nil)
+    #expect(Money.parse("1e2") == nil)
+    #expect(Money.parse(" 19.95 ") == 1995)
 }
 @Test func exchangeSurvivesPersistenceRoundTrip() throws {
     var exchange = Exchange(listing: try paidListing())

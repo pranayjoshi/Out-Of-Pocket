@@ -66,7 +66,9 @@ public enum Money {
         return amount.formatted(.currency(code: "USD").precision(cents % 100 == 0 ? .fractionLength(0) : .fractionLength(2)))
     }
     public static func parse(_ string: String) -> Int? {
-        guard let amount = Decimal(string: string, locale: Locale(identifier: "en_US_POSIX")),
+        let input = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard input.range(of: #"^[0-9]+(?:\.[0-9]{1,2})?$"#, options: .regularExpression) != nil,
+              let amount = Decimal(string: input, locale: Locale(identifier: "en_US_POSIX")),
               amount >= 0, amount <= 10_000 else { return nil }
         let cents = amount * 100
         let number = NSDecimalNumber(decimal: cents)
