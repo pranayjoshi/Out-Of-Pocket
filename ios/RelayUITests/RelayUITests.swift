@@ -10,7 +10,7 @@ final class RelayUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Your campus,\nin circulation."].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["discovery-intro"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.tabBars.buttons["Discover"].exists)
         XCTAssertTrue(app.tabBars.buttons["My plans"].exists)
         saveScreenshot("01-discover")

@@ -30,9 +30,18 @@ jobs:
           echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
           xcrun simctl boot "$DEVICE_ID" || true
           xcrun simctl bootstatus "$DEVICE_ID" -b
-      - name: Build and run the native UI tests
+      - name: Build the native app and test runner
+        id: build
         run: |
-          xcodebuild test \
+          xcodebuild build-for-testing \
+            -project ios/Relay.xcodeproj \
+            -scheme Relay \
+            -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Run the native UI tests
+        run: |
+          xcodebuild test-without-building \
             -project ios/Relay.xcodeproj \
             -scheme Relay \
             -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' \
@@ -41,12 +50,13 @@ jobs:
             -resultBundlePath ios/TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
       - name: Capture the native app
-        if: success()
+        if: always() && steps.build.conclusion == 'success'
         run: |
           DEVICE_ID='${{ steps.simulator.outputs.device_id }}'
           xcrun simctl install "$DEVICE_ID" ios/build/Build/Products/Debug-iphonesimulator/Relay.app
           xcrun simctl status_bar "$DEVICE_ID" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
           xcrun simctl ui "$DEVICE_ID" appearance light
+          xcrun simctl terminate "$DEVICE_ID" com.pranayjoshi.relay || true
           xcrun simctl launch "$DEVICE_ID" com.pranayjoshi.relay -ui-testing
           sleep 3
           mkdir -p ios/screenshots

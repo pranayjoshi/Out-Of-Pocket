@@ -100,7 +100,7 @@ struct DiscoverView: View {
             Text("Your campus,\nin circulation.").font(RelayTheme.heading(33)).tracking(-1.5).foregroundStyle(RelayTheme.ink)
             Text("Find your thing. Meet your people. Pass it on.")
                 .font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(3)
-        }.accessibilityElement(children: .combine)
+        }.accessibilityElement(children: .combine).accessibilityIdentifier("discovery-intro")
     }
     private var campusMenu: some View {
         Menu {
