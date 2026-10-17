@@ -33,7 +33,7 @@ struct RelayRootView: View {
                 try? await Task.sleep(for: .seconds(30))
             }
         }
-        .task { store.resumeAgentTrades() }
+        .task { store.resumeAgentTrades(); store.resumeSwaps() }
         .onOpenURL { store.open(url: $0) }
         .sheet(item: $store.deepLink) { link in
             if let listing = store.listings.first(where: { $0.id == link.id }) {

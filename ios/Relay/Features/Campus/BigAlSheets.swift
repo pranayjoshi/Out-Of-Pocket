@@ -201,53 +201,63 @@ struct ScheduleTradesSheet: View {
     }
 }
 
-/// A trade for anything, not just class materials.
+/// A trade for anything, not just class materials: buy it, or swap for it in a trading circle.
 struct OpenTradeSheet: View {
+    enum Mode: String, CaseIterable { case buy = "Buy", swap = "Swap" }
     @Environment(RelayStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var mode: Mode
     @State private var item = ""
     @State private var maxText = ""
-    @FocusState private var focused: Bool
+    @State private var gives = ""
+    @FocusState private var focused: String?
+    init(mode: Mode = .buy) { _mode = State(initialValue: mode) }
 
     private var suggestions: [String] {
+        if mode == .swap {
+            // What other students are offering, so a circle can actually form.
+            return Array(Set(store.swapPool.filter { $0.campus == store.campus }.map(\.gives))).sorted().prefix(6).map { $0 }
+        }
         let taken = Set(store.agentTrades.compactMap { $0.listing?.id })
         return Array(store.agentPool.filter { !taken.contains($0.id) && !$0.isOwnListing && $0.priceCents > 0 && $0.campus == store.campus }
             .map(\.title).prefix(6))
     }
+    private var giveSuggestions: [String] {
+        let own = store.listings.filter(\.isOwnListing).map(\.title)
+        return Array((own + ["TI-84 calculator", "Desk lamp", "Probability and Statistics for Engineers"]).prefix(4))
+    }
+    private var trimmedItem: String { item.trimmingCharacters(in: .whitespaces) }
+    private var trimmedGives: String { gives.trimmingCharacters(in: .whitespaces) }
+    private var canSubmit: Bool { !trimmedItem.isEmpty && (mode == .buy || !trimmedGives.isEmpty) }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    Picker("Kind of trade", selection: $mode) {
+                        ForEach(Mode.allCases, id: \.self) { Text($0.rawValue) }
+                    }.pickerStyle(.segmented).accessibilityIdentifier("trade-mode")
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("What do you need?").font(RelayTheme.heading(24)).tracking(-0.5)
-                        Text("Big Al finds the best listing, negotiates under your max and asks before you buy.")
-                            .font(.subheadline).foregroundStyle(RelayTheme.secondary)
+                        Text(mode == .buy ? "What do you need?" : "Start a trading circle").font(RelayTheme.heading(24)).tracking(-0.5)
+                        Text(mode == .buy ? "Big Al finds the best listing, negotiates under your max and asks before you buy."
+                                          : "Say what you’ll give and what you want. Big Al finds students whose swaps line up, so everyone gets something they asked for. No money changes hands.")
+                            .font(.subheadline).foregroundStyle(RelayTheme.secondary).fixedSize(horizontal: false, vertical: true)
                     }
-                    VStack(alignment: .leading, spacing: 9) {
-                        Text("Item").font(.subheadline.weight(.medium))
-                        TextField("Mini fridge, TI-84, desk lamp…", text: $item).focused($focused).submitLabel(.next)
-                            .padding(15).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
-                            .accessibilityIdentifier("bigal-item")
+                    if mode == .swap {
+                        field("You’ll give", placeholder: "TI-84, desk lamp, a textbook…", text: $gives, id: "swap-gives")
+                        chips(giveSuggestions, selection: $gives)
                     }
-                    if !suggestions.isEmpty {
-                        FlowLayout(spacing: 8) {
-                            ForEach(suggestions, id: \.self) { title in
-                                Button(title) { item = title }
-                                    .font(.footnote).padding(.horizontal, 12).padding(.vertical, 8)
-                                    .background(item == title ? RelayTheme.lime : RelayTheme.surface, in: Capsule())
-                                    .overlay(Capsule().strokeBorder(RelayTheme.line))
-                                    .buttonStyle(.plain)
-                            }
+                    field(mode == .buy ? "Item" : "You want", placeholder: mode == .buy ? "Mini fridge, TI-84, desk lamp…" : "Arduino kit, mini fridge…", text: $item, id: "bigal-item")
+                    if !suggestions.isEmpty { chips(suggestions, selection: $item) }
+                    if mode == .buy {
+                        VStack(alignment: .leading, spacing: 9) {
+                            Text("Your max").font(.subheadline.weight(.medium))
+                            HStack {
+                                Text("$").foregroundStyle(RelayTheme.secondary)
+                                TextField("Optional", text: $maxText).keyboardType(.decimalPad).accessibilityIdentifier("bigal-max")
+                            }.padding(15).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+                            Text("Leave it blank and Big Al stays under about 86% of the asking price.").font(.footnote).foregroundStyle(RelayTheme.secondary)
                         }
-                    }
-                    VStack(alignment: .leading, spacing: 9) {
-                        Text("Your max").font(.subheadline.weight(.medium))
-                        HStack {
-                            Text("$").foregroundStyle(RelayTheme.secondary)
-                            TextField("Optional", text: $maxText).keyboardType(.decimalPad).accessibilityIdentifier("bigal-max")
-                        }.padding(15).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
-                        Text("Leave it blank and Big Al stays under about 86% of the asking price.").font(.footnote).foregroundStyle(RelayTheme.secondary)
                     }
                 }.padding(20)
             }
@@ -258,18 +268,43 @@ struct OpenTradeSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .safeAreaInset(edge: .bottom) {
-                Button("Open trade") {
-                    store.openAgentTrades([AgentRequest(course: nil, item: item.trimmingCharacters(in: .whitespaces), maxCents: Money.parse(maxText))])
+                Button(mode == .buy ? "Open trade" : "Find a circle") {
+                    if mode == .buy {
+                        store.openAgentTrades([AgentRequest(course: nil, item: trimmedItem, maxCents: Money.parse(maxText))])
+                    } else {
+                        store.openSwap(gives: trimmedGives, wants: trimmedItem)
+                    }
                     dismiss()
                 }
-                .buttonStyle(RelayPrimaryButton()).disabled(item.trimmingCharacters(in: .whitespaces).isEmpty)
-                .opacity(item.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
+                .buttonStyle(RelayPrimaryButton()).disabled(!canSubmit).opacity(canSubmit ? 1 : 0.5)
                 .padding(.horizontal, 20).padding(.vertical, 10)
                 .accessibilityIdentifier("bigal-submit-trade")
             }
-            .onAppear { focused = true }
+            .onAppear { focused = mode == .swap ? "swap-gives" : "bigal-item" }
         }
         .presentationDetents([.large])
+    }
+
+    private func field(_ label: String, placeholder: String, text: Binding<String>, id: String) -> some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(label).font(.subheadline.weight(.medium))
+            TextField(placeholder, text: text).submitLabel(.next)
+                .focused($focused, equals: id)
+                .padding(15).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+                .accessibilityIdentifier(id)
+        }
+    }
+
+    private func chips(_ options: [String], selection: Binding<String>) -> some View {
+        FlowLayout(spacing: 8) {
+            ForEach(options, id: \.self) { title in
+                Button(title) { selection.wrappedValue = title }
+                    .font(.footnote).padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(selection.wrappedValue == title ? RelayTheme.lime : RelayTheme.surface, in: Capsule())
+                    .overlay(Capsule().strokeBorder(RelayTheme.line))
+                    .buttonStyle(.plain)
+            }
+        }
     }
 }
 

@@ -88,7 +88,7 @@ Future real payments must execute server-side with verified provider webhooks, a
 
 ## Checks and CI
 
-`RelayCore` has 40 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, conversation validation, negotiation turns and stale offers, free-item negotiation, agreed prices, unread counts, and persistence round trips.
+`RelayCore` has 44 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, conversation validation, negotiation turns and stale offers, free-item negotiation, agreed prices, unread counts, and persistence round trips.
 
 `RelayUITests` covers Big Al entry points, course-material review, trade approval and conversations, service navigation, tutor search/save/messaging, study requests, activity shortcuts, promotions, offer negotiation, mandatory inspection, cancellation, and mock payment decline/retry. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
 
@@ -113,3 +113,7 @@ Run the Vite service on port 5174 with server-only `OPENROUTER_API_KEY`; the sim
 Open **Buy with Big Al** on Home or in **Explore → Market**. It includes course-material review, item requests, simulated price negotiations, approval, local conversation transcripts, and trade management. The four main destinations and tutoring/tickets/rides service selector are preserved; My Plan remains removed. Buying-agent negotiation and meetup data are demos, and schedule-photo selection currently loads the labeled sample schedule rather than extracting the image. Select courses manually for your actual schedule.
 
 Optional AI chat uses the server-only `OPENROUTER_API_KEY` and `OPENROUTER_AGENT_MODEL` through `/api/agent/chat`. Set `RELAY_AGENT_URL` / `RelayAgentURL` for a hosted service; the simulator defaults to localhost port 5174. Without the chat service, manual requests and local negotiations still work. Tutor and ticket listings are excluded from the item-buying pool.
+
+### Trading circles
+
+Open **Buy & swap with Big Al → Start a trading circle**, or switch an open trade to **Swap**. Enter what you give and want. Big Al finds a same-campus loop of two to four students, shows each handoff, collects your approval, and produces a shared sample meetup and code once all simulated members agree. Circle details include local group chat, retry when no match exists, and leave/close actions. Existing campus-board trade posts join the matching pool. Saved circles resume after relaunch; all approvals and chat remain simulated on this device.

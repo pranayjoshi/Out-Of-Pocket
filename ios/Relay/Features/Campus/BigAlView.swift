@@ -7,11 +7,16 @@ struct BigAlView: View {
     @Environment(RelayStore.self) private var store
     @State private var showSchedule = false
     @State private var showOpenTrade = false
+    @State private var showSwap = false
+    @State private var closingSwap: AgentSwap?
     @State private var showChat = false
     @State private var closing: AgentTrade?
 
     private var trades: [AgentTrade] { store.agentTrades }
     private func trades(_ phases: Set<AgentTradePhase>) -> [AgentTrade] { trades.filter { phases.contains($0.phase) } }
+    private var swaps: [AgentSwap] { store.agentSwaps }
+    private func swaps(_ include: (AgentSwap) -> Bool) -> [AgentSwap] { swaps.filter(include) }
+    private var isEmpty: Bool { trades.isEmpty && swaps.isEmpty }
 
     var body: some View {
         List {
@@ -21,22 +26,23 @@ struct BigAlView: View {
                 DemoNotice(text: "Buying-agent demo. Negotiations, seller messages, and meetups are simulated on this device; no seller is contacted and no payment is made.")
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
             }
-            if !trades.isEmpty {
+            if !isEmpty {
                 Section { summary } header: { sectionHeader("Since your last visit") }.listRowBackground(RelayTheme.surface)
             }
             Section {
                 actionRow("Upload your schedule", detail: "Big Al lists what your classes need", symbol: "calendar.badge.plus", id: "bigal-schedule") { showSchedule = true }
                 actionRow("Open a trade", detail: "Anything, not just class materials", symbol: "plus.circle", id: "bigal-open-trade") { showOpenTrade = true }
+                actionRow("Start a trading circle", detail: "Swap what you have for what you want", symbol: "arrow.triangle.2.circlepath", id: "bigal-circle") { showSwap = true }
                 actionRow("Ask Big Al", detail: "Chat about what you’re looking for", symbol: "bubble.left", id: "bigal-chat") { showChat = true }
             }.listRowBackground(RelayTheme.surface)
             if let budget = store.agentBudgetCents { Section { budgetRow(budget) }.listRowBackground(RelayTheme.surface) }
-            tradeSection("Ready for you", trades([.ready, .noDeal]))
-            tradeSection("Working on it", trades([.searching, .negotiating]))
-            tradeSection("Locked in", trades([.locked]))
-            tradeSection("Closed", trades([.passed, .unavailable]))
-            if trades.isEmpty {
+            tradeSection("Ready for you", trades([.ready, .noDeal]), swaps { $0.phase == .approving && !$0.youApproved })
+            tradeSection("Working on it", trades([.searching, .negotiating]), swaps { $0.phase == .searching || ($0.phase == .approving && $0.youApproved) })
+            tradeSection("Locked in", trades([.locked]), swaps { $0.phase == .confirmed })
+            tradeSection("Closed", trades([.passed, .unavailable]), swaps { $0.phase == .noMatch || $0.phase == .declined })
+            if isEmpty {
                 Section {
-                    Text("No open trades. Upload your schedule or open one for anything you need; Big Al asks before it buys.")
+                    Text("No open trades or circles. Find course materials, open a buy request, or swap something you already have.")
                         .font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(3).padding(.vertical, 6)
                 } header: { sectionHeader("Open trades") }.listRowBackground(RelayTheme.surface)
             }
@@ -59,6 +65,11 @@ struct BigAlView: View {
         }
         .sheet(isPresented: $showSchedule) { ScheduleTradesSheet() }
         .sheet(isPresented: $showOpenTrade) { OpenTradeSheet() }
+        .sheet(isPresented: $showSwap) { OpenTradeSheet(mode: .swap) }
+        .confirmationDialog(closingSwap?.circle == nil ? "Close this swap?" : "Leave this circle?",
+                            isPresented: Binding(get: { closingSwap != nil }, set: { if !$0 { closingSwap = nil } }), titleVisibility: .visible, presenting: closingSwap) { swap in
+            Button(swap.circle == nil ? "Close swap" : "Leave circle", role: .destructive) { store.closeSwap(swap.id) }
+        } message: { swap in Text(swap.circle == nil ? "Big Al stops looking." : "Big Al lets everyone know, and the circle is off.") }
         .sheet(isPresented: $showChat) { NavigationStack { BigAlChatView() } }
         .confirmationDialog(closing.map { $0.phase == .locked ? "Cancel this purchase?" : "Close this trade?" } ?? "",
                             isPresented: Binding(get: { closing != nil }, set: { if !$0 { closing = nil } }), titleVisibility: .visible, presenting: closing) { trade in
@@ -74,7 +85,7 @@ struct BigAlView: View {
         HStack(spacing: 14) {
             BigAlAvatar(size: 56)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Buy with Big Al").font(RelayTheme.heading(22)).tracking(-0.4)
+                Text("Buy & swap with Big Al").font(RelayTheme.heading(22)).tracking(-0.4)
                 Text(status).font(.subheadline).foregroundStyle(RelayTheme.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -82,17 +93,21 @@ struct BigAlView: View {
     }
 
     private var status: String {
-        if store.agentWorkingCount > 0 { return "Working on \(store.agentWorkingCount) \(store.agentWorkingCount == 1 ? "trade" : "trades") right now" }
-        if store.agentReadyCount > 0 { return "\(store.agentReadyCount) \(store.agentReadyCount == 1 ? "deal is" : "deals are") waiting on you" }
-        return "Finds it, negotiates, and asks before buying."
+        let working = store.agentWorkingCount + swaps { $0.phase == .searching || ($0.phase == .approving && $0.youApproved) }.count
+        let ready = store.agentReadyCount + store.swapsNeedingYou
+        if working > 0 { return "Working on \(working) \(working == 1 ? "trade" : "trades") right now" }
+        if ready > 0 { return "\(ready) \(ready == 1 ? "deal is" : "deals are") waiting on you" }
+        return "Finds it, negotiates, or builds a trading circle."
     }
 
     private var summary: some View {
         let found = trades.filter { $0.listing != nil }
         let deals = trades.compactMap { t in t.phase == .ready || t.phase == .locked ? t.negotiation : nil }
         let saved = deals.map(\.savedCents).reduce(0, +)
+        let circles = swaps.filter { $0.circle != nil }
         let lines: [(String, String)] = [
-            ("magnifyingglass", "Found \(found.count) of \(trades.count) \(trades.count == 1 ? "item" : "items") on campus"),
+            trades.isEmpty ? nil : ("magnifyingglass", "Found \(found.count) of \(trades.count) \(trades.count == 1 ? "item" : "items") on campus"),
+            circles.isEmpty ? nil : ("arrow.triangle.2.circlepath", "Lined up \(circles.count) trading \(circles.count == 1 ? "circle" : "circles")\(store.swapsNeedingYou > 0 ? ", \(store.swapsNeedingYou) waiting on your OK" : "")"),
             deals.isEmpty ? nil : ("arrow.down.right", "Talked \(Money.format(saved)) off asking across \(deals.count) \(deals.count == 1 ? "deal" : "deals")"),
             store.agentReadyCount == 0 ? nil : ("checkmark.circle", "\(store.agentReadyCount) ready for you to lock in"),
             trades([.noDeal]).isEmpty ? nil : ("exclamationmark.circle", "\(trades([.noDeal]).count) won’t go under your max"),
@@ -140,9 +155,16 @@ struct BigAlView: View {
     }
 
     @ViewBuilder
-    private func tradeSection(_ title: String, _ items: [AgentTrade]) -> some View {
-        if !items.isEmpty {
+    private func tradeSection(_ title: String, _ items: [AgentTrade], _ swapItems: [AgentSwap]) -> some View {
+        if !items.isEmpty || !swapItems.isEmpty {
             Section {
+                ForEach(swapItems) { swap in
+                    NavigationLink { TradeCircleView(swapID: swap.id) } label: { SwapRow(swap: swap) }
+                        .accessibilityIdentifier("bigal-circle-\(swap.id)")
+                        .swipeActions(edge: .trailing) {
+                            Button(swap.circle == nil ? "Close" : "Leave", role: .destructive) { closingSwap = swap }
+                        }
+                }
                 ForEach(items) { trade in
                     NavigationLink { AgentTradeDetailView(tradeID: trade.id) } label: { AgentTradeRow(trade: trade) }
                         .accessibilityIdentifier("bigal-trade-\(trade.id)")
@@ -223,8 +245,8 @@ struct BigAlEntryCard: View {
             HStack(spacing: 14) {
                 BigAlAvatar(size: 50)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Buy with Big Al").font(.headline)
-                    Text(store.agentReadyCount > 0 ? "\(store.agentReadyCount) deals ready to review" : "Find course materials. Explore a better price.")
+                    Text("Buy & swap with Big Al").font(.headline)
+                    Text(store.agentReadyCount + store.swapsNeedingYou > 0 ? "\(store.agentReadyCount + store.swapsNeedingYou) trades ready to review" : "Buy or swap with your campus.")
                         .font(.caption).foregroundStyle(RelayTheme.secondary)
                 }
                 Spacer(minLength: 0)

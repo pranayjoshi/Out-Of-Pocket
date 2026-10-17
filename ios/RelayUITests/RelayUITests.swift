@@ -6,6 +6,61 @@ final class RelayUITests: XCTestCase {
     }
 
     @MainActor
+    func testTradingCircleApprovalChatAndLeave() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        app.buttons["bigal-entry"].tap()
+        let start = app.buttons["bigal-circle"]
+        scrollTo(start, in: app); start.tap()
+        let gives = app.textFields["swap-gives"]
+        XCTAssertTrue(gives.waitForExistence(timeout: 5))
+        gives.tap(); gives.typeText("TI-84 calculator")
+        let wants = app.textFields["bigal-item"]
+        scrollTo(wants, in: app); wants.tap(); wants.typeText("Arduino kit")
+        app.buttons["bigal-submit-trade"].tap()
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "bigal-circle-")).firstMatch
+        scrollTo(row, in: app); row.tap()
+        let approve = app.buttons["circle-approve"]
+        XCTAssertTrue(approve.waitForExistence(timeout: 10))
+        scrollTo(approve, in: app); approve.tap()
+        let meetup = app.descendants(matching: .any)["circle-meetup"].firstMatch
+        XCTAssertTrue(meetup.waitForExistence(timeout: 10))
+        scrollTo(meetup, in: app)
+        saveScreenshot("trading-circle-confirmed")
+        let chat = app.descendants(matching: .any)["circle-chat-input"].firstMatch
+        scrollTo(chat, in: app); chat.tap(); chat.typeText("I will bring the calculator.")
+        app.buttons["Send to circle"].tap()
+        XCTAssertTrue(app.staticTexts["I will bring the calculator."].waitForExistence(timeout: 5))
+        app.buttons["Circle options"].tap()
+        app.buttons["Leave circle"].tap()
+        app.buttons["Leave circle"].tap()
+        XCTAssertTrue(app.buttons["bigal-circle"].waitForExistence(timeout: 5))
+        XCTAssertFalse(row.exists)
+    }
+
+    @MainActor
+    func testTradingCircleNoMatchCanRetry() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        app.buttons["bigal-entry"].tap()
+        let start = app.buttons["bigal-circle"]
+        scrollTo(start, in: app); start.tap()
+        let gives = app.textFields["swap-gives"]
+        XCTAssertTrue(gives.waitForExistence(timeout: 5))
+        gives.tap(); gives.typeText("Desk lamp")
+        let wants = app.textFields["bigal-item"]
+        scrollTo(wants, in: app); wants.tap(); wants.typeText("Kayak")
+        app.buttons["bigal-submit-trade"].tap()
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "bigal-circle-")).firstMatch
+        scrollTo(row, in: app); row.tap()
+        XCTAssertTrue(app.staticTexts["No circle yet"].waitForExistence(timeout: 10))
+        app.buttons["Look again"].tap()
+        XCTAssertTrue(app.staticTexts["No circle yet"].waitForExistence(timeout: 10))
+    }
+
+    @MainActor
     func testBigAlTradeFromHomePreservesExploreServices() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
@@ -20,7 +75,7 @@ final class RelayUITests: XCTestCase {
         item.tap(); item.typeText("Artificial Intelligence: A Modern Approach")
         app.buttons["bigal-submit-trade"].tap()
         XCTAssertTrue(app.staticTexts["Ready for you"].waitForExistence(timeout: 15))
-        let trade = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "bigal-trade-")).firstMatch
+        let trade = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "bigal-trade-")).firstMatch
         scrollTo(trade, in: app); trade.tap()
         let lock = app.buttons["bigal-lock"]
         scrollTo(lock, in: app)
@@ -59,8 +114,8 @@ final class RelayUITests: XCTestCase {
         app.buttons["Find materials for 1 class"].tap()
         XCTAssertTrue(app.staticTexts["1 item for 1 class"].waitForExistence(timeout: 5))
         app.buttons["Cancel"].tap()
-        XCTAssertTrue(app.buttons["bigal-chat"].waitForExistence(timeout: 5))
-        app.buttons["bigal-chat"].tap()
+        let chat = app.buttons["bigal-chat"]
+        scrollTo(chat, in: app); chat.tap()
         XCTAssertTrue(app.staticTexts["Your buying agent · same rules for every student"].waitForExistence(timeout: 5))
     }
 
