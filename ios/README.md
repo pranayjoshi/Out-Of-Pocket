@@ -4,6 +4,26 @@ A native SwiftUI campus marketplace for iPhone and iPad, targeting iOS 18 and la
 
 ## Open and run
 
+From the repository root, run the first-time setup:
+
+```sh
+python3 ios/scripts/relay.py setup
+```
+
+This selects full Xcode for this process, installs its first-launch components and a compatible iOS runtime if missing, creates a dedicated **Relay iPhone**, then builds, installs, and launches the app. The runtime download is approximately 9 GB; setup requires at least 14 GB free before starting a download. It does not change the global `xcode-select` setting. No XcodeGen, Homebrew packages, Node dependencies, account, API key, or signing team is needed.
+
+For subsequent launches, double-click **Launch Relay.command** or run:
+
+```sh
+python3 ios/scripts/relay.py run
+python3 ios/scripts/relay.py doctor   # Check Xcode and the installed runtime
+python3 ios/scripts/relay.py test     # Domain tests and native simulator UI tests
+```
+
+Equivalent npm shortcuts are `npm run ios:setup`, `npm run ios`, `npm run ios:doctor`, and `npm run ios:test`. Optional `--device UUID` uses an existing simulator. Builds stay in the ignored `work/ios-local-build` directory; app data persists in the simulator across launches.
+
+Or use Xcode directly:
+
 1. Open `Relay.xcodeproj` in Xcode 16 or later.
 2. Choose the **Relay** scheme and an installed iPhone simulator.
 3. Run with **⌘R**. No account, API key, or signing team is needed for the simulator.

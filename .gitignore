@@ -4,6 +4,8 @@ dist
 .DS_Store
 work
 *.tsbuildinfo
+__pycache__/
+*.pyc
 
 # Native build output and personal Xcode state
 ios/build/
