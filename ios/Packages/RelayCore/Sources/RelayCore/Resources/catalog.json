@@ -1,0 +1,170 @@
+[
+  {
+    "id": "chair",
+    "title": "Your new favorite reading chair",
+    "category": "Dorm & living",
+    "priceCents": 4500,
+    "originalPriceCents": 12900,
+    "imageName": "chair",
+    "seller": "Sophie M.",
+    "initials": "SM",
+    "condition": "Like new",
+    "location": "North campus",
+    "campus": "Alabama",
+    "tag": "A good little find",
+    "description": "My favorite corner of the room, ready for its next chapter. A comfortable accent chair with a sturdy frame. Light signs of use on the legs; no rips or stains. Pickup at an agreed public exchange location.",
+    "checks": [
+      "Fabric and frame match the photos",
+      "Chair is stable and comfortable",
+      "Disclosed marks are acceptable"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "lamp",
+    "title": "A little light for late nights",
+    "category": "Dorm & living",
+    "priceCents": 1800,
+    "originalPriceCents": 4500,
+    "imageName": "lamp",
+    "seller": "Alex R.",
+    "initials": "AR",
+    "condition": "Good",
+    "location": "Central campus",
+    "campus": "Alabama",
+    "tag": null,
+    "description": "A warm reading lamp that got me through a lot of study sessions. Works well; a small scuff on the base is included in the condition notes. Bulb included.",
+    "checks": [
+      "Lamp switches on and off",
+      "Cord has no visible damage",
+      "Base scuff matches the description"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "books",
+    "title": "A fresh start for your bookshelf",
+    "category": "Textbooks",
+    "priceCents": 2400,
+    "originalPriceCents": 7200,
+    "imageName": "books",
+    "seller": "Jordan L.",
+    "initials": "JL",
+    "condition": "Good",
+    "location": "South campus",
+    "campus": "Alabama",
+    "tag": "Ready for another semester",
+    "description": "A small collection of well-loved books. Some penciled annotations and light cover wear. Check titles and editions in person before accepting; this is a sample listing.",
+    "checks": [
+      "Titles and editions are correct",
+      "Pages are present and readable",
+      "Annotations match the description"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "headphones",
+    "title": "Find your focus. Lose the noise.",
+    "category": "Tech",
+    "priceCents": 5500,
+    "originalPriceCents": 11000,
+    "imageName": "headphones",
+    "seller": "Chris W.",
+    "initials": "CW",
+    "condition": "Like new",
+    "location": "North campus",
+    "campus": "Alabama",
+    "tag": null,
+    "description": "Over-ear headphones with a clean finish and comfortable cushions. Both sides work. Test pairing and sound at the exchange. Charging cable included; original box not included.",
+    "checks": [
+      "Both speakers play audio",
+      "Pairing and controls work",
+      "Cushions and cable match the listing"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "plant",
+    "title": "A tiny roommate, no rent required",
+    "category": "Free stuff",
+    "priceCents": 0,
+    "originalPriceCents": null,
+    "imageName": "plant",
+    "seller": "Maya K.",
+    "initials": "MK",
+    "condition": "Healthy",
+    "location": "Central campus",
+    "campus": "Alabama",
+    "tag": "Free to a good dorm",
+    "description": "Moving away and hoping this little plant finds a sunny new window. Pot included. Free to someone who will give it a little love.",
+    "checks": [
+      "Plant and pot match the photo",
+      "No visible pests",
+      "You can transport it safely"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "bike",
+    "title": "Your 8:00 a.m. shortcut",
+    "category": "Getting around",
+    "priceCents": 8500,
+    "originalPriceCents": 22000,
+    "imageName": "bike",
+    "seller": "Ethan B.",
+    "initials": "EB",
+    "condition": "Good",
+    "location": "South campus",
+    "campus": "Alabama",
+    "tag": null,
+    "description": "A city bike for getting around campus. Normal cosmetic wear. Check frame size, brakes, tires, and gears in person. Ask the seller for ownership information before committing.",
+    "checks": [
+      "Frame size is suitable",
+      "Brakes and gears work",
+      "Ownership information is satisfactory"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "camera",
+    "title": "Make the semester worth keeping",
+    "category": "Tech",
+    "priceCents": 9000,
+    "originalPriceCents": 18000,
+    "imageName": "camera",
+    "seller": "Emma T.",
+    "initials": "ET",
+    "condition": "Good",
+    "location": "Cross-campus pickup",
+    "campus": "Auburn",
+    "tag": "Auburn find",
+    "description": "An entry-level camera for everyday campus moments. Cosmetic wear on the body. Battery and strap included. This listing requires a separately agreed cross-campus handoff.",
+    "checks": [
+      "Camera powers on and saves photos",
+      "Lens and sensor condition checked",
+      "Battery and included parts match"
+    ],
+    "isOwnListing": false
+  },
+  {
+    "id": "side-table",
+    "title": "The missing piece of your room",
+    "category": "Dorm & living",
+    "priceCents": 3000,
+    "originalPriceCents": 6500,
+    "imageName": "room",
+    "seller": "Olivia D.",
+    "initials": "OD",
+    "condition": "Like new",
+    "location": "Central campus",
+    "campus": "Alabama",
+    "tag": null,
+    "description": "A compact side table for a book, a coffee, and whatever your week brings. Confirm dimensions before reserving. Photo is illustrative of the room style.",
+    "checks": [
+      "Dimensions work for your room",
+      "Surface and legs are stable",
+      "Condition matches the description"
+    ],
+    "isOwnListing": false
+  }
+]

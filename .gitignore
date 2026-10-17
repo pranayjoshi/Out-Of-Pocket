@@ -4,3 +4,13 @@ dist
 .DS_Store
 work
 *.tsbuildinfo
+
+# Native build output and personal Xcode state
+ios/build/
+ios/DerivedData/
+**/.build/
+**/.swiftpm/
+**/xcuserdata/
+*.xcuserstate
+*.xcresult
+ios/screenshots/
