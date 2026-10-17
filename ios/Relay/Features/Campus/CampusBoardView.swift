@@ -1,49 +1,6 @@
 import SwiftUI
 import RelayCore
 
-struct CampusBoardView: View {
-    @Environment(RelayStore.self) private var store
-    @State private var selectedEvent: String?
-    @State private var showRequest = false
-    @State private var relatedPost: CampusRequest?
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                SectionTitle(eyebrow: "MORE THAN A MARKETPLACE", title: "Good things\nare happening.")
-                Text("Less lost in the group chat.\nMore actually showing up.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5)
-                HStack {
-                    SectionTitle(eyebrow: "THE CAMPUS SWITCHBOARD", title: "A little give. A little take.")
-                    Button { showRequest = true } label: { RoundIcon(symbol: "plus") }.accessibilityLabel("Post a campus request")
-                }
-                ForEach(store.campusRequests) { request in
-                    HStack(spacing: 12) {
-                        Text(String(request.person.prefix(1))).font(.subheadline).frame(width: 44, height: 44).background(RelayTheme.soft, in: Circle())
-                        VStack(alignment: .leading, spacing: 7) {
-                            Text(request.title).font(.subheadline.weight(.medium))
-                            if let details = request.details, !details.isEmpty { Text(details).font(.caption).foregroundStyle(RelayTheme.secondary) }
-                            Text("\(request.postIntent.rawValue) · \(request.summary)").font(.caption).foregroundStyle(RelayTheme.secondary)
-                        }
-                        Spacer(minLength: 0)
-                        Button { relatedPost = request } label: { Image(systemName: "arrow.up.right").frame(width: 44, height: 44) }.accessibilityLabel("Create a related post for \(request.title)")
-                    }.padding(17).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 20))
-                }
-                CampusPromotionPlacement(placement: "Campus board")
-                SectionTitle(eyebrow: "AROUND CAMPUS", title: "Make a little time.")
-                ForEach(DemoCatalog.events.filter { $0.id != "coffee" }) { event in
-                    Button { selectedEvent = event.id } label: { FlyerCard(event: event) }.buttonStyle(.plain)
-                }
-                DemoNotice(text: "Sample events and campaigns. No live event bookings or sponsor-funded offers.")
-            }.foregroundStyle(RelayTheme.ink).padding(20).padding(.bottom, 20)
-        }.background(RelayTheme.paper)
-            .navigationTitle("Campus board").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showRequest = true } label: { Image(systemName: "plus.bubble") }.accessibilityLabel("Post a campus request") } }
-            .sheet(isPresented: Binding(get: { selectedEvent != nil }, set: { if !$0 { selectedEvent = nil } })) {
-                if let event = DemoCatalog.events.first(where: { $0.id == selectedEvent }) { EventDetailView(event: event) }
-            }
-            .sheet(isPresented: $showRequest) { RequestEditorView() }
-            .sheet(item: $relatedPost) { CampusPostResponseView(post: $0) }
-    }
-}
 struct FlyerCard: View {
     @Environment(RelayStore.self) private var store
     let event: CampusEvent

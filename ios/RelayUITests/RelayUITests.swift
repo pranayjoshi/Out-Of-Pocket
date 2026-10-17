@@ -44,7 +44,7 @@ final class RelayUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["My cozy campus corner"].waitForExistence(timeout: 5))
         saveScreenshot("02-plans")
         app.tabBars.buttons["Campus"].tap()
-        XCTAssertTrue(app.staticTexts["Good things\nare happening."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Buy with Big Al"].waitForExistence(timeout: 5))
         saveScreenshot("03-campus")
         app.tabBars.buttons["You"].tap()
         XCTAssertTrue(app.staticTexts["Your campus era."].waitForExistence(timeout: 5))

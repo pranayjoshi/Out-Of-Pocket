@@ -17,7 +17,7 @@ struct RelayRootView: View {
                 NavigationStack { PlansView() }
             }
             Tab(RelayTab.campus.rawValue, systemImage: RelayTab.campus.symbol, value: RelayTab.campus) {
-                NavigationStack { CampusBoardView() }
+                NavigationStack { BigAlView() }
             }
             Tab(RelayTab.exchanges.rawValue, systemImage: RelayTab.exchanges.symbol, value: RelayTab.exchanges) {
                 NavigationStack { InboxView() }.badge(store.unreadMessageCount)
@@ -35,6 +35,7 @@ struct RelayRootView: View {
                 try? await Task.sleep(for: .seconds(30))
             }
         }
+        .task { store.resumeAgentTrades() }
         .onOpenURL { store.open(url: $0) }
         .sheet(item: $store.deepLink) { link in
             if let listing = store.listings.first(where: { $0.id == link.id }) {

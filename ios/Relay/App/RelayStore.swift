@@ -17,6 +17,10 @@ struct AppSnapshot: Codable {
     var requests: [CampusRequest] = DemoCatalog.requests
     var includeOtherCampuses = false
     var hasSeenWelcome = false
+    // Big Al (optional so earlier saved data still decodes)
+    var agentTrades: [AgentTrade]?
+    var agentBudgetCents: Int?
+    var agentChat: [AgentChatMessage]?
 }
 
 enum RelayTab: String, CaseIterable, Identifiable {
@@ -73,11 +77,14 @@ final class RelayStore {
     var planListings: [Listing] { listings.filter { snapshot.plan?.listingIDs.contains($0.id) == true } }
     var planTotal: Int { snapshot.plan?.total(in: listings) ?? 0 }
     var conversations: [ListingConversation] {
-        if usesSharedMarket, let remoteThreads { return remoteThreads.sorted { $0.updatedAt > $1.updatedAt } }
+        if usesSharedMarket, let remoteThreads {
+            let agent = (snapshot.conversations ?? []).filter { agentListingIDs.contains($0.listing.id) }
+            return (remoteThreads + agent).sorted { $0.updatedAt > $1.updatedAt }
+        }
         return (snapshot.conversations ?? []).sorted { $0.updatedAt > $1.updatedAt }
     }
     var exchanges: [Exchange] {
-        if usesSharedMarket, let remoteExchanges { return remoteExchanges }
+        if usesSharedMarket, let remoteExchanges { return snapshot.exchanges.filter { agentListingIDs.contains($0.listing.id) } + remoteExchanges }
         return snapshot.exchanges
     }
     var unreadMessageCount: Int { conversations.reduce(0) { $0 + $1.unreadCount } }
@@ -457,7 +464,7 @@ final class RelayStore {
         selectedTab = .discover
     }
 
-    private func update(_ mutation: (inout AppSnapshot) -> Void) {
+    func update(_ mutation: (inout AppSnapshot) -> Void) {
         mutation(&snapshot)
         guard let url = persistenceURL else { return }
         do {
