@@ -22,6 +22,8 @@ python3 ios/scripts/relay.py test     # Domain tests and native simulator UI tes
 
 Equivalent npm shortcuts are `npm run ios:setup`, `npm run ios`, `npm run ios:doctor`, and `npm run ios:test`. Optional `--device UUID` uses an existing simulator. Builds stay in the ignored `work/ios-local-build` directory; app data persists in the simulator across launches.
 
+If the simulator hangs on its first boot, retry with `python3 ios/scripts/relay.py run --restart`. This restarts the selected simulator without erasing its data or downloading the runtime again. The launcher stops waiting after 10 minutes and prints recovery instructions. A runtime marked **Verified / Ready** in `xcrun simctl runtime list` has finished verification; the subsequent first-boot migration and cache setup are separate steps.
+
 Or use Xcode directly:
 
 1. Open `Relay.xcodeproj` in Xcode 16 or later.
@@ -53,9 +55,9 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 
 ## Native experience
 
-- **Discover:** campus switching, native search, category chips, price sorting, free-item/cross-campus filters, product detail sheets, sharing, favorites, and a floating photo composition.
+- **Discover:** an interactive campus switchboard with Find / Offer / Trade, six quick topics (books, dorm gear, lab supplies, tickets, tutoring, rides), category-aware matching, prefilled listing and campus-post forms, and an ask fallback when there are no matches. Also includes campus switching, native search, category chips, price sorting, free-item/cross-campus filters, product detail sheets, sharing, favorites, and responsive listing cards.
 - **My plans:** editable budgets, persistent setup pieces, calculated totals, and budget progress.
-- **Campus:** sample event flyers, event saving, sponsorship concepts, and campus request creation.
+- **Campus:** campus asks, service offers, and trades appear before sample event flyers. Posts include optional budgets, timing/rate details, and both sides of a trade. All posts are local to this device. Also includes event saving and sponsorship concepts.
 - **Exchanges:** reservations, partner identification, inspection checklists, explicit acceptance, cancellation, and refund tracking.
 - **Mock checkout:** select sample Visa, Mastercard, or Apple Pay; simulate success, decline, or connection failure at authorization and capture. Processing prevents duplicate taps. Failed attempts keep the current stage and can be retried. Receipts retain the original funding method through refunds. No Wallet connection or real card details are collected.
 - **You:** saved finds, locally created listing entry, campus preferences, accessibility information, and safety guidance.
@@ -81,7 +83,7 @@ Future real payments must execute server-side with verified provider webhooks, a
 
 ## Checks and CI
 
-`RelayCore` has 15 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, and persistence round trips.
+`RelayCore` has 17 Swift Testing cases covering catalog decoding, campus filters, search, sorting, precise money, setup totals, exchange guards, cancellation, refunds, mock payment failures/retries, original-method retention, legacy data, campus post migration, trade/service post persistence, and persistence round trips.
 
 `RelayUITests` covers native navigation, setup creation, invalid partner codes, mandatory inspection, cancellation, and mock payment decline/retry. `.github/workflows/ios.yml` runs domain and simulator UI checks on pushes, then uploads the simulator build, test result bundle, and light/dark screenshots.
 

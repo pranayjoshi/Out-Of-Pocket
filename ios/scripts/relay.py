@@ -12,10 +12,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def run(*args, capture=False):
+def run(*args, capture=False, timeout=None):
     print("+ " + " ".join(str(arg) for arg in args), flush=True)
     return subprocess.run([str(arg) for arg in args], check=True, text=True,
-                          stdout=subprocess.PIPE if capture else None).stdout
+                          stdout=subprocess.PIPE if capture else None, timeout=timeout).stdout
 
 
 def sim_json(*args):
@@ -26,6 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["setup", "run", "test", "doctor"], default="run", nargs="?")
     parser.add_argument("--device", help="Existing simulator UUID; defaults to a dedicated Relay iPhone")
+    parser.add_argument("--restart", action="store_true", help="Restart the selected simulator before launching")
     opts = parser.parse_args()
     developer = os.environ.get("DEVELOPER_DIR")
     if not developer:
@@ -80,9 +81,15 @@ def main():
     if opts.action == "doctor":
         print("Ready to build and launch Relay.")
         return
+    if opts.restart and device["state"] != "Shutdown":
+        run("xcrun", "simctl", "shutdown", device["udid"], timeout=120)
+        device["state"] = "Shutdown"
     if device["state"] != "Booted":
-        run("xcrun", "simctl", "boot", device["udid"])
-    run("xcrun", "simctl", "bootstatus", device["udid"], "-b")
+        run("xcrun", "simctl", "boot", device["udid"], timeout=120)
+    try:
+        run("xcrun", "simctl", "bootstatus", device["udid"], "-b", timeout=600)
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError("Simulator first boot exceeded 10 minutes. Retry with: python3 ios/scripts/relay.py run --restart. This restarts the simulator without erasing its data.") from error
     derived = ROOT / "work/ios-local-build"
     common = ["-project", ROOT / "ios/Relay.xcodeproj", "-scheme", "Relay",
               "-destination", f"platform=iOS Simulator,id={device['udid']}",
@@ -104,6 +111,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (RuntimeError, subprocess.CalledProcessError) as error:
+    except (RuntimeError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         print(f"\nSetup stopped: {error}", file=sys.stderr)
         sys.exit(1)
