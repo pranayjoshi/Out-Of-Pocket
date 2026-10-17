@@ -12,23 +12,25 @@ struct ProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
                 VStack(alignment: .leading, spacing: 17) {
-                    Text("Y").font(.system(size: 31, weight: .medium, design: .rounded)).frame(width: 78, height: 78).background(RelayTheme.peach, in: Circle())
-                    SectionTitle(eyebrow: "MAKE YOURSELF AT HOME", title: "Your campus era.")
-                    Text("Good things. Thoughtful exchanges.\nA little corner of campus, just for you.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
+                    Text(String((store.account?.displayName ?? "You").prefix(1))).font(.system(.largeTitle, weight: .bold)).frame(width: 76, height: 84).background(RelayTheme.lavender, in: RoundedRectangle(cornerRadius: 26))
+                    SectionTitle(eyebrow: store.campus.name, title: store.account?.displayName ?? "Make yourself at home.")
+                    Text("Your saves, your posts, your semester.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
                 }
                 HStack(spacing: 10) {
                     stat("Saved finds", "\(store.snapshot.savedListingIDs.count)", "heart")
-                    stat("Plan pieces", "\(store.planListings.count)", "square.grid.2x2")
-                    stat("Exchanges", "\(store.snapshot.exchanges.count)", "arrow.left.arrow.right")
+                    stat("Classes", "\(store.courseCodes.count)", "graduationcap")
+                    stat("Conversations", "\(store.conversations.count)", "bubble.left.and.bubble.right")
                 }
                 VStack(spacing: 0) {
                     NavigationLink { ScheduleView() } label: { profileRow("Your classes", "Import a schedule. Find what fits.", "calendar") }
                     Divider().padding(.leading, 59)
                     Button { showSaved = true } label: { profileRow("Your saved finds", "Worth coming back for.", "heart") }
                     Divider().padding(.leading, 59)
-                    Button { showCreate = true } label: { profileRow("Pass something on", "Someone’s next favorite thing.", "plus.circle") }
+                    Button { showCreate = true } label: { profileRow("Create a post", "Tutor, sell a ticket, or offer a ride.", "plus.circle") }
                     Divider().padding(.leading, 59)
-                    Button { showSafety = true } label: { profileRow("The Relay way", "A little trust goes a long way.", "checkmark.shield") }
+                    NavigationLink { MyPostsView() } label: { profileRow("My posts", "Manage what you’re sharing.", "square.and.pencil") }
+                    Divider().padding(.leading, 59)
+                    Button { showSafety = true } label: { profileRow("Safety & how it works", "Meet thoughtfully. Know the next step.", "checkmark.shield") }
                 }.background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 23))
                 VStack(alignment: .leading, spacing: 20) {
                     Eyebrow(text: "YOUR COMMUNITY")
@@ -38,8 +40,8 @@ struct ProfileView: View {
                     Divider()
                     Toggle(isOn: Binding(get: { store.snapshot.includeOtherCampuses }, set: { store.setCrossCampus($0) })) {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("A little beyond campus").font(.subheadline.weight(.medium))
-                            Text("Include sample listings from other schools.").font(.caption).foregroundStyle(RelayTheme.secondary)
+                            Text("Beyond campus").font(.subheadline.weight(.medium))
+                            Text("Include marketplace finds from other schools.").font(.caption).foregroundStyle(RelayTheme.secondary)
                         }
                     }.tint(RelayTheme.forest)
                 }.padding(21).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 23))
@@ -49,19 +51,19 @@ struct ProfileView: View {
                         .font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
                 }.padding(21).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 23))
                 if let account = store.account {
-                    DemoNotice(text: "Signed in as \(account.displayName). \(account.badge) The campus picker below is a browsing preference and does not change this membership.")
+                    DemoNotice(text: "Signed in as \(account.displayName). \(account.badge) The campus picker above is a browsing preference and does not change this membership.")
                     Button("Sign out") { store.signOut() }.buttonStyle(RelayPrimaryButton())
                 } else {
                     Button("Sign in with your university email") { showSignIn = true }.buttonStyle(RelayPrimaryButton())
                     DemoNotice(text: "Unsigned, this app keeps a local sample catalog. Sign in to see the shared campus marketplace. Payments in the pilot are sandbox only.")
                 }
                 HStack { Spacer(); RelayWordmark(); Spacer() }.padding(.top, 5)
-                Text("A little less new. A little more you.").font(.caption).foregroundStyle(RelayTheme.secondary).frame(maxWidth: .infinity)
-            }.foregroundStyle(RelayTheme.ink).padding(20).padding(.bottom, 25)
+                Text("Your campus. A little closer.").font(.caption).foregroundStyle(RelayTheme.secondary).frame(maxWidth: .infinity)
+            }.foregroundStyle(RelayTheme.ink).padding(22).padding(.bottom, 25).relayEntrance()
         }.background(RelayTheme.paper).navigationTitle("You").navigationBarTitleDisplayMode(.inline)
             .navigationDestination(isPresented: $showSaved) { SavedFindsView() }
             .sheet(isPresented: $showSafety) { SafetyView() }
-            .sheet(isPresented: $showCreate) { CreateListingView() }
+            .sheet(isPresented: $showCreate) { CreateChoiceSheet() }
             .sheet(isPresented: $showSignIn) { SignInSheet() }
     }
     private func stat(_ name: String, _ value: String, _ symbol: String) -> some View {
@@ -92,12 +94,15 @@ struct SavedFindsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 25) {
-                SectionTitle(eyebrow: "YOUR LITTLE COLLECTION", title: "Worth coming back for.")
+                SectionTitle(eyebrow: "YOUR COLLECTION", title: "Keep the good ones close.")
                 if listings.isEmpty {
-                    EmptyContent(symbol: "heart", title: "Your next favorite is out there.", message: "Tap a heart on a listing to keep it here.", actionTitle: "Explore campus finds") { store.selectedTab = .discover }
+                    EmptyContent(symbol: "heart", title: "Your next favorite is out there.", message: "Tap a heart on a listing to keep it here.", actionTitle: "Explore campus finds") { store.explore(.market) }
                 } else {
+                    ForEach(listings.filter { $0.category == .tutoring }) { tutor in
+                        Button { selected = tutor } label: { TutorRow(listing: tutor) }.buttonStyle(RelayPressStyle())
+                    }
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 24) {
-                        ForEach(listings) { listing in ListingCard(listing: listing) { selected = listing } }
+                        ForEach(listings.filter { $0.category != .tutoring }) { listing in ListingCard(listing: listing) { selected = listing } }
                     }
                 }
             }.padding(20)

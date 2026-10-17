@@ -5,32 +5,38 @@ struct ConversationDestination: Identifiable { let id: UUID }
 
 struct InboxView: View {
     @Environment(RelayStore.self) private var store
-    @State private var handoffs = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
+        @Bindable var store = store
         VStack(spacing: 0) {
-            Picker("Inbox section", selection: $handoffs) {
-                Text("Messages").tag(false)
-                Text("Handoffs").tag(true)
+            Picker("Inbox section", selection: $store.inboxPane) {
+                Text("Messages").tag("messages")
+                Text("Activity").tag("activity")
+                Text("Handoffs").tag("handoffs")
             }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 10)
-            if handoffs { ExchangesView() }
-            else {
+            if store.inboxPane == "handoffs" { ExchangesView() }
+            else if store.inboxPane == "activity" {
+                ScrollView { RideTicketActivity().padding(20) }.background(RelayTheme.paper)
+            } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        SectionTitle(eyebrow: "A GOOD FIND STARTS WITH HELLO", title: "Make a little connection.")
-                        Text("Ask a question, agree on a price, and plan your pickup.").font(.subheadline).foregroundStyle(RelayTheme.secondary)
-                        DemoNotice(text: store.usesSharedMarket ? "Messages go to the other signed-in student." : "Local demo conversations. Messages stay on this device; no one else receives them.")
+                        SectionTitle(eyebrow: "YOUR CONVERSATIONS", title: "Keep it moving.")
+                        Text("Questions, details, and next steps. All together.").font(.subheadline).foregroundStyle(RelayTheme.secondary)
                         if store.conversations.isEmpty {
-                            EmptyContent(symbol: "bubble.left.and.bubble.right", title: "Say hello to a good find.", message: "Open a listing and tap Message seller to start a conversation.", actionTitle: "Explore listings") { store.selectedTab = .discover }
+                            EmptyContent(symbol: "bubble.left.and.bubble.right", title: "Say hello to a good find.", message: "Open a listing and tap Message seller to start a conversation.", actionTitle: "Explore listings") { store.explore(.market) }
                         }
                         ForEach(store.conversations) { thread in
                             NavigationLink {
                                 ConversationView(conversationID: thread.id)
                             } label: { conversationRow(thread) }.buttonStyle(.plain)
                         }
-                    }.padding(20)
+                        DemoNotice(text: store.usesSharedMarket ? "Messages go to the other signed-in student." : "Local demo conversations. Messages stay on this device; no one else receives them.")
+                    }.padding(22).relayEntrance()
                 }.background(RelayTheme.paper)
             }
-        }.background(RelayTheme.paper).navigationTitle("Inbox").navigationBarTitleDisplayMode(.inline)
+        }.animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: store.inboxPane)
+            .sensoryFeedback(.selection, trigger: store.inboxPane)
+            .background(RelayTheme.paper).navigationTitle("Inbox").navigationBarTitleDisplayMode(.inline)
     }
     private func conversationRow(_ thread: ListingConversation) -> some View {
         HStack(spacing: 14) {
@@ -82,10 +88,12 @@ struct ConversationView: View {
                                         .onChange(of: demoOtherParty) { _, _ in draft = ""; error = nil; showOffer = false }
                                 }
                                 if thread.messages.isEmpty {
-                                    Text("Ask about condition, availability, or a public pickup spot.").font(.subheadline).foregroundStyle(RelayTheme.secondary).padding(.vertical, 22)
+                                    Text(thread.listing.category == .tutoring ? "Share your course, topics, and preferred session times." : "Ask about condition, availability, or a public pickup spot.").font(.subheadline).foregroundStyle(RelayTheme.secondary).padding(.vertical, 22)
                                 }
                                 ForEach(thread.messages) { message in messageBubble(message, thread: thread) }
-                                offerPanel(thread)
+                                if thread.listing.category == .tutoring {
+                                    DemoNotice(text: "Discuss your course, session time, and rate here. Tutoring sessions and payments are not booked in this prototype.")
+                                } else { offerPanel(thread) }
                                 if let error { Text(error).font(.caption).foregroundStyle(.red).accessibilityIdentifier("conversation-error") }
                                 Color.clear.frame(height: 1).id("latest")
                             }.padding(20)

@@ -52,6 +52,7 @@ struct CampusPromotionPlacement: View {
             .background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 21))
             .clipShape(RoundedRectangle(cornerRadius: 21))
             .overlay(RoundedRectangle(cornerRadius: 21).stroke(RelayTheme.line, lineWidth: 1))
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("campus-promotion-\(placement)")
             .sheet(item: $sampleDetail) { promotion in
                 PromotionSampleDetail(promotion: promotion)

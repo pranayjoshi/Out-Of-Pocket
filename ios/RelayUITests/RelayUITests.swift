@@ -10,9 +10,11 @@ final class RelayUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
-        app.tabBars.buttons["Campus"].tap()
+        app.tabBars.buttons["Explore"].tap()
+        app.buttons["service-Market"].tap()
         let promotion = app.descendants(matching: .any)["campus-promotion-Campus board"].firstMatch
-        XCTAssertTrue(promotion.waitForExistence(timeout: 10))
+        scrollTo(promotion, in: app)
+        XCTAssertTrue(promotion.exists)
         let open = app.buttons["open-campus-promotion"]
         scrollTo(open, in: app)
         open.tap()
@@ -33,21 +35,49 @@ final class RelayUITests: XCTestCase {
         app.launchArguments = ["-ui-testing"]
         app.launch()
         XCTAssertTrue(app.descendants(matching: .any)["discovery-intro"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.tabBars.buttons["Discover"].exists)
-        XCTAssertTrue(app.tabBars.buttons["My plans"].exists)
-        saveScreenshot("01-discover")
-        app.tabBars.buttons["My plans"].tap()
-        XCTAssertTrue(app.buttons["Build my setup"].waitForExistence(timeout: 5))
-        app.buttons["Build my setup"].tap()
-        XCTAssertTrue(app.buttons["Save my plan"].waitForExistence(timeout: 5))
-        app.buttons["Save my plan"].tap()
-        XCTAssertTrue(app.staticTexts["My cozy campus corner"].waitForExistence(timeout: 5))
-        saveScreenshot("02-plans")
-        app.tabBars.buttons["Campus"].tap()
-        XCTAssertTrue(app.staticTexts["Good things\nare happening."].waitForExistence(timeout: 5))
-        saveScreenshot("03-campus")
+        for title in ["Home", "Explore", "Inbox", "You"] { XCTAssertTrue(app.tabBars.buttons[title].exists) }
+        XCTAssertFalse(app.tabBars.buttons["My plans"].exists)
+        saveScreenshot("01-home")
+        app.buttons["home-Tutoring"].tap()
+        XCTAssertTrue(app.staticTexts["Your next aha!"].waitForExistence(timeout: 5))
+        saveScreenshot("02-tutoring")
+        app.buttons["service-Tickets"].tap()
+        XCTAssertTrue(app.staticTexts["Your way in."].waitForExistence(timeout: 5))
+        saveScreenshot("03-tickets")
+        app.buttons["service-Rides"].tap()
+        XCTAssertTrue(app.buttons["find-ride"].waitForExistence(timeout: 5))
+        saveScreenshot("04-rides")
+        app.tabBars.buttons["Inbox"].tap()
+        XCTAssertTrue(app.staticTexts["Keep it moving."].waitForExistence(timeout: 5))
         app.tabBars.buttons["You"].tap()
-        XCTAssertTrue(app.staticTexts["Your campus era."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Make yourself at home."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Plan pieces"].exists)
+        saveScreenshot("05-profile")
+    }
+
+    @MainActor
+    func testTutorSearchSaveAndConversation() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        app.buttons["home-Tutoring"].tap()
+        let search = app.textFields["Course, subject, or tutor"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap(); search.typeText("MATH 125")
+        XCTAssertTrue(app.staticTexts["Maya R."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Jordan L."].exists)
+        app.buttons.containing(.staticText, identifier: "Maya R.").firstMatch.tap()
+        XCTAssertTrue(app.buttons["Save tutor"].waitForExistence(timeout: 5))
+        app.buttons["Save tutor"].tap()
+        XCTAssertTrue(app.buttons["Unsave tutor"].exists)
+        saveScreenshot("06-tutor-profile")
+        app.buttons["message-tutor"].tap()
+        let input = app.descendants(matching: .any)["message-input"].firstMatch
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["conversation-handoff"].exists)
+        input.tap(); input.typeText("Can we go over derivatives?")
+        app.buttons["send-message"].tap()
+        XCTAssertTrue(app.staticTexts["Can we go over derivatives?"].waitForExistence(timeout: 5))
     }
 
     @MainActor
@@ -102,68 +132,58 @@ final class RelayUITests: XCTestCase {
     }
 
     @MainActor
-    func testSwitchboardFindAndOfferPrefill() throws {
+    func testTutoringRequestAndOffering() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
-        let books = app.buttons["campus-topic-Textbooks"]
-        XCTAssertTrue(books.waitForExistence(timeout: 10))
-        books.tap()
-        app.buttons["campus-move-submit"].tap()
-        XCTAssertTrue(app.staticTexts["Let’s see what’s around."].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["campus-find-ask"].exists)
-        saveScreenshot("06-switchboard-find")
-        app.buttons["Done"].tap()
-        app.buttons["campus-intent-Offer"].tap()
-        let input = app.textFields["campus-move-input"]
-        input.tap()
-        input.typeText("My chemistry textbook\n")
-        XCTAssertTrue(app.textFields["A chair with a lot of good stories…"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.textFields["A chair with a lot of good stories…"].value as? String, "My chemistry textbook")
-        app.buttons["Cancel"].tap()
-    }
-
-    @MainActor
-    func testSwitchboardTradeRequiresBothSides() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-ui-testing"]
-        app.launch()
-        XCTAssertTrue(app.buttons["campus-intent-Trade"].waitForExistence(timeout: 10))
-        app.buttons["campus-intent-Trade"].tap()
-        let input = app.textFields["campus-move-input"]
-        input.tap()
-        input.typeText("My chemistry textbook\n")
+        app.buttons["home-Tutoring"].tap()
+        let request = app.buttons["request-tutor"]
+        scrollTo(request, in: app)
+        request.tap()
+        let title = app.textFields["campus-post-title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        title.tap(); title.typeText("Help with derivatives")
         let submit = app.buttons["campus-post-submit"]
-        XCTAssertTrue(submit.waitForExistence(timeout: 5))
-        XCTAssertFalse(submit.isEnabled)
-        let wanted = app.textFields["campus-post-wanted"]
-        wanted.tap()
-        wanted.typeText("A desk lamp")
-        app.swipeUp()
-        scrollTo(submit, in: app)
-        XCTAssertTrue(submit.isEnabled)
-        submit.tap()
-        XCTAssertTrue(app.staticTexts["A little give. A little take."].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.buttons["Campus"].isSelected)
-        scrollTo(app.staticTexts["My chemistry textbook"], in: app)
-        XCTAssertTrue(app.staticTexts["Trade · For: A desk lamp"].exists)
-        saveScreenshot("07-switchboard-trade")
+        scrollTo(submit, in: app); submit.tap()
+        XCTAssertTrue(app.tabBars.buttons["Explore"].isSelected)
+        scrollTo(app.staticTexts["Help with derivatives"], in: app)
+        XCTAssertTrue(app.staticTexts["Help with derivatives"].exists)
+        saveScreenshot("07-study-request")
     }
 
     @MainActor
-    func testSwitchboardNoMatchCanBecomeAnAsk() throws {
+    func testPostingTutorOfferReturnsToStudyBoard() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
-        let input = app.textFields["campus-move-input"]
-        XCTAssertTrue(input.waitForExistence(timeout: 10))
-        input.tap()
-        input.typeText("Help with advanced chemistry\n")
-        XCTAssertTrue(app.staticTexts["Be the first to ask."].waitForExistence(timeout: 5))
-        app.buttons["campus-find-ask"].tap()
-        XCTAssertTrue(app.textFields["campus-post-title"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.textFields["campus-post-title"].value as? String, "Help with advanced chemistry")
-        XCTAssertTrue(app.buttons["campus-post-submit"].isEnabled)
+        app.buttons["Create a post"].tap()
+        app.buttons.containing(.staticText, identifier: "Offer tutoring").firstMatch.tap()
+        let title = app.textFields["campus-post-title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        title.tap(); title.typeText("Intro chemistry tutoring")
+        let submit = app.buttons["campus-post-submit"]
+        scrollTo(submit, in: app); submit.tap()
+        XCTAssertTrue(app.tabBars.buttons["Explore"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tabBars.buttons["Explore"].isSelected)
+        scrollTo(app.staticTexts["Intro chemistry tutoring"], in: app)
+        XCTAssertTrue(app.staticTexts["Intro chemistry tutoring"].exists)
+    }
+
+    @MainActor
+    func testHomeShortcutsAndActivity() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        app.buttons["home-Tickets"].tap()
+        XCTAssertTrue(app.staticTexts["Your way in."].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Home"].tap()
+        app.buttons["home-Rides"].tap()
+        XCTAssertTrue(app.staticTexts["Going your way."].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Home"].tap()
+        let activity = app.descendants(matching: .any)["home-activity"].firstMatch
+        scrollTo(activity, in: app); activity.tap()
+        XCTAssertTrue(app.tabBars.buttons["Inbox"].isSelected)
+        XCTAssertTrue(app.buttons["Activity"].isSelected)
     }
 
     @MainActor
@@ -177,8 +197,6 @@ final class RelayUITests: XCTestCase {
         input.typeText("Is pickup after class okay?")
         app.buttons["send-message"].tap()
         XCTAssertTrue(app.staticTexts["Is pickup after class okay?"].waitForExistence(timeout: 5))
-        // Dismiss the keyboard with a downward scroll before working with offers.
-        app.swipeDown()
         let make = app.buttons["make-offer"]
         scrollTo(make, in: app)
         make.tap()

@@ -6,7 +6,7 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
 
 @Test func bundledCatalogLoads() throws {
     let listings = try DemoCatalog.listings()
-    #expect(listings.count == 8)
+    #expect(listings.count == 14)
     #expect(Set(listings.map(\.id)).count == listings.count)
 }
 @Test func identificationNeverCapturesPayment() throws {
@@ -68,9 +68,9 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
     var query = ListingQuery()
     #expect(query.apply(to: listings).allSatisfy { $0.campus == .alabama })
     query.campus = .auburn
-    #expect(query.apply(to: listings).count == 1)
+    #expect(query.apply(to: listings).count == 4)
     query.includeOtherCampuses = true
-    #expect(query.apply(to: listings).count == 8)
+    #expect(query.apply(to: listings).count == 14)
 }
 @Test func searchCombinesFiltersAndSort() throws {
     var query = ListingQuery()

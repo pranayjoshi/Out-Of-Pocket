@@ -11,6 +11,9 @@ struct ListingDetailView: View {
     @State private var destination: ExchangeDestination?
     @State private var conversationDestination: ConversationDestination?
     var body: some View {
+        if listing.category == .tutoring {
+            TutorDetailView(listing: listing)
+        } else {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 23) {
@@ -87,14 +90,80 @@ struct ListingDetailView: View {
                         }
                     } label: { HStack { Text(store.usesSharedMarket ? "Reserve" : "Try the handoff demo"); Spacer(); Image(systemName: "arrow.up.right") } }
                         .buttonStyle(RelayPrimaryButton(secondary: true)).accessibilityIdentifier("reserve-listing").disabled(listing.isOwnListing)
-                    Button { store.addToPlan(listing); dismiss() } label: { Label("Add to my setup", systemImage: "plus") }
-                        .buttonStyle(RelayPrimaryButton(secondary: true))
                 }.padding(.horizontal, 20).padding(.top, 13).padding(.bottom, 8).background(.regularMaterial)
             }
             .sheet(item: $conversationDestination) { target in
                 NavigationStack { ConversationView(conversationID: target.id).toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { conversationDestination = nil } } } }
             }
             .sheet(item: $destination) { ExchangeDetailView(exchangeID: $0.id) }
+        }.presentationDragIndicator(.visible)
+        }
+    }
+}
+
+struct TutorDetailView: View {
+    let listing: Listing
+    @Environment(RelayStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var conversation: ConversationDestination?
+    @State private var request = false
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 26) {
+                    VStack(alignment: .leading, spacing: 23) {
+                        HStack(alignment: .top) {
+                            Text(listing.initials).font(.system(.largeTitle, weight: .semibold)).frame(width: 88, height: 102).background(RelayTheme.surface.opacity(0.65), in: RoundedRectangle(cornerRadius: 28))
+                            Spacer()
+                            Label(listing.courseCode ?? "Study help", systemImage: "graduationcap.fill").font(.caption.weight(.semibold)).padding(12).background(RelayTheme.surface.opacity(0.65), in: Capsule())
+                        }
+                        VStack(alignment: .leading, spacing: 9) {
+                            Text(listing.seller).font(.largeTitle.weight(.bold)).tracking(-1)
+                            Text(listing.title).font(.title3).fixedSize(horizontal: false, vertical: true)
+                            Text("Sample tutor · affiliation unverified").font(.caption).foregroundStyle(RelayTheme.secondary)
+                        }
+                    }.padding(24).frame(maxWidth: .infinity, alignment: .leading).background(RelayTheme.lavender, in: RoundedRectangle(cornerRadius: 28)).relayEntrance()
+                    HStack(alignment: .top, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("\(listing.price) / hour").font(.title3.weight(.bold))
+                            Text("Rate to agree before a session").font(.caption).foregroundStyle(RelayTheme.secondary)
+                        }
+                        Spacer(minLength: 0)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Image(systemName: "calendar").font(.title3)
+                            Text(listing.condition).font(.caption).foregroundStyle(RelayTheme.secondary)
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("A little about your sessions").font(.title3.weight(.bold))
+                        Text(listing.description).font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5)
+                    }
+                    Label(listing.location, systemImage: "mappin.and.ellipse").font(.subheadline)
+                    DemoNotice(text: "Message to discuss your course, goals, and timing. This prototype does not book sessions or take tutoring payments.")
+                    Button("Create a study request") { request = true }.buttonStyle(RelayPrimaryButton(secondary: true))
+                }.foregroundStyle(RelayTheme.ink).padding(22).padding(.bottom, 10)
+            }.background(RelayTheme.paper).navigationTitle("Meet your tutor").navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { store.toggleSaved(listing) } label: {
+                            Image(systemName: store.isSaved(listing) ? "heart.fill" : "heart")
+                                .symbolEffect(.bounce, value: store.isSaved(listing) && !reduceMotion)
+                        }.accessibilityLabel(store.isSaved(listing) ? "Unsave tutor" : "Save tutor")
+                    }
+                }
+                .safeAreaInset(edge: .bottom) {
+                    Button {
+                        Task { conversation = ConversationDestination(id: await store.openConversation(for: listing)) }
+                    } label: { Label("Message tutor", systemImage: "bubble.left.and.bubble.right.fill") }
+                        .buttonStyle(RelayPrimaryButton()).padding(.horizontal, 22).padding(.vertical, 12).background(.regularMaterial)
+                        .accessibilityIdentifier("message-tutor")
+                }
+                .sheet(item: $conversation) { target in
+                    NavigationStack { ConversationView(conversationID: target.id).toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { conversation = nil } } } }
+                }
+                .sheet(isPresented: $request) { RequestEditorView(title: "Study help with \(listing.courseCode ?? listing.tag ?? "my course")", category: .tutoring, details: "Interested in sessions with \(listing.seller). Preferred time and topics: ") }
         }.presentationDragIndicator(.visible)
     }
 }

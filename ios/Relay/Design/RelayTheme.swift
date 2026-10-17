@@ -3,19 +3,19 @@ import UIKit
 
 // Semantic, adaptive surfaces keep the campus palette legible in both appearances.
 enum RelayTheme {
-    static let paper = adaptive(0xF8F9F4, 0x151E19)
-    static let surface = adaptive(0xFFFFFF, 0x202C24)
-    static let soft = adaptive(0xEEF1E5, 0x293629)
-    static let forest = adaptive(0x294B3D, 0xC8E1B5)
-    static let ink = adaptive(0x263E32, 0xF1F5E9)
-    static let secondary = adaptive(0x6B7862, 0xAFBBA3)
-    static let line = adaptive(0xE2E7D9, 0x3A493A)
-    static let lime = adaptive(0xDCEB9C, 0x526C35)
-    static let peach = adaptive(0xEFD4C1, 0x634B3E)
-    static let lavender = adaptive(0xDDD8E7, 0x4A4259)
-    static let heroInk = adaptive(0x30462E, 0xEBF2DD)
-    static let onForest = adaptive(0xFCFFF4, 0x18321F)
-    static let accent = adaptive(0x7C9459, 0xB4D08D)
+    static let paper = adaptive(0xF6F6F2, 0x11131B)
+    static let surface = adaptive(0xFFFFFF, 0x1C1F2A)
+    static let soft = adaptive(0xEBEDF3, 0x282D3C)
+    static let forest = adaptive(0x4C52D9, 0xB8BCFF)
+    static let ink = adaptive(0x202337, 0xF4F4FB)
+    static let secondary = adaptive(0x6B7084, 0xA7ADC3)
+    static let line = adaptive(0xE3E5EC, 0x353B4D)
+    static let lime = adaptive(0xDCEFBA, 0x344827)
+    static let peach = adaptive(0xFFE0CD, 0x553A2D)
+    static let lavender = adaptive(0xE4E3FF, 0x36335A)
+    static let heroInk = adaptive(0x252940, 0xF2F0FF)
+    static let onForest = adaptive(0xFFFFFF, 0x222650)
+    static let accent = adaptive(0x555ED0, 0xB8BCFF)
     static func eventColor(_ theme: String) -> Color { theme == "peach" ? peach : theme == "lavender" ? lavender : lime }
     static func heading(_ size: CGFloat) -> Font {
         let style: Font.TextStyle
@@ -26,7 +26,7 @@ enum RelayTheme {
         case 20..<24: style = .title3
         default: style = .headline
         }
-        return .system(style, design: .rounded, weight: .semibold)
+        return .system(style, design: .default, weight: .bold)
     }
     static func adaptive(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(uiColor: UIColor { trait in
@@ -162,5 +162,122 @@ struct FlowLayout: Layout {
             points.append(CGPoint(x: x, y: y)); x += size.width + spacing; rowHeight = max(rowHeight, size.height)
         }
         return (CGSize(width: width, height: y + rowHeight), points)
+    }
+}
+
+// One service vocabulary shared by the home hub, explore rail and posting sheet.
+enum CampusService: String, CaseIterable, Identifiable {
+    case tutoring = "Tutoring", tickets = "Tickets", rides = "Rides", market = "Market"
+    var id: String { rawValue }
+    var symbol: String {
+        switch self {
+        case .tutoring: "graduationcap.fill"
+        case .tickets: "ticket.fill"
+        case .rides: "car.side.fill"
+        case .market: "bag.fill"
+        }
+    }
+    var color: Color {
+        switch self {
+        case .tutoring: RelayTheme.lavender
+        case .tickets: RelayTheme.peach
+        case .rides: RelayTheme.lime
+        case .market: RelayTheme.soft
+        }
+    }
+    var subtitle: String {
+        switch self {
+        case .tutoring: "Get unstuck"
+        case .tickets: "Be there"
+        case .rides: "Go together"
+        case .market: "Find your thing"
+        }
+    }
+}
+
+struct ServiceRail: View {
+    @Binding var selection: CampusService
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Namespace private var highlight
+    var body: some View {
+        Group {
+            if typeSize.isAccessibilitySize {
+                ScrollView(.horizontal) { items }.scrollIndicators(.hidden)
+            } else { items }
+        }.background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 24))
+            .sensoryFeedback(.selection, trigger: selection)
+    }
+    private var items: some View {
+        HStack(spacing: 4) {
+            ForEach(CampusService.allCases) { service in
+                Button {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.8)) { selection = service }
+                } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: service.symbol).font(.system(.subheadline, weight: .semibold))
+                            .symbolEffect(.bounce, options: .nonRepeating, value: selection == service && !reduceMotion)
+                        Text(service.rawValue).font(.caption.weight(.semibold))
+                    }
+                    .frame(minWidth: typeSize.isAccessibilitySize ? 125 : 0, maxWidth: .infinity, minHeight: 59)
+                    .padding(.horizontal, 3)
+                    .foregroundStyle(selection == service ? RelayTheme.onForest : RelayTheme.secondary)
+                    .background {
+                        if selection == service {
+                            RoundedRectangle(cornerRadius: 20).fill(RelayTheme.forest).matchedGeometryEffect(id: "service", in: highlight)
+                        }
+                    }.contentShape(RoundedRectangle(cornerRadius: 20))
+                }.buttonStyle(.plain)
+                    .accessibilityIdentifier("service-\(service.rawValue)")
+                    .accessibilityAddTraits(selection == service ? .isSelected : [])
+            }
+        }.padding(5)
+    }
+}
+
+struct RelayPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.65), value: configuration.isPressed)
+    }
+}
+
+private struct RelayEntrance: ViewModifier {
+    let order: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var visible = false
+    func body(content: Content) -> some View {
+        content.opacity(visible ? 1 : 0)
+            .offset(y: visible || reduceMotion ? 0 : 18)
+            .onAppear {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.85).delay(Double(order) * 0.06)) { visible = true }
+            }
+    }
+}
+extension View {
+    func relayEntrance(_ order: Int = 0) -> some View { modifier(RelayEntrance(order: order)) }
+    func relayCard() -> some View {
+        padding(20).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 24))
+    }
+}
+
+struct ServiceHeading: View {
+    let service: CampusService
+    let title: String
+    let subtitle: String
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title).font(RelayTheme.heading(32)).tracking(-1.2).fixedSize(horizontal: false, vertical: true)
+                Text(subtitle).font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(3)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: service.symbol).font(.system(size: 25, weight: .medium))
+                .frame(width: 58, height: 64).background(service.color, in: RoundedRectangle(cornerRadius: 21))
+                .rotationEffect(.degrees(-7)).accessibilityHidden(true)
+        }.foregroundStyle(RelayTheme.ink)
     }
 }

@@ -13,9 +13,6 @@ struct RelayRootView: View {
             Tab(RelayTab.discover.rawValue, systemImage: RelayTab.discover.symbol, value: RelayTab.discover) {
                 NavigationStack { DiscoverView() }
             }
-            Tab(RelayTab.plans.rawValue, systemImage: RelayTab.plans.symbol, value: RelayTab.plans) {
-                NavigationStack { PlansView() }
-            }
             Tab(RelayTab.campus.rawValue, systemImage: RelayTab.campus.symbol, value: RelayTab.campus) {
                 NavigationStack { CampusBoardView() }
             }
@@ -26,6 +23,7 @@ struct RelayRootView: View {
                 NavigationStack { ProfileView() }
             }
         }
+        .sensoryFeedback(.selection, trigger: store.selectedTab)
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await store.refreshMarketplace()

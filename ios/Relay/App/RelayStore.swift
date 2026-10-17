@@ -17,16 +17,18 @@ struct AppSnapshot: Codable {
     var requests: [CampusRequest] = DemoCatalog.requests
     var includeOtherCampuses = false
     var hasSeenWelcome = false
+    var rideDemo: RideLedger?
+    var ticketDemo: TicketLedger?
+    var baselineApplied: Bool?
 }
 
 enum RelayTab: String, CaseIterable, Identifiable {
-    case discover = "Discover", plans = "My plans", campus = "Campus", exchanges = "Inbox", you = "You"
+    case discover = "Home", campus = "Explore", exchanges = "Inbox", you = "You"
     var id: String { rawValue }
     var symbol: String {
         switch self {
-        case .discover: "sparkle.magnifyingglass"
-        case .plans: "square.grid.2x2"
-        case .campus: "ticket"
+        case .discover: "house"
+        case .campus: "square.grid.2x2"
         case .exchanges: "bubble.left.and.bubble.right"
         case .you: "person.crop.circle"
         }
@@ -40,6 +42,15 @@ final class RelayStore {
     var promotions: [CampusPromotion] = CampusPromotion.samples
     var dismissedPromotionIDs: Set<String> = []
     var selectedTab: RelayTab = .discover
+    var selectedService: CampusService = .tutoring
+    var inboxPane = "messages"
+    func explore(_ service: CampusService) {
+        selectedService = service
+        selectedTab = .campus
+        feedbackCount += 1
+    }
+    func openActivity() { inboxPane = "activity"; selectedTab = .exchanges }
+
     var toast: String?
     var persistenceError: String?
     var feedbackCount = 0
@@ -70,8 +81,6 @@ final class RelayStore {
             state.courseProfiles?[campus.rawValue] = Array(Set(codes.filter { allowed.contains($0) })).sorted()
         }
     }
-    var planListings: [Listing] { listings.filter { snapshot.plan?.listingIDs.contains($0.id) == true } }
-    var planTotal: Int { snapshot.plan?.total(in: listings) ?? 0 }
     var conversations: [ListingConversation] {
         if usesSharedMarket, let remoteThreads { return remoteThreads.sorted { $0.updatedAt > $1.updatedAt } }
         return (snapshot.conversations ?? []).sorted { $0.updatedAt > $1.updatedAt }
@@ -83,6 +92,15 @@ final class RelayStore {
     var unreadMessageCount: Int { conversations.reduce(0) { $0 + $1.unreadCount } }
     var campusRequests: [CampusRequest] { snapshot.requests.filter { $0.campus == campus } }
 
+    func rideLedger(now: Date = Date()) -> RideLedger {
+        (try? CampusMobility.hydrateRides(snapshot.rideDemo, now: now)) ?? RideLedger(trips: [], bookings: [], handoffs: [], keys: [:])
+    }
+    func saveRides(_ ledger: RideLedger) { update { $0.rideDemo = ledger } }
+    func ticketLedger(now: Date = Date()) -> TicketLedger {
+        (try? CampusMobility.hydrateTickets(snapshot.ticketDemo, now: now)) ?? TicketLedger(events: [], listings: [], orders: [], eventRequests: [], keys: [:])
+    }
+    func saveTickets(_ ledger: TicketLedger) { update { $0.ticketDemo = ledger } }
+
     init(inMemory: Bool = false) {
         let directory = URL.applicationSupportDirectory.appending(path: "Relay", directoryHint: .isDirectory)
         persistenceURL = inMemory ? nil : directory.appending(path: "campus-state-v1.json")
@@ -91,7 +109,7 @@ final class RelayStore {
            let feed = try? JSONDecoder().decode(CampusPromotionFeed.self, from: data) { promotions = feed.ads }
         var loaded = AppSnapshot()
         var startupError: String?
-        if let url = persistenceURL, FileManager.default.fileExists(atPath: url.path) {
+        if !Self.uiTesting, let url = persistenceURL, FileManager.default.fileExists(atPath: url.path) {
             do {
                 let data = try Data(contentsOf: url)
                 let restored = try JSONDecoder().decode(AppSnapshot.self, from: data)
@@ -110,6 +128,67 @@ final class RelayStore {
         }
         do { catalog = try DemoCatalog.listings() }
         catch { persistenceError = "The sample catalog couldn’t be loaded. You can still create a listing." }
+        installBaselineIfNeeded()
+    }
+
+    private static var uiTesting: Bool { ProcessInfo.processInfo.arguments.contains("-ui-testing") }
+
+    /// Fills empty local demo areas once. Existing messages, plans, and saves stay put.
+    private func installBaselineIfNeeded() {
+        guard !Self.uiTesting, snapshot.baselineApplied != true else { return }
+        let byID = Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
+        guard let headphones = byID["headphones"], let books = byID["books"], let table = byID["side-table"] else { return }
+        let meeting = Calendar.current.date(byAdding: .hour, value: 26, to: Date()) ?? Date()
+        update { state in
+            if state.savedListingIDs.isEmpty { state.savedListingIDs = ["chair", "lamp", "plant"] }
+            if state.savedEventIDs.isEmpty { state.savedEventIDs = ["repair"] }
+            if state.courseProfiles?.values.allSatisfy(\.isEmpty) ?? true {
+                state.courseProfiles = [Campus.alabama.rawValue: ["CS 100", "EN 101"], Campus.auburn.rawValue: ["COMP 1210"]]
+            }
+            if (state.conversations ?? []).isEmpty {
+                state.conversations = Self.sampleConversations(headphones: headphones, books: books)
+            }
+            if state.exchanges.isEmpty {
+                state.exchanges = [Exchange(id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-333333333303")!, listing: table, meeting: meeting)]
+            }
+            let starter: Set<String> = ["desk-request", "bike-request"]
+            if state.requests.isEmpty || Set(state.requests.map(\.id)).isSubset(of: starter) {
+                state.requests = DemoCatalog.requests
+            }
+            state.baselineApplied = true
+        }
+    }
+
+    private static func sampleConversations(headphones: Listing, books: Listing) -> [ListingConversation] {
+        let earlier = Date().addingTimeInterval(-5 * 3600)
+        let middle = Date().addingTimeInterval(-4 * 3600)
+        let later = Date().addingTimeInterval(-3 * 3600)
+        let offerID = UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-444444444404")!
+        let offer = ListingOffer(id: offerID, amountCents: 4_500, author: .seller, status: .pending, createdAt: later)
+        let headphonesThread = ListingConversation(
+            id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-111111111101")!,
+            listing: headphones,
+            messages: [
+                ListingMessage(id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-111111111111")!, author: .buyer, text: "Still available this week?", offerID: nil, createdAt: earlier),
+                ListingMessage(id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-111111111112")!, author: .seller, text: "Yes. I can meet near Gorgas after 4.", offerID: nil, createdAt: middle),
+                ListingMessage(id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-111111111113")!, author: .seller, text: "Offered \(Money.format(4_500))", offerID: offerID, createdAt: later)
+            ],
+            offers: [offer],
+            readMessageCount: 1,
+            createdAt: earlier
+        )
+        let booksThread = ListingConversation(
+            id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-222222222202")!,
+            listing: books,
+            messages: [
+                ListingMessage(id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-222222222221")!, author: .buyer, text: "Are there notes in the margins?", offerID: nil, createdAt: earlier.addingTimeInterval(-3600)),
+                ListingMessage(id: UUID(uuidString: "6F0C2A10-4B1E-4C3A-9D2E-222222222222")!, author: .seller, text: "A few pencil notes in chapter 2. Happy to show you before you decide.", offerID: nil, createdAt: earlier)
+            ],
+            offers: [],
+            readMessageCount: 2,
+            createdAt: earlier.addingTimeInterval(-3600)
+        )
+        return [headphonesThread, booksThread]
     }
 
     /// The simulator can reach the Mac's loopback campaign service. A physical
@@ -151,18 +230,6 @@ final class RelayStore {
     func selectCampus(_ campus: Campus) { update { $0.campus = campus } }
     func setCrossCampus(_ enabled: Bool) { update { $0.includeOtherCampuses = enabled } }
     func finishWelcome() { update { $0.hasSeenWelcome = true } }
-    func savePlan(name: String, budgetCents: Int) {
-        update { $0.plan = SetupPlan(name: name, budgetCents: budgetCents, listingIDs: $0.plan?.listingIDs ?? []) }
-        notify("A little plan. A great beginning.")
-    }
-    func addToPlan(_ listing: Listing) {
-        update { state in
-            if state.plan == nil { state.plan = SetupPlan() }
-            state.plan?.add(listing.id)
-        }
-        notify("Added to your setup plan.")
-    }
-    func removeFromPlan(_ listing: Listing) { update { $0.plan?.remove(listing.id) } }
     static var photosDirectory: URL { URL.applicationSupportDirectory.appending(path: "Relay/Photos", directoryHint: .isDirectory) }
     func savePhoto(_ data: Data) throws -> String {
         let filename = UUID().uuidString + ".jpg"
@@ -459,7 +526,7 @@ final class RelayStore {
 
     private func update(_ mutation: (inout AppSnapshot) -> Void) {
         mutation(&snapshot)
-        guard let url = persistenceURL else { return }
+        guard let url = persistenceURL, !Self.uiTesting else { return }
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder().encode(snapshot).write(to: url, options: .atomic)

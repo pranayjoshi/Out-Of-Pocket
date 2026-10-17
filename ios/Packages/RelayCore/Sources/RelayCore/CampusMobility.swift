@@ -166,6 +166,12 @@ public struct RideLedger: Codable, Equatable, Sendable {
     public var bookings: [RideBooking]
     public var handoffs: [ProviderHandoff]
     public var keys: [String: IdempotencyRecord]
+    public init(trips: [RideTrip], bookings: [RideBooking], handoffs: [ProviderHandoff], keys: [String: IdempotencyRecord]) {
+        self.trips = trips
+        self.bookings = bookings
+        self.handoffs = handoffs
+        self.keys = keys
+    }
 }
 
 public struct TicketTypeSpec: Codable, Identifiable, Equatable, Sendable {
@@ -270,6 +276,13 @@ public struct TicketLedger: Codable, Equatable, Sendable {
     public var orders: [TicketOrder]
     public var eventRequests: [EventReviewRequest]
     public var keys: [String: IdempotencyRecord]
+    public init(events: [AdmissionEvent], listings: [TicketListing], orders: [TicketOrder], eventRequests: [EventReviewRequest], keys: [String: IdempotencyRecord]) {
+        self.events = events
+        self.listings = listings
+        self.orders = orders
+        self.eventRequests = eventRequests
+        self.keys = keys
+    }
 }
 
 public struct UberLink: Equatable, Sendable {

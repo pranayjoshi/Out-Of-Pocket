@@ -11,7 +11,7 @@ struct ExchangesView: View {
                 Text("Clear steps. No guesswork. Your next handoff, all in one place.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
                 DemoNotice(text: store.usesSharedMarket ? "Shared reservations. Sandbox holds do not charge a bank." : "Sample handoffs stay on this device.")
                 if store.exchanges.isEmpty {
-                    EmptyContent(symbol: "arrow.left.arrow.right", title: "It starts with a good find.", message: "Reserve a sample listing to explore the complete handoff, inspection, and payment journey.", actionTitle: "Find your next thing") { store.selectedTab = .discover }
+                    EmptyContent(symbol: "arrow.left.arrow.right", title: "It starts with a good find.", message: "Reserve a sample listing to explore the complete handoff, inspection, and payment journey.", actionTitle: "Find your next thing") { store.explore(.market) }
                 }
                 ForEach(store.exchanges) { exchange in
                     Button { selected = ExchangeDestination(id: exchange.id) } label: {

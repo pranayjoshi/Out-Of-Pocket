@@ -3,16 +3,215 @@ import RelayCore
 
 struct CampusBoardView: View {
     @Environment(RelayStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showCreate = false
+    var body: some View {
+        @Bindable var store = store
+        VStack(spacing: 0) {
+            ServiceRail(selection: $store.selectedService).padding(.horizontal, 20).padding(.vertical, 12)
+            Group {
+                switch store.selectedService {
+                case .tutoring: TutoringView()
+                case .tickets: TicketsDemoView()
+                case .rides: RidesDemoView()
+                case .market: MarketplaceView()
+                }
+            }.id(store.selectedService)
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 8)))
+        }.background(RelayTheme.paper)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: store.selectedService)
+            .navigationTitle("Explore").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showCreate = true } label: { Label("Post", systemImage: "plus") }.font(.subheadline.weight(.semibold))
+                }
+            }
+            .sheet(isPresented: $showCreate) { CreateChoiceSheet() }
+    }
+}
+
+struct TutoringView: View {
+    @Environment(RelayStore.self) private var store
+    @State private var search = ""
+    @State private var selected: Listing?
+    @State private var showRequest = false
+    @State private var subject = "All"
+    private let subjects = ["All", "Math", "Computer science", "Writing"]
+    private var tutors: [Listing] {
+        store.listings.filter {
+            $0.campus == store.campus && $0.category == .tutoring &&
+            (search.isEmpty || "\($0.title) \($0.seller) \($0.courseCode ?? "") \($0.description)".localizedCaseInsensitiveContains(search)) &&
+            (subject == "All" || $0.tag == subject)
+        }
+    }
+    private var asks: [CampusRequest] {
+        store.campusRequests.filter { $0.category == .tutoring && (search.isEmpty || "\($0.title) \($0.details ?? "")".localizedCaseInsensitiveContains(search)) }
+    }
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 23) {
+                ServiceHeading(service: .tutoring, title: "Your next aha!", subtitle: "Find someone who gets your course.\nLearn at your own pace.").relayEntrance()
+                RelaySearchField(placeholder: "Course, subject, or tutor", text: $search)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(subjects, id: \.self) { item in
+                            Button { subject = item } label: {
+                                Text(item).font(.caption.weight(.semibold)).padding(.horizontal, 15).frame(minHeight: 40)
+                                    .background(subject == item ? RelayTheme.lavender : RelayTheme.surface, in: Capsule())
+                                    .foregroundStyle(RelayTheme.ink)
+                            }.accessibilityAddTraits(subject == item ? .isSelected : [])
+                        }
+                    }
+                }.scrollIndicators(.hidden)
+                HStack {
+                    Text("Find your study person").font(.title3.weight(.bold)).tracking(-0.5)
+                    Spacer(); Text("\(tutors.count) tutors").font(.caption).foregroundStyle(RelayTheme.secondary)
+                }
+                if tutors.isEmpty {
+                    EmptyContent(symbol: "graduationcap", title: "Let’s ask your campus.", message: "No tutors match these filters. Post your course and what you need help with.", actionTitle: "Request a tutor") { showRequest = true }
+                }
+                ForEach(Array(tutors.enumerated()), id: \.element.id) { index, tutor in
+                    Button { selected = tutor } label: { TutorRow(listing: tutor) }.buttonStyle(RelayPressStyle()).relayEntrance(min(index + 1, 4))
+                }
+                Button { showRequest = true } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text("Need help with something else?").font(.headline)
+                            Text("Post your course. Let campus come to you.").font(.caption).foregroundStyle(RelayTheme.secondary)
+                        }
+                        Spacer(minLength: 0); Image(systemName: "plus.circle.fill").font(.title2)
+                    }.foregroundStyle(RelayTheme.ink).padding(20).background(RelayTheme.lavender, in: RoundedRectangle(cornerRadius: 23))
+                }.buttonStyle(RelayPressStyle()).accessibilityIdentifier("request-tutor")
+                if !asks.isEmpty {
+                    Text("The study board").font(.title3.weight(.bold))
+                    ForEach(asks) { post in
+                        NavigationLink { TutoringPostView(post: post) } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                RoundIcon(symbol: post.postIntent == .offer ? "hand.raised.fill" : "questionmark.bubble.fill")
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(post.title).font(.subheadline.weight(.semibold))
+                                    Text("\(post.person) · \(post.summary)").font(.caption).foregroundStyle(RelayTheme.secondary)
+                                }
+                                Spacer(minLength: 0); Image(systemName: "chevron.right").font(.caption)
+                            }.foregroundStyle(RelayTheme.ink).relayCard()
+                        }.buttonStyle(.plain)
+                    }
+                }
+                DemoNotice(text: "Sample tutors and local study posts. Availability and affiliations are unverified. No sessions are booked or paid for here.")
+            }.padding(22).padding(.bottom, 16)
+        }.scrollDismissesKeyboard(.interactively)
+            .sheet(item: $selected) { ListingDetailView(listing: $0) }
+            .sheet(isPresented: $showRequest) { RequestEditorView(category: .tutoring) }
+    }
+}
+
+struct TutoringPostView: View {
+    let post: CampusRequest
+    @State private var respond = false
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                ServiceHeading(service: post.category == .tutoring ? .tutoring : .market, title: post.title, subtitle: "\(post.person) · \(post.summary)")
+                if let details = post.details { Text(details).font(.body).foregroundStyle(RelayTheme.secondary) }
+                DemoNotice(text: "Local study post. A response creates a related post on this device; it does not contact this person.")
+                Button(post.category != .tutoring ? "Create a related post" : post.postIntent == .offer ? "Create a related request" : "Offer study help") { respond = true }.buttonStyle(RelayPrimaryButton())
+            }.padding(22)
+        }.background(RelayTheme.paper).navigationTitle(post.category == .tutoring ? "Study board" : "Campus board").navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $respond) { CampusPostResponseView(post: post) }
+    }
+}
+
+struct RelaySearchField: View {
+    let placeholder: String
+    @Binding var text: String
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass").foregroundStyle(RelayTheme.secondary)
+            TextField(placeholder, text: $text).font(.subheadline).submitLabel(.search)
+                .accessibilityLabel(placeholder)
+            if !text.isEmpty {
+                Button { text = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(RelayTheme.secondary).frame(width: 30, height: 36) }.accessibilityLabel("Clear search")
+            }
+        }.padding(.horizontal, 16).frame(minHeight: 54).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 18))
+    }
+}
+
+struct MarketplaceView: View {
+    @Environment(RelayStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var search = ""
+    @State private var category: RelayCore.Category = .all
+    @State private var sort: ListingSort = .recommended
+    @State private var freeOnly = false
+    @State private var showFilters = false
+    @State private var selected: Listing?
+    private var results: [Listing] {
+        var query = ListingQuery()
+        query.campus = store.campus; query.category = category; query.text = search
+        query.includeOtherCampuses = store.snapshot.includeOtherCampuses; query.freeOnly = freeOnly; query.sort = sort
+        let filtered = query.apply(to: store.listings).filter { ![.tutoring, .tickets].contains($0.category) }
+        guard sort == .recommended else { return filtered }
+        return filtered.enumerated().sorted { a, b in
+            let first = UniversityCourse.reason(for: a.element, campus: store.campus, codes: store.courseCodes) != nil
+            let second = UniversityCourse.reason(for: b.element, campus: store.campus, codes: store.courseCodes) != nil
+            return first == second ? a.offset < b.offset : first
+        }.map(\.element)
+    }
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                ServiceHeading(service: .market, title: "Good finds. Close by.", subtitle: "A new chapter for someone’s old favorite.")
+                RelaySearchField(placeholder: "Search campus finds", text: $search)
+                HStack {
+                    Menu {
+                        Picker("Category", selection: $category) {
+                            ForEach(RelayCore.Category.allCases.filter { ![.tutoring, .tickets].contains($0) }) { Text($0.rawValue).tag($0) }
+                        }
+                    } label: { Label(category.rawValue, systemImage: "square.grid.2x2").font(.subheadline.weight(.semibold)).frame(minHeight: 44) }
+                    Spacer()
+                    Button { showFilters = true } label: { Label("Filter", systemImage: "slider.horizontal.3").font(.subheadline).frame(minHeight: 44) }
+                }
+                if results.isEmpty {
+                    EmptyContent(symbol: "magnifyingglass", title: "No finds just yet.", message: "Try a different search or reset your filters.", actionTitle: "Reset filters") { search = ""; category = .all; freeOnly = false; sort = .recommended }
+                } else {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 24) {
+                        ForEach(results) { listing in ListingCard(listing: listing) { selected = listing } }
+                    }
+                }
+                NavigationLink { CommunityBoardView() } label: {
+                    HStack { Label("Campus asks & trades", systemImage: "bubble.left.and.bubble.right"); Spacer(); Image(systemName: "arrow.right") }
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(RelayTheme.ink).relayCard()
+                }
+                CampusPromotionPlacement(placement: "Campus board")
+            }.padding(22)
+        }.scrollDismissesKeyboard(.interactively)
+            .sheet(item: $selected) { ListingDetailView(listing: $0) }
+            .sheet(isPresented: $showFilters) {
+                NavigationStack {
+                    Form {
+                        Picker("Sort", selection: $sort) { ForEach(ListingSort.allCases) { Text($0.rawValue).tag($0) } }
+                        Toggle("Free finds only", isOn: $freeOnly)
+                        Toggle("Include other campuses", isOn: Binding(get: { store.snapshot.includeOtherCampuses }, set: { store.setCrossCampus($0) }))
+                    }.navigationTitle("Filter finds").navigationBarTitleDisplayMode(.inline)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showFilters = false } } }
+                }.presentationDetents([.medium, .large])
+            }
+    }
+}
+
+struct CommunityBoardView: View {
+    @Environment(RelayStore.self) private var store
     @State private var selectedEvent: String?
     @State private var showRequest = false
     @State private var relatedPost: CampusRequest?
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                SectionTitle(eyebrow: "MORE THAN A MARKETPLACE", title: "Good things\nare happening.")
-                Text("Less lost in the group chat.\nMore actually showing up.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5)
+                SectionTitle(eyebrow: "THE CAMPUS BOARD", title: "Ask. Offer. Trade.")
+                Text("What you need. What you can share.\nA place to find each other.").font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(5)
                 HStack {
-                    SectionTitle(eyebrow: "THE CAMPUS SWITCHBOARD", title: "A little give. A little take.")
+                    SectionTitle(eyebrow: "YOUR COMMUNITY", title: "Open on campus")
                     Button { showRequest = true } label: { RoundIcon(symbol: "plus") }.accessibilityLabel("Post a campus request")
                 }
                 ForEach(store.campusRequests) { request in
@@ -178,7 +377,7 @@ struct RequestEditorView: View {
                             budgetCents: intent == .trade ? 0 : Money.parse(budget) ?? 0, category: category, campus: store.campus,
                             intent: intent, exchangeFor: intent == .trade ? exchangeFor.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
                             details: details.trimmingCharacters(in: .whitespacesAndNewlines)))
-                        store.selectedTab = .campus; dismiss()
+                        store.explore(category == .tutoring ? .tutoring : .market); dismiss()
                     }.buttonStyle(RelayPrimaryButton()).disabled(!valid).accessibilityIdentifier("campus-post-submit")
                 }.foregroundStyle(RelayTheme.ink).padding(24)
             }.background(RelayTheme.paper).navigationTitle(intent == .find ? "The community ask" : "\(intent.rawValue) on campus").navigationBarTitleDisplayMode(.inline)
