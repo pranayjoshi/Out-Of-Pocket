@@ -5,7 +5,7 @@ struct DiscoverView: View {
     @Environment(RelayStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var category: Category = .all
+    @State private var category: RelayCore.Category = .all
     @State private var search = ""
     @State private var sort: ListingSort = .recommended
     @State private var freeOnly = false
@@ -34,7 +34,6 @@ struct DiscoverView: View {
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared || reduceMotion ? 0 : 16)
                     trustStrip
-                    setupNudge
                 }
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(alignment: .bottom) {
@@ -61,6 +60,7 @@ struct DiscoverView: View {
                     }
                 }
                 if search.isEmpty {
+                    setupNudge
                     requestNudge
                     SponsorNudge()
                     HStack(spacing: 7) {
@@ -97,7 +97,7 @@ struct DiscoverView: View {
                 Image(systemName: "sun.max").foregroundStyle(RelayTheme.accent)
                 Eyebrow(text: "GOOD FINDS. GOOD PEOPLE.")
             }.font(.caption)
-            Text("Your campus,\nin circulation.").font(RelayTheme.heading(36)).tracking(-1.5).foregroundStyle(RelayTheme.ink)
+            Text("Your campus,\nin circulation.").font(RelayTheme.heading(33)).tracking(-1.5).foregroundStyle(RelayTheme.ink)
             Text("Find your thing. Meet your people. Pass it on.")
                 .font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(3)
         }.accessibilityElement(children: .combine)
@@ -123,7 +123,7 @@ struct DiscoverView: View {
     private var categoryPicker: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                ForEach(Category.allCases) { item in
+                ForEach(RelayCore.Category.allCases) { item in
                     Button { withAnimation(reduceMotion ? nil : .snappy) { category = item } } label: {
                         Label(item.rawValue, systemImage: item.symbol).font(.caption.weight(.medium))
                             .padding(.horizontal, 13).frame(minHeight: 42)
@@ -205,37 +205,47 @@ struct CampusHero: View {
     @State private var float = false
     var action: () -> Void
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "A NEW HOME LOOKS GOOD ON IT").padding(.bottom, 14)
-            Text("Good things deserve\na second story.")
-                .font(RelayTheme.heading(typeSize.isAccessibilitySize ? 29 : 31)).tracking(-1.1)
-                .foregroundStyle(RelayTheme.heroInk).fixedSize(horizontal: false, vertical: true)
-            ZStack {
-                Circle().stroke(RelayTheme.accent.opacity(0.2), lineWidth: 1).frame(width: 235, height: 235).offset(x: 35, y: 4)
-                Circle().stroke(RelayTheme.accent.opacity(0.14), lineWidth: 1).frame(width: 198, height: 198).offset(x: 35, y: 4)
-                Polaroid(image: "lamp", caption: "Late-night companion", price: "$18")
-                    .frame(width: 125, height: 180).rotationEffect(.degrees(12)).offset(x: 78, y: float ? -12 : -5)
-                Polaroid(image: "chair", caption: "Someone’s favorite. Yours next.", price: "$45")
-                    .frame(width: 152, height: 201).rotationEffect(.degrees(-9)).offset(x: -27, y: float ? 6 : 0)
-                VStack(spacing: 5) {
-                    Image(systemName: "arrow.left.arrow.right").font(.title3.weight(.semibold))
-                    Text("PRE-LOVED.\nRE-LOVED.").font(.system(size: 8, weight: .bold)).tracking(0.7).multilineTextAlignment(.center)
-                }.foregroundStyle(RelayTheme.heroInk).frame(width: 77, height: 77).background(RelayTheme.lime, in: Circle())
-                    .rotationEffect(.degrees(-9)).offset(x: -100, y: -57)
-            }.frame(maxWidth: .infinity).frame(height: 239).accessibilityHidden(true)
-            HStack(alignment: .center) {
-                Text("Their favorite corner.\nYour new beginning.").font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(3)
-                Spacer()
-                Button(action: action) {
-                    Image(systemName: "arrow.up.right").font(.title3.weight(.medium)).frame(width: 49, height: 49)
-                        .foregroundStyle(RelayTheme.onForest).background(RelayTheme.forest, in: Circle())
-                }.accessibilityLabel("Explore dorm and living finds")
+        VStack(alignment: .leading, spacing: 15) {
+            Eyebrow(text: "PRE-LOVED. RE-LOVED.")
+            if typeSize.isAccessibilitySize {
+                copy
+                art.frame(maxWidth: .infinity).frame(height: 205)
+            } else {
+                HStack(spacing: 0) {
+                    copy.frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
+                    art.frame(width: 145, height: 195)
+                }
             }
-        }.padding(23).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 29))
+        }.padding(22).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 28))
         .task {
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) { float = true }
         }
+    }
+    private var copy: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Good things.\nSecond stories.")
+                .font(RelayTheme.heading(25)).tracking(-0.9).foregroundStyle(RelayTheme.heroInk)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Their favorite corner.\nYour new beginning.").font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(3)
+            Button(action: action) {
+                HStack(spacing: 8) { Text("Find your thing").font(.caption.weight(.semibold)); Image(systemName: "arrow.up.right").font(.caption) }
+                    .padding(.horizontal, 13).frame(minHeight: 44)
+                    .foregroundStyle(RelayTheme.onForest).background(RelayTheme.forest, in: Capsule())
+            }.accessibilityLabel("Explore dorm and living finds")
+        }
+    }
+    private var art: some View {
+        ZStack {
+            Circle().stroke(RelayTheme.accent.opacity(0.18), lineWidth: 1).frame(width: 168, height: 168)
+            Polaroid(image: "lamp", caption: "Late-night companion", price: "$18")
+                .frame(width: 96, height: 131).rotationEffect(.degrees(12)).offset(x: 34, y: float ? -27 : -22)
+            Polaroid(image: "chair", caption: "Someone’s favorite. Yours next.", price: "$45")
+                .frame(width: 114, height: 156).rotationEffect(.degrees(-9)).offset(x: -10, y: float ? 21 : 16)
+            Image(systemName: "arrow.left.arrow.right").font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(RelayTheme.heroInk).frame(width: 45, height: 45).background(RelayTheme.lime, in: Circle())
+                .rotationEffect(.degrees(-13)).offset(x: -42, y: -63)
+        }.accessibilityHidden(true)
     }
 }
 struct Polaroid: View {
@@ -283,7 +293,7 @@ struct ListingCard: View {
                     .multilineTextAlignment(.leading).lineLimit(2).frame(maxWidth: .infinity, minHeight: 40, alignment: .topLeading)
             }
             HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Text(listing.price).font(.system(.title3, weight: .semibold, design: .rounded)).foregroundStyle(RelayTheme.ink)
+                Text(listing.price).font(.system(.title3, design: .rounded, weight: .semibold)).foregroundStyle(RelayTheme.ink)
                 if let original = listing.originalPrice { Text(original).font(.caption2).strikethrough().foregroundStyle(RelayTheme.secondary) }
             }
             HStack(spacing: 4) {

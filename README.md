@@ -1,5 +1,7 @@
 # Relay
 
+The native iPhone and iPad app lives in [`ios/`](ios/README.md). Open `ios/Relay.xcodeproj` in Xcode to run the SwiftUI experience. The React app below remains available as the original browser prototype.
+
 A campus marketplace UI prototype built with React, TypeScript, Vite, Motion, and Lucide. Warm paper surfaces, forest-green controls, floating editorial imagery, staggered listing reveals, animated navigation, and responsive layouts establish the first product direction.
 
 ## Run locally

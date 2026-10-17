@@ -8,19 +8,19 @@ struct RelayRootView: View {
     var body: some View {
         @Bindable var store = store
         TabView(selection: $store.selectedTab) {
-            Tab(RelayTab.discover.rawValue, systemImage: RelayTab.discover.symbol, value: .discover) {
+            Tab(RelayTab.discover.rawValue, systemImage: RelayTab.discover.symbol, value: RelayTab.discover) {
                 NavigationStack { DiscoverView() }
             }
-            Tab(RelayTab.plans.rawValue, systemImage: RelayTab.plans.symbol, value: .plans) {
+            Tab(RelayTab.plans.rawValue, systemImage: RelayTab.plans.symbol, value: RelayTab.plans) {
                 NavigationStack { PlansView() }
             }
-            Tab(RelayTab.campus.rawValue, systemImage: RelayTab.campus.symbol, value: .campus) {
+            Tab(RelayTab.campus.rawValue, systemImage: RelayTab.campus.symbol, value: RelayTab.campus) {
                 NavigationStack { CampusBoardView() }
             }
-            Tab(RelayTab.exchanges.rawValue, systemImage: RelayTab.exchanges.symbol, value: .exchanges) {
+            Tab(RelayTab.exchanges.rawValue, systemImage: RelayTab.exchanges.symbol, value: RelayTab.exchanges) {
                 NavigationStack { ExchangesView() }
             }
-            Tab(RelayTab.you.rawValue, systemImage: RelayTab.you.symbol, value: .you) {
+            Tab(RelayTab.you.rawValue, systemImage: RelayTab.you.symbol, value: RelayTab.you) {
                 NavigationStack { ProfileView() }
             }
         }

@@ -8,7 +8,7 @@ struct CreateListingView: View {
     @State private var title = ""
     @State private var price = ""
     @State private var details = ""
-    @State private var category: Category = .dorm
+    @State private var category: RelayCore.Category = .dorm
     @State private var condition = "Good"
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
@@ -18,14 +18,15 @@ struct CreateListingView: View {
         switch category { case .tech: "headphones"; case .books: "books"; case .transport: "bike"; case .free: "plant"; default: "chair" }
     }
     var body: some View {
-        NavigationStack {
+        let currentPhotoData = photoData
+        return NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     SectionTitle(eyebrow: "SOMEONE’S NEXT FAVORITE THING", title: "Give it a next chapter.")
                     Text("A few honest details can make someone’s whole semester.").font(.subheadline).foregroundStyle(RelayTheme.secondary)
                     PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
                         VStack(spacing: 11) {
-                            if let photoData, let image = UIImage(data: photoData) {
+                            if let currentPhotoData, let image = UIImage(data: currentPhotoData) {
                                 Image(uiImage: image).resizable().scaledToFill().frame(height: 170).clipped().clipShape(RoundedRectangle(cornerRadius: 18))
                             } else {
                                 Image(systemName: "camera").font(.system(size: 31, weight: .light))
@@ -38,7 +39,7 @@ struct CreateListingView: View {
                     FormField(label: "What are you passing on?", placeholder: "A chair with a lot of good stories…", text: $title)
                     HStack {
                         Text("Category").font(.subheadline.weight(.medium)); Spacer()
-                        Picker("Category", selection: $category) { ForEach(Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }.tint(RelayTheme.forest)
+                        Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }.tint(RelayTheme.forest)
                     }
                     FormField(label: "Price ($) · zero means free", placeholder: "35.00", text: $price).keyboardType(.decimalPad)
                     HStack {

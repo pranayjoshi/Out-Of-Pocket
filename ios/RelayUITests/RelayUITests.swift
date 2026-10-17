@@ -1,7 +1,6 @@
 import XCTest
 
 final class RelayUITests: XCTestCase {
-    @MainActor
     override func setUpWithError() throws {
         continueAfterFailure = false
     }

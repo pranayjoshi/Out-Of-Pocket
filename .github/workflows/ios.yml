@@ -37,6 +37,7 @@ jobs:
             -scheme Relay \
             -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' \
             -derivedDataPath ios/build \
+            -parallel-testing-enabled NO \
             -resultBundlePath ios/TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
       - name: Capture the native app

@@ -101,7 +101,7 @@ struct RequestEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var budget = ""
-    @State private var category: Category = .dorm
+    @State private var category: RelayCore.Category = .dorm
     private var valid: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && (Money.parse(budget) ?? 0) > 0 }
     var body: some View {
         NavigationStack {
@@ -115,7 +115,7 @@ struct RequestEditorView: View {
                     HStack {
                         Text("Category").font(.subheadline)
                         Spacer()
-                        Picker("Category", selection: $category) { ForEach(Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }
+                        Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { $0 != .all }) { Text($0.rawValue).tag($0) } }
                     }
                     DemoNotice(text: "Your sample request stays on this device. It isn’t posted to a shared server.")
                     Button("Ask your campus") {
