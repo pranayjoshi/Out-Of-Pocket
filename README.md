@@ -1,8 +1,9 @@
+<a id="top"></a>
 <div align="center">
 
 <img src="ios/Relay/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="88" alt="Out of Pocket app icon">
 
-# HackBama 1 2nd place
+# HackBama I 🥈 2nd Place — Out of Pocket: Campus Life, Handled
 
 ### Campus life, handled.
 
@@ -251,6 +252,6 @@ Read the [implementation and integration notes](docs/development.md) for marketp
 
 **Your campus. A little closer.**
 
-[Back to top](#hackbama-1-2nd-place)
+[Back to top](#top)
 
 </div>
