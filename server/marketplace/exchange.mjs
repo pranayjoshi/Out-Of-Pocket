@@ -90,7 +90,7 @@ export const exchangeMethods = {
       kind: 'message',
       title: 'New message',
       body: text,
-      preview: 'You have a new Relay message',
+      preview: 'You have a new Out of Pocket message',
       href: `/messages/${conversation.id}`,
       dedupeKey: `message:${id}`,
     });
@@ -129,7 +129,7 @@ export const exchangeMethods = {
     });
     const recipient = actor.id === conversation.buyer_id ? conversation.seller_id : conversation.buyer_id;
     this.notify(recipient, {
-      kind: 'offer', title: 'New offer', body: `An offer was updated in your conversation.`, preview: 'You have a new Relay offer',
+      kind: 'offer', title: 'New offer', body: `An offer was updated in your conversation.`, preview: 'You have a new Out of Pocket offer',
       href: `/messages/${conversation.id}`, dedupeKey: `offer:${id}`,
     });
     this.processJobs();
@@ -162,7 +162,7 @@ export const exchangeMethods = {
     this.db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').run(now, conversation.id);
     const other = actor.id === conversation.buyer_id ? conversation.seller_id : conversation.buyer_id;
     this.notify(other, {
-      kind: 'offer', title: `Offer ${status}`, body: 'An offer in your conversation was updated.', preview: 'A Relay offer was updated',
+      kind: 'offer', title: `Offer ${status}`, body: 'An offer in your conversation was updated.', preview: 'An Out of Pocket offer was updated',
       href: `/messages/${conversation.id}`, dedupeKey: `offer-status:${offer.id}:${status}`,
     });
     this.processJobs();
@@ -341,7 +341,7 @@ export const exchangeMethods = {
     });
     this.enqueue('notify', {
       userId: reservation.buyer_id, kind: 'reminder', title: 'Pickup reminder', body: 'Your confirmed pickup is coming up.',
-      preview: 'You have a Relay pickup reminder', href: `/orders/${id}`, dedupeKey: `remind:${id}:buyer`,
+      preview: 'You have an Out of Pocket pickup reminder', href: `/orders/${id}`, dedupeKey: `remind:${id}:buyer`,
     }, `remind:${id}:buyer`, new Date(Date.parse(pickup.starts_at) - 60 * 60_000).toISOString());
     this.processJobs();
     return this.presentReservation(this.reservationRow(id), actor);
@@ -437,7 +437,7 @@ export const exchangeMethods = {
     this.recordMetric('completion', { campusId: this.listingRow(reservation.listing_id)?.campus_id, subjectId: reservation.id, props: { amount } });
     for (const person of [reservation.buyer_id, reservation.seller_id]) {
       this.notify(person, {
-        kind: 'completed', title: 'Exchange complete', body: 'You can leave one review for this exchange.', preview: 'A Relay exchange was completed',
+        kind: 'completed', title: 'Exchange complete', body: 'You can leave one review for this exchange.', preview: 'An Out of Pocket exchange was completed',
         href: `/orders/${reservation.id}`, dedupeKey: `done:${reservation.id}:${person}`,
       });
     }
@@ -572,7 +572,7 @@ export const exchangeMethods = {
     return {
       ...reservation,
       studentFeeCents: 0,
-      feePolicy: 'Relay does not add a student marketplace fee. The total is the agreed price plus any delivery fee you accepted before reserving.',
+      feePolicy: 'Out of Pocket does not add a student marketplace fee. The total is the agreed price plus any delivery fee you accepted before reserving.',
       bankConfirmed: false,
       ledger: entries,
     };

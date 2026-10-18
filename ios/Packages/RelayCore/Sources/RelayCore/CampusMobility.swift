@@ -536,18 +536,18 @@ public enum CampusMobility {
         let pickupCoordinates = reviewedCoordinates(pickup)
         let dropoffCoordinates = reviewedCoordinates(dropoff)
         if trimmed.isEmpty {
-            return UberLink(mode: "manual", url: URL(string: "https://m.uber.com/")!, nativeURL: nil, coordinatesIncluded: false, bookingState: nil, message: "Uber opens for you to confirm the pickup and destination. Review your pickup, fare, and booking in Uber. Relay does not book this ride.", copyText: copy)
+            return UberLink(mode: "manual", url: URL(string: "https://m.uber.com/")!, nativeURL: nil, coordinatesIncluded: false, bookingState: nil, message: "Uber opens for you to confirm the pickup and destination. Review your pickup, fare, and booking in Uber. Out of Pocket does not book this ride.", copyText: copy)
         }
         guard let pickupCoordinates, let dropoffCoordinates else {
             let url = URL(string: "https://m.uber.com/looking?client_id=\(trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed)")!
-            return UberLink(mode: "confirm", url: url, nativeURL: nil, coordinatesIncluded: false, bookingState: nil, message: "These locations do not have reviewed coordinates, so Relay will not send a pin. Confirm the pickup and destination in Uber.", copyText: copy)
+            return UberLink(mode: "confirm", url: url, nativeURL: nil, coordinatesIncluded: false, bookingState: nil, message: "These locations do not have reviewed coordinates, so Out of Pocket will not send a pin. Confirm the pickup and destination in Uber.", copyText: copy)
         }
         let pickupJSON = #"{"latitude":\#(pickupCoordinates.latitude),"longitude":\#(pickupCoordinates.longitude),"addressLine1":"\#(pickup.name)","addressLine2":"\#(pickup.formattedAddress)"}"#
         let dropJSON = #"{"latitude":\#(dropoffCoordinates.latitude),"longitude":\#(dropoffCoordinates.longitude),"addressLine1":"\#(dropoff.name)","addressLine2":"\#(dropoff.formattedAddress)"}"#
         let query = "client_id=\(encode(trimmed))&pickup=\(encode(pickupJSON))&drop[0]=\(encode(dropJSON))"
         let url = URL(string: "https://m.uber.com/looking?\(query)")!
         let native = URL(string: "uber://riderequest?pickup[latitude]=\(pickupCoordinates.latitude)&pickup[longitude]=\(pickupCoordinates.longitude)&dropoff[latitude]=\(dropoffCoordinates.latitude)&dropoff[longitude]=\(dropoffCoordinates.longitude)")
-        return UberLink(mode: "reviewed", url: url, nativeURL: native, coordinatesIncluded: true, bookingState: nil, message: "Review your pickup, fare, and booking in Uber. Relay does not book this ride.", copyText: copy)
+        return UberLink(mode: "reviewed", url: url, nativeURL: native, coordinatesIncluded: true, bookingState: nil, message: "Review your pickup, fare, and booking in Uber. Out of Pocket does not book this ride.", copyText: copy)
     }
 
     public static func seedTickets(now: Date = Date()) throws -> TicketLedger {

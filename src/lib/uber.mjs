@@ -37,7 +37,7 @@ export function buildUberHandoff(input) {
       ...base,
       mode: 'manual',
       url: 'https://m.uber.com/',
-      message: 'Uber opens for you to confirm the pickup and destination. Review your pickup, fare, and booking in Uber. Relay does not book this ride.',
+      message: 'Uber opens for you to confirm the pickup and destination. Review your pickup, fare, and booking in Uber. Out of Pocket does not book this ride.',
     };
   }
   if (!pickupCoordinates || !dropoffCoordinates) {
@@ -45,7 +45,7 @@ export function buildUberHandoff(input) {
       ...base,
       mode: 'confirm',
       url: `https://m.uber.com/looking?client_id=${encodeURIComponent(clientId)}`,
-      message: 'These locations do not have reviewed coordinates, so Relay will not send a pin. Confirm the pickup and destination in Uber.',
+      message: 'These locations do not have reviewed coordinates, so Out of Pocket will not send a pin. Confirm the pickup and destination in Uber.',
     };
   }
   const pickupJson = JSON.stringify({
@@ -78,6 +78,6 @@ export function buildUberHandoff(input) {
     coordinatesIncluded: true,
     url,
     nativeUrl,
-    message: 'Review your pickup, fare, and booking in Uber. Relay does not book this ride.',
+    message: 'Review your pickup, fare, and booking in Uber. Out of Pocket does not book this ride.',
   };
 }

@@ -40,11 +40,11 @@ test('airport fixture reads as today at 4:30 with two seats and a demo contribut
 test('search matches campus, endpoints, window, and capacity without consuming request seats', () => {
   const state = seedRides(now);
   const results = searchRides(state, { campusId: 'alabama', pickupId: 'student-center', destinationId: 'airport', dayKey: day, windowName: 'afternoon', seats: 1 }, now);
-  assert.deepEqual(results.map((item) => item.id), ['ride-airport']);
+  assert.deepEqual(results.map((item) => item.id), ['ride-ua-0-1', 'ride-airport']);
   const evening = searchRides(state, { campusId: 'alabama', pickupId: 'student-center', destinationId: 'airport', dayKey: day, windowName: 'evening', seats: 1 }, now);
   assert.equal(evening[0].id, 'ride-full');
   assert.equal(evening[0].seatsLeft, 0);
-  assert.equal(searchRides(state, { campusId: 'auburn', pickupId: 'au-student-center', destinationId: 'au-library', dayKey: day, windowName: 'afternoon', seats: 1 }, now).length, 0);
+  assert.deepEqual(searchRides(state, { campusId: 'auburn', pickupId: 'au-student-center', destinationId: 'au-library', dayKey: day, windowName: 'afternoon', seats: 1 }, now).map((item) => item.id), ['ride-au-0-1']);
 });
 
 test('a seat request does not take capacity, and acceptance of the last seat rejects the other request', () => {

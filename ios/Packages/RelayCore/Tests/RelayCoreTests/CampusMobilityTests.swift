@@ -10,7 +10,7 @@ private let clock = ISO8601DateFormatter().date(from: "2026-10-17T15:00:00Z")!
     #expect(campus.officialMapUrl == "https://www.ua.edu/map/")
     #expect(campus.places.allSatisfy { $0.coordinates == nil && $0.reviewStatus == "unreviewed" })
     let rides = try CampusMobility.seedRides(now: clock)
-    #expect(rides.trips.count == 4)
+    #expect(rides.trips.count >= 24)
     let airport = try #require(rides.trips.first { $0.id == "ride-airport" })
     #expect(try CampusMobility.summary(rides, trip: airport, now: clock).contains("4:30"))
     #expect(try CampusMobility.seatsLeft(rides, tripId: "ride-airport") == 2)
@@ -75,4 +75,30 @@ private let clock = ISO8601DateFormatter().date(from: "2026-10-17T15:00:00Z")!
     let recorded = CampusMobility.recordHandoff(rides, campusId: "alabama", pickupId: "student-center", destinationId: "airport", coordinatesIncluded: false, now: clock)
     #expect(recorded.1.bookingState == nil)
     #expect(recorded.0.bookings.count == rides.bookings.count)
+}
+
+@Test func eachCampusHasUsableRidesAndTicketInventory() throws {
+    let rides = try CampusMobility.seedRides(now: clock)
+    let tickets = try CampusMobility.seedTickets(now: clock)
+    for campus in Campus.allCases {
+        let id = campus == .alabama ? "alabama" : "auburn"
+        let places = try CampusMobility.campus(for: campus).places.map(\.id)
+        let trips = rides.trips.filter { $0.campusId == id }
+        #expect(trips.count >= 10)
+        for trip in trips {
+            #expect(places.contains(trip.pickupId))
+            #expect(places.contains(trip.destinationId))
+        }
+        let nextDay = try #require(trips.first { $0.departure?.dayOffset == 1 && $0.status == "open" })
+        let requested = try CampusMobility.requestSeat(rides, tripId: nextDay.id, riderCampusId: id, quantity: 1, now: clock)
+        #expect(requested.1.status == "requested")
+        let events = tickets.events.filter { $0.campusId == id }
+        #expect(events.count >= 3)
+        for event in events {
+            #expect(places.contains(event.venuePlaceId))
+            #expect(tickets.listings.contains { $0.eventId == event.id && CampusMobility.availableQuantity(tickets, listingId: $0.id) > 0 })
+        }
+    }
+    #expect(Set(rides.trips.map(\.id)).count == rides.trips.count)
+    #expect(Set(tickets.events.map(\.id)).count == tickets.events.count)
 }

@@ -270,7 +270,7 @@ struct HandoffTicket: View {
                 Label("Meet \(listing.seller). Show this code, check the item, then pay.", systemImage: "checkmark.shield")
             }.font(.subheadline).foregroundStyle(RelayTheme.secondary)
             HStack(spacing: 10) {
-                ShareLink(item: "Relay handoff \(negotiation.code): \(listing.title), \(negotiation.slot) at the \(negotiation.zone).") {
+                ShareLink(item: "Out of Pocket handoff \(negotiation.code): \(listing.title), \(negotiation.slot) at the \(negotiation.zone).") {
                     Label("Share", systemImage: "square.and.arrow.up")
                 }.buttonStyle(RelayPrimaryButton(secondary: true))
                 Button("Undo lock-in", action: undo).buttonStyle(RelayPrimaryButton(secondary: true))

@@ -88,6 +88,7 @@ export const products: Product[] = [
     condition: "Good",
     location: "South campus",
     campus: "Alabama",
+    courseCode: "EN 101",
     tag: "Ready for another semester",
     description:
       "A small collection of well-loved books. Some penciled annotations and light cover wear. Check titles and editions in person before accepting; this is a sample listing.",
@@ -110,6 +111,7 @@ export const products: Product[] = [
     condition: "Like new",
     location: "North campus",
     campus: "Alabama",
+    courseCode: "CS 100",
     description:
       "Over-ear headphones with a clean finish and comfortable cushions. Both sides work. Test pairing and sound at the exchange. Charging cable included; original box not included.",
     checks: [
@@ -214,7 +216,7 @@ export const flyers = [
     date: "OCT 22",
     time: "Thursday · 3–6 PM",
     location: "Public campus space · location to be confirmed",
-    host: "Relay Reuse Club",
+    host: "Out of Pocket Reuse Club",
     theme: "lime",
     icon: "repair",
   },

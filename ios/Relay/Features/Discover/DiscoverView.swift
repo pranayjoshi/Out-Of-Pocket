@@ -5,6 +5,7 @@ struct DiscoverView: View {
     @Environment(RelayStore.self) private var store
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showCreate = false
+    @State private var adBeforeSpotlight = Bool.random()
     @State private var showRequest = false
     @State private var selected: Listing?
     private var tutors: [Listing] { store.listings.filter { $0.campus == store.campus && $0.category == .tutoring } }
@@ -12,7 +13,7 @@ struct DiscoverView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 13) {
-                    Eyebrow(text: "YOUR CAMPUS, CONNECTED")
+                    Eyebrow(text: store.campus.name)
                     Text("Campus life,\nhandled.").font(.system(.largeTitle, weight: .bold)).tracking(-1.5)
                     Text("A little help. A way there. A reason to go.")
                         .font(.subheadline).foregroundStyle(RelayTheme.secondary)
@@ -36,8 +37,9 @@ struct DiscoverView: View {
                         }.buttonStyle(RelayPressStyle()).accessibilityIdentifier("home-\(service.rawValue)").relayEntrance(index + 1)
                     }
                 }
-                BigAlEntryCard().relayEntrance(3)
+                if adBeforeSpotlight { CampusPromotionPlacement(placement: "Discover", slot: "home") }
                 spotlight.relayEntrance(4)
+                if !adBeforeSpotlight { CampusPromotionPlacement(placement: "Discover", slot: "home") }
                 Button {
                     if store.unreadMessageCount > 0 { store.inboxPane = "messages"; store.selectedTab = .exchanges }
                     else { store.openActivity() }
@@ -84,7 +86,6 @@ struct DiscoverView: View {
                         Spacer(minLength: 0); Image(systemName: "arrow.up.right").font(.subheadline)
                     }.foregroundStyle(RelayTheme.ink).relayCard()
                 }.buttonStyle(RelayPressStyle())
-                CampusPromotionPlacement(placement: "Discover")
                 Text("Made for the in-between, and everything after.").font(.caption).foregroundStyle(RelayTheme.secondary).frame(maxWidth: .infinity)
             }.foregroundStyle(RelayTheme.ink).padding(22).padding(.bottom, 18)
         }.background(RelayTheme.paper).navigationBarTitleDisplayMode(.inline)
@@ -99,7 +100,10 @@ struct DiscoverView: View {
                             }
                         }
                     } label: {
-                        HStack(spacing: 5) { Image(systemName: "mappin.circle.fill"); Text(store.campus.shortName) }.font(.subheadline.weight(.semibold)).fixedSize()
+                        HStack(spacing: 6) {
+                            Circle().fill(RelayTheme.brand).frame(width: 8, height: 8)
+                            Text(store.campus.shortName)
+                        }.font(.subheadline.weight(.semibold)).fixedSize()
                     }.accessibilityLabel("Select campus, currently \(store.campus.name)")
                     Button { showCreate = true } label: { Image(systemName: "plus").font(.headline).frame(width: 38, height: 38).background(RelayTheme.forest, in: Circle()).foregroundStyle(RelayTheme.onForest) }
                         .accessibilityLabel("Create a post")
@@ -118,10 +122,10 @@ struct DiscoverView: View {
                     Label("Find your next ticket", systemImage: "arrow.right").font(.caption.weight(.semibold))
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "ticket.fill").font(.system(size: 66, weight: .regular))
-                    .rotationEffect(.degrees(-28)).foregroundStyle(Color(red: 0.84, green: 0.87, blue: 1))
+                    .rotationEffect(.degrees(-28)).foregroundStyle(.white.opacity(0.45))
                     .frame(width: 85).accessibilityHidden(true)
-            }.padding(23).foregroundStyle(.white)
-                .background(Color(red: 0.20, green: 0.23, blue: 0.50).gradient, in: RoundedRectangle(cornerRadius: 28))
+            }.padding(23).foregroundStyle(RelayTheme.onBrand)
+                .background(RelayTheme.brand.gradient, in: RoundedRectangle(cornerRadius: 28))
         }.buttonStyle(RelayPressStyle()).accessibilityIdentifier("home-ticket-spotlight")
     }
     private func sectionHeader(_ title: String, action: String, onTap: @escaping () -> Void) -> some View {

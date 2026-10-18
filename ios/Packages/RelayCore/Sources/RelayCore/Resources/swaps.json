@@ -1,10 +1,132 @@
 [
- {"id": "swap-jordan", "person": "Jordan M.", "campus": "Alabama", "gives": "Arduino Uno starter kit", "wants": "Mini fridge", "imageName": "bigal-arduino"},
- {"id": "swap-priya", "person": "Priya S.", "campus": "Alabama", "gives": "Mini fridge", "wants": "TI-84 calculator"},
- {"id": "swap-chris", "person": "Chris D.", "campus": "Alabama", "gives": "Introduction to Algorithms, 4e", "wants": "Desk lamp", "imageName": "bigal-clrs"},
- {"id": "swap-leah", "person": "Leah W.", "campus": "Alabama", "gives": "Bike lock", "wants": "Statistics textbook"},
- {"id": "swap-nia", "person": "Nia B.", "campus": "Alabama", "gives": "Coffee maker", "wants": "Bike lock"},
- {"id": "swap-owen", "person": "Owen K.", "campus": "Alabama", "gives": "TI-84 Plus graphing calculator", "wants": "Coffee maker", "imageName": "bigal-ti84"},
- {"id": "swap-sam", "person": "Sam T.", "campus": "Alabama", "gives": "The Cosmic Perspective, 9e", "wants": "Calculus textbook", "imageName": "bigal-cosmic"},
- {"id": "swap-taylor", "person": "Taylor R.", "campus": "Auburn", "gives": "Mini fridge", "wants": "Desk lamp"}
+  {
+    "id": "swap-jordan",
+    "person": "Jordan M.",
+    "campus": "Alabama",
+    "gives": "Arduino Uno starter kit",
+    "wants": "Mini fridge",
+    "imageName": "bigal-arduino"
+  },
+  {
+    "id": "swap-priya",
+    "person": "Priya S.",
+    "campus": "Alabama",
+    "gives": "Mini fridge",
+    "wants": "TI-84 calculator"
+  },
+  {
+    "id": "swap-chris",
+    "person": "Chris D.",
+    "campus": "Alabama",
+    "gives": "Introduction to Algorithms, 4e",
+    "wants": "Desk lamp",
+    "imageName": "bigal-clrs"
+  },
+  {
+    "id": "swap-leah",
+    "person": "Leah W.",
+    "campus": "Alabama",
+    "gives": "Bike lock",
+    "wants": "Statistics textbook"
+  },
+  {
+    "id": "swap-nia",
+    "person": "Nia B.",
+    "campus": "Alabama",
+    "gives": "Coffee maker",
+    "wants": "Bike lock"
+  },
+  {
+    "id": "swap-owen",
+    "person": "Owen K.",
+    "campus": "Alabama",
+    "gives": "TI-84 Plus graphing calculator",
+    "wants": "Coffee maker",
+    "imageName": "bigal-ti84"
+  },
+  {
+    "id": "swap-sam",
+    "person": "Sam T.",
+    "campus": "Alabama",
+    "gives": "The Cosmic Perspective, 9e",
+    "wants": "Calculus textbook",
+    "imageName": "bigal-cosmic"
+  },
+  {
+    "id": "swap-taylor",
+    "person": "Taylor R.",
+    "campus": "Auburn",
+    "gives": "Mini fridge",
+    "wants": "Desk lamp"
+  },
+  {
+    "id": "swap-ua-extra-0",
+    "person": "Avery P.",
+    "campus": "Alabama",
+    "gives": "Desk organizer",
+    "wants": "Composition handbook"
+  },
+  {
+    "id": "swap-ua-extra-1",
+    "person": "Morgan S.",
+    "campus": "Alabama",
+    "gives": "Composition handbook",
+    "wants": "Camera tripod"
+  },
+  {
+    "id": "swap-ua-extra-2",
+    "person": "Drew R.",
+    "campus": "Alabama",
+    "gives": "Camera tripod",
+    "wants": "Desk organizer"
+  },
+  {
+    "id": "swap-au-extra-0",
+    "person": "Avery P.",
+    "campus": "Auburn",
+    "gives": "Desk organizer",
+    "wants": "Composition handbook"
+  },
+  {
+    "id": "swap-au-extra-1",
+    "person": "Morgan S.",
+    "campus": "Auburn",
+    "gives": "Composition handbook",
+    "wants": "Camera tripod"
+  },
+  {
+    "id": "swap-au-extra-2",
+    "person": "Drew R.",
+    "campus": "Auburn",
+    "gives": "Camera tripod",
+    "wants": "Desk organizer"
+  },
+  {
+    "id": "swap-au-extra-3",
+    "person": "Jordan M.",
+    "campus": "Auburn",
+    "gives": "Arduino Uno starter kit",
+    "wants": "Mini fridge"
+  },
+  {
+    "id": "swap-au-extra-4",
+    "person": "Priya S.",
+    "campus": "Auburn",
+    "gives": "TI-84 calculator",
+    "wants": "Arduino kit"
+  },
+  {
+    "id": "swap-au-extra-5",
+    "person": "Chris D.",
+    "campus": "Auburn",
+    "gives": "Introduction to Algorithms, 4e",
+    "wants": "Desk lamp"
+  },
+  {
+    "id": "swap-au-extra-6",
+    "person": "Leah W.",
+    "campus": "Auburn",
+    "gives": "Bike lock",
+    "wants": "Statistics textbook"
+  }
 ]

@@ -145,7 +145,7 @@ export function processImage(input) {
   const stripped = info.type === 'image/jpeg' ? stripJpegMetadata(buffer) : buffer;
   const reencoded = sips(['-s', 'format', 'jpeg'], stripped) || stripped;
   const thumb = sips(['-s', 'format', 'jpeg', '-Z', '480'], reencoded) || reencoded;
-  if (thumb.length > 1_500_000 && thumb === reencoded) throw new ImageError('Relay could not make a thumbnail for this photo. Try a smaller image.');
+  if (thumb.length > 1_500_000 && thumb === reencoded) throw new ImageError('Out of Pocket could not make a thumbnail for this photo. Try a smaller image.');
   const sized = jpegSize(reencoded) || info;
   return {
     buffer: reencoded,

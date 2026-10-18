@@ -22,10 +22,6 @@ struct BigAlView: View {
         List {
             Section { header.listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 6, trailing: 4)) }
                 .listRowBackground(Color.clear)
-            Section {
-                DemoNotice(text: "Buying-agent demo. Negotiations, seller messages, and meetups are simulated on this device; no seller is contacted and no payment is made.")
-                    .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-            }
             if !isEmpty {
                 Section { summary } header: { sectionHeader("Since your last visit") }.listRowBackground(RelayTheme.surface)
             }
@@ -38,6 +34,10 @@ struct BigAlView: View {
             if let budget = store.agentBudgetCents { Section { budgetRow(budget) }.listRowBackground(RelayTheme.surface) }
             tradeSection("Ready for you", trades([.ready, .noDeal]), swaps { $0.phase == .approving && !$0.youApproved })
             tradeSection("Working on it", trades([.searching, .negotiating]), swaps { $0.phase == .searching || ($0.phase == .approving && $0.youApproved) })
+            Section {
+                CampusPromotionPlacement(placement: "Campus board", slot: "bigal")
+                    .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+            }
             tradeSection("Locked in", trades([.locked]), swaps { $0.phase == .confirmed })
             tradeSection("Closed", trades([.passed, .unavailable]), swaps { $0.phase == .noMatch || $0.phase == .declined })
             if isEmpty {
@@ -46,17 +46,13 @@ struct BigAlView: View {
                         .font(.subheadline).foregroundStyle(RelayTheme.secondary).lineSpacing(3).padding(.vertical, 6)
                 } header: { sectionHeader("Open trades") }.listRowBackground(RelayTheme.surface)
             }
-            Section {
-                CampusPromotionPlacement(placement: "Campus board")
-                    .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-            }
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(RelayTheme.paper)
         .foregroundStyle(RelayTheme.ink)
         .tint(RelayTheme.forest)
-        .navigationTitle("Big Al")
+        .navigationTitle(store.campus == .auburn ? "Tiger" : "Big Al")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -85,7 +81,7 @@ struct BigAlView: View {
         HStack(spacing: 14) {
             BigAlAvatar(size: 56)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Buy & swap with Big Al").font(RelayTheme.heading(22)).tracking(-0.4)
+                Text(buySwapTitle(store.campus)).font(RelayTheme.heading(22)).tracking(-0.4)
                 Text(status).font(.subheadline).foregroundStyle(RelayTheme.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -181,12 +177,16 @@ struct BigAlView: View {
     }
 }
 
+private func buySwapTitle(_ campus: Campus) -> String {
+    campus == .auburn ? "Buy & swap with Tiger" : "Buy & swap with Big Al"
+}
+
 struct BigAlAvatar: View {
+    @Environment(RelayStore.self) private var store
     var size: CGFloat = 40
     var body: some View {
-        Image("bigal-avatar").resizable().scaledToFill()
-            .frame(width: size, height: size).clipShape(Circle())
-            .overlay(Circle().stroke(RelayTheme.line, lineWidth: 1))
+        CampusPetSprite(campus: store.campus)
+            .frame(width: size, height: size)
             .accessibilityHidden(true)
     }
 }
@@ -245,7 +245,7 @@ struct BigAlEntryCard: View {
             HStack(spacing: 14) {
                 BigAlAvatar(size: 50)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Buy & swap with Big Al").font(.headline)
+                    Text(buySwapTitle(store.campus)).font(.headline)
                     Text(store.agentReadyCount + store.swapsNeedingYou > 0 ? "\(store.agentReadyCount + store.swapsNeedingYou) trades ready to review" : "Buy or swap with your campus.")
                         .font(.caption).foregroundStyle(RelayTheme.secondary)
                 }

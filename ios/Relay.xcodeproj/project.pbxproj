@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        AA1400000000000000000001 /* CampusPetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1400000000000000000002 /* CampusPetView.swift */; };
         BB11000000000000000001 /* RidesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11000000000000000002 /* RidesDemoView.swift */; };
 		1164B3EFB5F662C29F6486BF /* RelayStore+BigAl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */; };
 		17E33641F92C9450A5832240 /* RelayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5331A55A2A8B7DA91B10ABB0 /* RelayStore.swift */; };
@@ -43,6 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+        AA1400000000000000000002 /* CampusPetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CampusPetView.swift; sourceTree = "<group>"; };
         BB11000000000000000002 /* RidesDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RidesDemoView.swift; path = Relay/Features/Rides/RidesDemoView.swift; sourceTree = SOURCE_ROOT; };
 		007A17839909CBFC9AF49A1F /* RelayStore+BigAl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RelayStore+BigAl.swift"; sourceTree = "<group>"; };
 		36C393911B87D9E64B2167E7 /* RelayTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayTheme.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				497B425814B6A3B6BCDD678D /* BigAlChatView.swift */,
 				B1020BEFF116FCB9EE4A2D4C /* BigAlSheets.swift */,
 				D1E0E70BD38AA0857AF84F73 /* BigAlView.swift */,
+                AA1400000000000000000002 /* CampusPetView.swift */,
 				A709D9B9273767192FA4B757 /* CampusBoardView.swift */,
 				DE5065D0CC00090B610263A9 /* TradeCircleView.swift */,
 			);
@@ -346,6 +349,7 @@
 				54B296BF82E8221115009F44 /* BigAlChatView.swift in Sources */,
 				2DECEF8E5E8F2436AD9DD65D /* BigAlSheets.swift in Sources */,
 				BDD076B618035F17DE4118CC /* BigAlView.swift in Sources */,
+                AA1400000000000000000001 /* CampusPetView.swift in Sources */,
 				8FA786DFC1BE92D673B6C986 /* CampusBoardView.swift in Sources */,
 				445C6DC33544834F14B13A7E /* CampusPromotionView.swift in Sources */,
 				956136FAE2B2BDF9DDD1C5DF /* CreateListingView.swift in Sources */,
@@ -519,7 +523,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LocalNetworking.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Relay;
+				INFOPLIST_KEY_CFBundleDisplayName = "OOPs!";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -559,7 +563,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Relay;
+				INFOPLIST_KEY_CFBundleDisplayName = "OOPs!";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

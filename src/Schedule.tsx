@@ -37,7 +37,7 @@ export default function Schedule({ campus, codes, onSave }: { campus: string; co
     }} />
     {image && <img className="schedule-preview" src={image} alt="Selected schedule screenshot" />}
     <label className="schedule-consent"><input type="checkbox" checked={consent} disabled={busy} onChange={e => setConsent(e.target.checked)} /> Send this screenshot to OpenRouter and its model provider to read course codes. Crop out personal details first.</label>
-    <p className="schedule-note">Relay does not save the screenshot. Only the classes you confirm stay in this browser. Provider data policies apply to the uploaded image.</p>
+    <p className="schedule-note">Out of Pocket does not save the screenshot. Only the classes you confirm stay in this browser. Provider data policies apply to the uploaded image.</p>
     <button type="button" className="button secondary" disabled={!image || !consent || busy} onClick={readSchedule}>{busy ? 'Reading your schedule…' : 'Read screenshot'}</button>
     {message && <p role="status">{message}</p>}
     {unmatched.length > 0 && <p role="status">Outside this starter catalog: {unmatched.join(', ')}. These classes have not been added.</p>}

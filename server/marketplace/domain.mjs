@@ -217,7 +217,7 @@ export class Marketplace {
   notify(userId, { kind, title, body, href, dedupeKey, preview }) {
     this.enqueue('notify', {
       userId, kind, title, body, href, dedupeKey,
-      preview: preview || 'You have a new Relay update',
+      preview: preview || 'You have a new Out of Pocket update',
     }, `notify:${userId}:${dedupeKey}`);
     const sockets = this.subscribers.get(userId);
     if (sockets) {
@@ -240,7 +240,7 @@ export class Marketplace {
         VALUES (@id, @userId, @kind, @title, @body, @preview, @href, @created_at, @dedupeKey)
       `).run(notification);
     }
-    this.#delivery(notification.id, 'inbox', 'delivered', 'Shown in the Relay inbox.');
+    this.#delivery(notification.id, 'inbox', 'delivered', 'Shown in the Out of Pocket inbox.');
     const pref = this.prefs(payload.userId);
     if (this.#inQuietHours(pref)) {
       this.enqueue('push', { notificationId: notification.id }, `push:${notification.id}`, this.#quietEnd(pref));
@@ -350,7 +350,7 @@ export class Marketplace {
     const normalized = String(email || '').trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) throw new MarketError('invalid_email', 'Enter a valid email address.');
     const campus = campusForEmail(normalized);
-    if (!campus) throw new MarketError('campus_required', 'Use an approved university email. Relay currently verifies ua.edu, crimson.ua.edu, and auburn.edu.');
+    if (!campus) throw new MarketError('campus_required', 'Use an approved university email. Out of Pocket currently verifies ua.edu, crimson.ua.edu, and auburn.edu.');
     const fixture = this.db.prepare('SELECT is_fixture FROM users WHERE email = ?').get(normalized);
     if (fixture?.is_fixture) throw new MarketError('fixture_email', 'That address is reserved for sample inventory.');
     this.rateLimit(`code:${normalized}`, 5, 60 * 60_000);
@@ -513,7 +513,7 @@ export class Marketplace {
       campusVerification: user.campus_id ? {
         status: 'verified_email_domain',
         badge: `Verified ${CAMPUS_NAMES[user.campus_id]} email`,
-        proves: 'This badge means Relay confirmed control of an approved university email domain. It does not prove current enrollment, a student ID photo, or a class year.',
+        proves: 'This badge means Out of Pocket confirmed control of an approved university email domain. It does not prove current enrollment, a student ID photo, or a class year.',
       } : null,
       joinedAt: user.joined_at,
       completedExchanges: completed,

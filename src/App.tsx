@@ -1,3 +1,4 @@
+import { PriceSuggestion } from "./features/PriceSuggestion";
 import { useState, useEffect, useRef, useMemo } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -99,12 +100,7 @@ function useStored<T>(key: string, initial: T) {
 }
 function Brand({ small = false }: { small?: boolean }) {
   return (
-    <span className={`brand ${small ? "small" : ""}`}>
-      <span className="brand-symbol">
-        <ArrowLeftRight size={23} strokeWidth={2.6} />
-      </span>
-      relay<span className="brand-period">.</span>
-    </span>
+    <span className={`brand ${small ? "small" : ""}`}>OOPs!</span>
   );
 }
 function Modal({
@@ -278,7 +274,108 @@ function Empty({
   );
 }
 
+const baselineNeeds: Need[] = [
+  { title: "A desk that fits a tiny dorm", budget: "Under $50", person: "Jamie", category: "Dorm & living" },
+  { title: "A spare desk lamp, gently used", budget: "Asking $12", person: "Noah", category: "Dorm & living" },
+  { title: "A little help before the calculus quiz", budget: "Up to $25", person: "Priya", category: "Tutoring" },
+  { title: "A bike for the rest of the semester", budget: "Under $100", person: "Taylor", category: "Getting around" },
+  { title: "My chemistry textbook", budget: "Trade · a desk lamp", person: "Avery", category: "Textbooks" },
+];
+
+function sampleThreads(): Conversation[] {
+  const headphones = initialProducts.find((item) => item.id === "headphones");
+  const books = initialProducts.find((item) => item.id === "books");
+  if (!headphones || !books) return [];
+  const at = (hoursAgo: number) => new Date(Date.now() - hoursAgo * 3_600_000).toISOString();
+  return [
+    {
+      id: "thread-headphones",
+      subject: { kind: "item", id: "headphones" },
+      product: headphones,
+      own: false,
+      readCount: 1,
+      createdAt: at(5),
+      offers: [{ id: "offer-headphones", author: "seller", amountCents: 4500, status: "pending" }],
+      messages: [
+        { id: "msg-hp-1", author: "buyer", text: "Still available this week?", createdAt: at(5) },
+        { id: "msg-hp-2", author: "seller", text: "Yes. I can meet near Gorgas after 4.", createdAt: at(4) },
+        { id: "msg-hp-3", author: "seller", text: "Offered $45", offerId: "offer-headphones", createdAt: at(3) },
+      ],
+    },
+    {
+      id: "thread-books",
+      subject: { kind: "item", id: "books" },
+      product: books,
+      own: false,
+      readCount: 2,
+      createdAt: at(8),
+      offers: [],
+      messages: [
+        { id: "msg-bk-1", author: "buyer", text: "Are there notes in the margins?", createdAt: at(8) },
+        { id: "msg-bk-2", author: "seller", text: "A few pencil notes in chapter 2. Happy to show you before you decide.", createdAt: at(7) },
+      ],
+    },
+  ];
+}
+
+function installBrowserBaseline(current: {
+  saved: string[];
+  plan: Plan | null;
+  threads: Conversation[];
+  orders: Order[];
+  courseProfiles: CourseProfile[];
+  rsvps: string[];
+  needs: Need[];
+  setSaved: (value: string[]) => void;
+  setPlan: (value: Plan | null) => void;
+  setThreads: (value: Conversation[]) => void;
+  setOrders: (value: Order[]) => void;
+  setCourseProfiles: (value: CourseProfile[]) => void;
+  setRsvps: (value: string[]) => void;
+  setNeeds: (value: Need[]) => void;
+}) {
+  try {
+    if (localStorage.getItem("relay-baseline-v1")) return;
+  } catch {
+    return;
+  }
+  const nextSaved = current.saved.length ? current.saved : ["chair", "lamp", "plant"];
+  const nextPlan = current.plan ?? { name: "My cozy campus corner", budget: 120, items: ["chair", "lamp", "plant"] };
+  const nextThreads = current.threads.length ? current.threads : sampleThreads();
+  const table = initialProducts.find((item) => item.id === "side-table");
+  const nextOrders = current.orders.length || !table ? current.orders : [{ product: table, state: "reserved", meeting: "Tomorrow · 3:00 PM" }];
+  const nextCourses = current.courseProfiles.length ? current.courseProfiles : [
+    { campus: "Alabama", codes: ["CS 100", "EN 101"] },
+    { campus: "Auburn", codes: ["COMP 1210"] },
+  ];
+  const nextRsvps = current.rsvps.length ? current.rsvps : ["repair"];
+  const starterBoard = current.needs.length <= 2 && current.needs.every((item) => item.person === "Jamie" || item.person === "Taylor");
+  const nextNeeds = current.needs.length === 0 || starterBoard ? baselineNeeds : current.needs;
+  const write = (key: string, value: unknown) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Storage is optional. */ }
+  };
+  write("relay-saved", nextSaved);
+  write("relay-plan", nextPlan);
+  write("relay-conversations-v1", nextThreads);
+  write("relay-orders", nextOrders);
+  write("relay-courses-v1", nextCourses);
+  write("relay-rsvps", nextRsvps);
+  write("relay-needs", nextNeeds);
+  write("relay-baseline-v1", "1");
+  current.setSaved(nextSaved);
+  current.setPlan(nextPlan);
+  current.setThreads(nextThreads);
+  current.setOrders(nextOrders);
+  current.setCourseProfiles(nextCourses);
+  current.setRsvps(nextRsvps);
+  current.setNeeds(nextNeeds);
+}
+
 export default function App() {
+  const [listingTitle, setListingTitle] = useState("");
+  const [listingCategory, setListingCategory] = useState<Category>("Dorm & living");
+  const [listingCondition, setListingCondition] = useState("Good");
+  const [listingPrice, setListingPrice] = useState("");
   const [view, setView] = useState<View>(() => window.location.pathname === "/admin/ads" ? "Campus promotions" : "Discover");
   const { ads, commit: commitAds, syncError: adsSyncError } = useAds();
   useEffect(() => {
@@ -327,20 +424,8 @@ export default function App() {
   const [activityFilter, setActivityFilter] = useState<"all" | "items" | "rides" | "tickets">("all");
   const [activeThread, setActiveThread] = useState<string | null>(null);
   const [rsvps, setRsvps] = useStored<string[]>("relay-rsvps", []);
-  const [needs, setNeeds] = useStored<Need[]>("relay-needs", [
-    {
-      title: "A desk that fits a tiny dorm",
-      budget: "Under $50",
-      person: "Jamie",
-      category: "Dorm & living",
-    },
-    {
-      title: "A bike for the rest of the semester",
-      budget: "Under $100",
-      person: "Taylor",
-      category: "Getting around",
-    },
-  ]);
+  const [needs, setNeeds] = useStored<Need[]>("relay-needs", baselineNeeds);
+  useEffect(() => { installBrowserBaseline({ saved, plan, threads, orders, courseProfiles, rsvps, needs, setSaved, setPlan, setThreads, setOrders, setCourseProfiles, setRsvps, setNeeds }); }, []);
   const [selected, setSelected] = useState<Product | null>(null);
   const [activeOrder, setActiveOrder] = useState<number | null>(null);
   const [modal, setModal] = useState<
@@ -528,7 +613,7 @@ export default function App() {
         <button
           className="brand-button"
           onClick={() => navigate("Discover")}
-          aria-label="Relay home"
+          aria-label="OOPs home"
         >
           <Brand />
         </button>
@@ -580,7 +665,7 @@ export default function App() {
             </strong>
             <p>Thoughtful exchanges start with a little trust.</p>
             <span>
-              Meet the Relay way
+              Meet the Out of Pocket way
               <ArrowUpRight size={15} />
             </span>
           </button>
@@ -915,7 +1000,7 @@ export default function App() {
                       Good for your pocket. Better for the planet.
                     </span>
                     <button onClick={() => setModal("safety")}>
-                      How Relay works
+                      How Out of Pocket works
                       <ArrowUpRight size={14} />
                     </button>
                   </div>
@@ -1724,6 +1809,8 @@ export default function App() {
             </label>
             <input
               id="listing-title"
+              value={listingTitle}
+              onChange={(event) => setListingTitle(event.target.value)}
               name="title"
               required
               maxLength={80}
@@ -1734,34 +1821,23 @@ export default function App() {
                 <label className="field-label" htmlFor="listing-category">
                   Category
                 </label>
-                <select id="listing-category" name="category">
+                <select id="listing-category" name="category" value={listingCategory} onChange={(event) => { setListingCategory(event.target.value as Category); if (listingCategory === "Free stuff" || event.target.value === "Free stuff") setListingPrice(""); }}>
                   {categories.slice(1).map((c) => (
                     <option key={c}>{c}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="field-label" htmlFor="listing-price">
-                  Price ($) · 0 means free
-                </label>
-                <input
-                  id="listing-price"
-                  name="price"
-                  type="number"
-                  min="0"
-                  max="10000"
-                  required
-                  placeholder="35"
-                />
-              </div>
             </div>
+            <PriceSuggestion title={listingTitle} category={listingCategory} condition={listingCondition} campus={campus} listings={products.map((p) => ({ ...p, priceCents: Math.round(p.price * 100), mine: p.seller === "You" }))} onUse={setListingPrice} sample />
+            <label className="field-label" htmlFor="listing-price">Your selling price ($) · 0 means free</label>
+            <input id="listing-price" name="price" type="number" min="0" max="10000" step="0.01" required value={listingCategory === "Free stuff" ? "0" : listingPrice} readOnly={listingCategory === "Free stuff"} onChange={(event) => setListingPrice(event.target.value)} placeholder="Enter your own price" />
             <label className="field-label" htmlFor="listing-course">Class number (optional) · {campus}</label>
             <select key={campus} id="listing-course" name="courseCode"><option value="">Not tied to a class</option>{coursesFor(campus).map(c => <option key={c.code} value={c.code}>{c.code} — {c.title}</option>)}</select>
             <p className="schedule-note">Starter catalog for this university. Only tag classes this item is relevant to.</p>
             <label className="field-label" htmlFor="condition">
               Condition
             </label>
-            <select name="condition" id="condition">
+            <select name="condition" id="condition" value={listingCondition} onChange={(event) => setListingCondition(event.target.value)}>
               <option>Good</option>
               <option>Like new</option>
               <option>Well-loved</option>
@@ -1866,7 +1942,7 @@ export default function App() {
       )}
 
       {modal === "safety" && (
-        <Modal title="The Relay way" onClose={() => setModal(null)}>
+        <Modal title="The Out of Pocket way" onClose={() => setModal(null)}>
           <span className="modal-symbol">
             <ShieldCheck size={27} />
           </span>

@@ -62,7 +62,7 @@
 .ad-context-preview { border:1px solid #dfe4d7; border-radius:12px; padding:23px; background:#fffefa; box-shadow:0 9px 30px #3a4a2810; margin:0 auto; width:100%; transition:max-width .25s; }
 .ad-context-preview.mobile { max-width:320px; padding:17px; }
 .ad-context-top { display:flex; justify-content:space-between; align-items:center; }
-.ad-mini-brand { font-family:Manrope,sans-serif; font-size:24px; font-weight:800; letter-spacing:-1px; }
+.ad-mini-brand { font-family:Manrope,sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.6px; white-space:nowrap; }
 .ad-mini-brand > span { color:#9ab66f; }
 .ad-context-top > span:last-child { display:flex; align-items:center; font-size:8px; color:#839076; gap:6px; }
 .ad-context-heading { font-family:Manrope,sans-serif; font-size:15px; letter-spacing:-.6px; margin:24px 0 15px; font-weight:600; }

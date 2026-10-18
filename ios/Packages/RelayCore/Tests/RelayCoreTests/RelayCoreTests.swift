@@ -6,7 +6,7 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
 
 @Test func bundledCatalogLoads() throws {
     let listings = try DemoCatalog.listings()
-    #expect(listings.count == 14)
+    #expect(listings.count >= 38)
     #expect(Set(listings.map(\.id)).count == listings.count)
 }
 @Test func identificationNeverCapturesPayment() throws {
@@ -68,9 +68,9 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
     var query = ListingQuery()
     #expect(query.apply(to: listings).allSatisfy { $0.campus == .alabama })
     query.campus = .auburn
-    #expect(query.apply(to: listings).count == 4)
+    #expect(query.apply(to: listings).count == listings.filter { $0.campus == .auburn }.count)
     query.includeOtherCampuses = true
-    #expect(query.apply(to: listings).count == 14)
+    #expect(query.apply(to: listings).count == listings.count)
 }
 @Test func searchCombinesFiltersAndSort() throws {
     var query = ListingQuery()
@@ -205,4 +205,25 @@ func paidListing() throws -> Listing { try #require(DemoCatalog.listings().first
     var old = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     old.removeValue(forKey: "courseCode")
     #expect(try JSONDecoder().decode(Listing.self, from: JSONSerialization.data(withJSONObject: old)).courseCode == nil)
+}
+
+@Test func sampleDirectoryCoversBothCampusesAndCourseMaterials() throws {
+    let listings = try DemoCatalog.listings()
+    for campus in Campus.allCases {
+        let local = listings.filter { $0.campus == campus }
+        #expect(local.filter { $0.category == .tutoring }.count >= 6)
+        for category in [Category.dorm, .books, .tech, .transport, .free, .lab] {
+            #expect(local.contains { $0.category == category })
+        }
+        for course in UniversityCourse.courses(for: campus) {
+            let materials = BigAl.materials(for: course.code)
+            #expect(!materials.isEmpty)
+            for material in materials {
+                if let id = material.listingID {
+                    #expect(BigAl.listings.contains { $0.id == id && $0.campus == campus })
+                }
+            }
+        }
+        #expect(DemoCatalog.requests.filter { $0.campus == campus && $0.category == .tutoring }.count >= 2)
+    }
 }

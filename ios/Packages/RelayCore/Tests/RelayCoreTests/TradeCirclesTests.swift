@@ -40,3 +40,16 @@ private func mine(_ gives: String, _ wants: String, campus: Campus = .alabama) -
     #expect(TradeCircles.findCircle(for: mine("Desk lamp", "Mini fridge"), in: TradeCircles.samplePosts) == nil)
     #expect(TradeCircles.findCircle(for: mine("Desk lamp", "Kayak"), in: TradeCircles.samplePosts) == nil)
 }
+
+@Test func expandedSamplesSupportCirclesAtBothCampuses() throws {
+    let posts = TradeCircles.samplePosts
+    #expect(Set(posts.map(\.id)).count == posts.count)
+    for campus in Campus.allCases {
+        let circle = try #require(TradeCircles.findCircle(for: mine("Camera tripod", "Desk organizer", campus: campus), in: posts))
+        #expect(circle.members.count == 3)
+        #expect(circle.members.allSatisfy { $0.campus == campus })
+        for (index, member) in circle.members.enumerated() {
+            #expect(TradeCircles.satisfies(member.gives, circle.members[(index + 1) % circle.members.count].wants))
+        }
+    }
+}

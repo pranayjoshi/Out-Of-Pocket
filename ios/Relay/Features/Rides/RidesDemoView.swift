@@ -58,6 +58,8 @@ struct RidesDemoView: View {
     @State private var pickupId = ""
     @State private var destination = ""
     @State private var windowName = "afternoon"
+    @State private var rideDay = 0
+    @State private var adGap = Int.random(in: 1...2)
     @State private var seats = 1
     @State private var tripId = ""
     @State private var asDriver = false
@@ -120,7 +122,9 @@ struct RidesDemoView: View {
                 }
                 Divider()
                 HStack {
-                    Label("Today", systemImage: "calendar").font(.subheadline).foregroundStyle(RelayTheme.secondary)
+                    Picker("Ride day", selection: $rideDay) {
+                        Text("Today").tag(0); Text("Tomorrow").tag(1); Text("In two days").tag(2)
+                    }.labelsHidden().accessibilityIdentifier("ride-day")
                     Spacer()
                     Picker("Departure window", selection: $windowName) {
                         Text("Morning").tag("morning"); Text("Afternoon").tag("afternoon"); Text("Evening").tag("evening")
@@ -128,7 +132,7 @@ struct RidesDemoView: View {
                 }
                 Stepper("\(seats) \(seats == 1 ? "passenger" : "passengers")", value: $seats, in: 1...6).font(.subheadline)
                 Button(mode == "uber" ? "Continue in Uber" : "Find a ride") { mode == "uber" ? openUber() : find() }.buttonStyle(RelayPrimaryButton()).accessibilityIdentifier("find-ride")
-                if mode == "uber" { Text("Review your fare and book in Uber. Relay will not show a confirmed booking.").font(.caption).foregroundStyle(RelayTheme.secondary) }
+                if mode == "uber" { Text("Review your fare and book in Uber. Out of Pocket will not show a confirmed booking.").font(.caption).foregroundStyle(RelayTheme.secondary) }
             }.relayCard()
             HStack {
                 Button { showMap = true } label: { Label("Campus map", systemImage: "map").font(.subheadline.weight(.semibold)).frame(minHeight: 44) }
@@ -136,7 +140,12 @@ struct RidesDemoView: View {
                 Button { offerStep = 1; screen = "offer" } label: { Label("Offer a ride", systemImage: "plus").font(.subheadline.weight(.semibold)).frame(minHeight: 44) }
             }
             Text("Seats around campus").font(.title3.weight(.bold)).tracking(-0.5)
-            ForEach(ledger.trips.filter { $0.campusId == campusId && $0.kind == "offer" && $0.status != "canceled" }) { trip in
+            let trips = ledger.trips.filter {
+                $0.campusId == campusId && $0.kind == "offer" && $0.status != "canceled" &&
+                ((try? CampusMobility.departure($0, now: Date())) ?? .distantPast) > Date()
+            }.sorted { ((try? CampusMobility.departure($0, now: Date())) ?? .distantFuture) < ((try? CampusMobility.departure($1, now: Date())) ?? .distantFuture) }
+            ForEach(Array(trips.enumerated()), id: \.element.id) { index, trip in
+                if index == min(adGap, trips.count - 1) { CampusPromotionPlacement(placement: "Campus board", slot: "rides") }
                 Button { tripId = trip.id; screen = "detail"; error = "" } label: { rideCard(trip) }
                     .buttonStyle(RelayPressStyle()).accessibilityIdentifier("ride-\(trip.id)")
             }
@@ -267,7 +276,7 @@ struct RidesDemoView: View {
 
     private func find() {
         run {
-            let day = CampusClock.dayKey(Date(), timeZone: map?.timezone ?? "America/Chicago")
+            let day = CampusClock.shift(CampusClock.dayKey(Date(), timeZone: map?.timezone ?? "America/Chicago"), by: rideDay)
             let found = try CampusMobility.search(ledger, campusId: campusId, pickupId: pickupId, destinationId: destination, dayKey: day, windowName: windowName, seats: seats)
             results = found.map(\.id)
             screen = "results"
@@ -301,7 +310,7 @@ struct RidesDemoView: View {
             let link = try CampusMobility.uberLink(pickup: pickup, dropoff: dropoff, clientId: "")
             let saved = CampusMobility.recordHandoff(ledger, campusId: campusId, pickupId: pickupId, destinationId: destination, coordinatesIncluded: link.coordinatesIncluded)
             store.saveRides(saved.0)
-            banner = "Opened in Uber. No ride was booked in Relay."
+            banner = "Opened in Uber. No ride was booked in Out of Pocket."
             UIApplication.shared.open(link.url)
         }
     }
@@ -337,6 +346,7 @@ struct TicketsDemoView: View {
     @State private var banner = "Sample tickets stay on this device. No barcode, password, or payment is collected."
     @State private var error = ""
     @State private var bowl = ""
+    @State private var adGap = Int.random(in: 1...2)
     @State private var price = "45"
     @State private var attested = false
 
@@ -375,6 +385,9 @@ struct TicketsDemoView: View {
                 Button("Sell a ticket") { screen = "sell" }.font(.caption.weight(.semibold)).frame(minHeight: 44)
             }
             ForEach(Array(ledger.events.filter { $0.campusId == campusId }.enumerated()), id: \.element.id) { index, event in
+                if index == min(adGap, ledger.events.filter { $0.campusId == campusId }.count - 1) {
+                    CampusPromotionPlacement(placement: "Campus board", slot: "tickets")
+                }
                 let available = ledger.listings.filter { $0.eventId == event.id && CampusMobility.availableQuantity(ledger, listingId: $0.id) > 0 }
                 let count = available.reduce(0) { $0 + CampusMobility.availableQuantity(ledger, listingId: $1.id) }
                 Button { eventId = event.id; listingId = ""; screen = "event" } label: {
@@ -421,11 +434,11 @@ struct TicketsDemoView: View {
                             Text(CampusClock.contribution(listing.priceCents)).font(.headline)
                         }.foregroundStyle(RelayTheme.ink).relayCard()
                             .overlay(RoundedRectangle(cornerRadius: 24).stroke(listingId == listing.id ? RelayTheme.forest : .clear, lineWidth: 2))
-                    }.disabled(left == 0)
+                    }.disabled(left == 0).accessibilityIdentifier("ticket-listing-\(listing.id)")
                 }
                 if let listing = ledger.listings.first(where: { $0.id == listingId }) {
                     Text(listing.bowl.isEmpty ? "General admission" : listing.bowl).font(.headline)
-                    Text("\(CampusClock.contribution(listing.priceCents)) total · no Relay fee in this demo")
+                    Text("\(CampusClock.contribution(listing.priceCents)) total · no Out of Pocket fee in this demo")
                     Button("Reserve ticket") { reserve(listing) }.buttonStyle(RelayPrimaryButton())
                 }
             }
@@ -500,7 +513,7 @@ struct TicketsDemoView: View {
         case "reserved": "Reserved. This hold is not a purchase."
         case "awaiting_transfer": "Demo payment recorded. No card was charged. The seller reports the transfer next."
         case "transfer_reported": "Transfer reported by the seller. The buyer still has to accept it."
-        case "receipt_reported": "Receipt reported by you. Relay did not verify it with the university."
+        case "receipt_reported": "Receipt reported by you. Out of Pocket did not verify it with the university."
         case "disputed": "A case is open. This order is not complete."
         default: status.replacingOccurrences(of: "_", with: " ")
         }
@@ -522,7 +535,7 @@ struct TicketsDemoView: View {
         run { store.saveTickets(try CampusMobility.reportTransfer(ledger, orderId: order.id, actorId: order.sellerId)); banner = "Transfer reported by the seller. The buyer still has to accept it." }
     }
     private func receipt(_ order: TicketOrder) {
-        run { store.saveTickets(try CampusMobility.reportReceipt(ledger, orderId: order.id, actorId: CampusMobility.you)); banner = "Receipt reported by you. Relay did not verify it with the university." }
+        run { store.saveTickets(try CampusMobility.reportReceipt(ledger, orderId: order.id, actorId: CampusMobility.you)); banner = "Receipt reported by you. Out of Pocket did not verify it with the university." }
     }
     private func publish() {
         run {

@@ -32,7 +32,7 @@ export async function api<T>(path: string, options: { method?: string; body?: un
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     });
   } catch {
-    throw new ApiError(0, "offline", "Relay can’t reach the marketplace right now. You can retry when the connection returns.");
+    throw new ApiError(0, "offline", "Out of Pocket can’t reach the marketplace right now. You can retry when the connection returns.");
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new ApiError(response.status, data.code || "error", data.error || "That request didn’t go through.");

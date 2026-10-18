@@ -20,6 +20,11 @@ struct CreateListingView: View {
         _price = State(initialValue: category == .free ? "0" : "")
     }
     private var valid: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.count <= 100 && details.trimmingCharacters(in: .whitespacesAndNewlines).count >= 15 && Money.parse(price) != nil && (category != .free || Money.parse(price) == 0) }
+    private var prediction: PricePrediction? {
+        // Signed-in estimates must not silently fall back to the sample catalog.
+        let listings = store.account == nil ? store.listings : store.remotePriceComparisons
+        return PricePrediction.predict(title: title, category: category, condition: condition, campus: store.campus, listings: listings)
+    }
     private var fallbackImage: String {
         switch category { case .tech: "headphones"; case .books: "books"; case .transport: "bike"; case .free: "plant"; default: "chair" }
     }
@@ -43,6 +48,7 @@ struct CreateListingView: View {
                             .padding(12).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 23))
                     }.accessibilityLabel("Choose a listing photo")
                     FormField(label: "What are you passing on?", placeholder: "A chair with a lot of good stories…", text: $title)
+                        .accessibilityIdentifier("listing-title")
                     HStack {
                         Text("Category").font(.subheadline.weight(.medium)); Spacer()
                         Picker("Category", selection: $category) { ForEach(RelayCore.Category.allCases.filter { ![.all, .tickets, .tutoring].contains($0) }) { Text($0.rawValue).tag($0) } }.tint(RelayTheme.forest)
@@ -54,14 +60,38 @@ struct CreateListingView: View {
                         }
                     }.tint(RelayTheme.forest)
                     Text("Starter course catalog for \(store.campus.name).").font(.caption).foregroundStyle(RelayTheme.secondary)
-                    FormField(label: "Price ($) · zero means free", placeholder: "35.00", text: $price).keyboardType(.decimalPad).disabled(category == .free)
                     HStack {
                         Text("Condition").font(.subheadline.weight(.medium)); Spacer()
                         Picker("Condition", selection: $condition) { ForEach(["Like new", "Good", "Well-loved", "Needs repair"], id: \.self) { Text($0) } }.tint(RelayTheme.forest)
                     }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Predicted price").font(.subheadline.weight(.semibold))
+                        if let prediction {
+                            Text(Money.format(prediction.priceCents)).font(.title2.weight(.semibold))
+                                .accessibilityIdentifier("predicted-price")
+                            if prediction.priceCents > 0 {
+                                Text("Suggested range: \(Money.format(prediction.lowCents))–\(Money.format(prediction.highCents))").font(.subheadline)
+                            }
+                            Text(prediction.basis).font(.caption).foregroundStyle(RelayTheme.secondary)
+                            if store.account == nil && prediction.comparableCount > 0 {
+                                Text("Uses sample listings for this demo.").font(.caption).foregroundStyle(RelayTheme.secondary)
+                            }
+                            Button("Use predicted price") {
+                                price = String(format: "%.2f", Double(prediction.priceCents) / 100)
+                            }.buttonStyle(.bordered).tint(RelayTheme.forest)
+                                .accessibilityIdentifier("use-predicted-price")
+                        } else {
+                            Text("Add an item title to see a starting price.").font(.caption)
+                        }
+                        Text("You choose the final price. Enter your own selling price below, or change it after using the prediction.").font(.caption).foregroundStyle(RelayTheme.secondary)
+                    }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 18))
+                    FormField(label: "Your selling price ($) · zero means free", placeholder: "Enter your own price", text: $price)
+                        .keyboardType(.decimalPad).disabled(category == .free).accessibilityIdentifier("selling-price")
                     VStack(alignment: .leading, spacing: 9) {
                         Text("The honest details").font(.subheadline.weight(.medium))
                         TextField("What works, what’s included, and any little imperfections…", text: $details, axis: .vertical)
+                            .accessibilityIdentifier("listing-details")
                             .lineLimit(4...8).padding(15).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 14))
                         Text("At least 15 characters. Leave personal contact details out.").font(.caption).foregroundStyle(RelayTheme.secondary)
                     }
@@ -74,7 +104,10 @@ struct CreateListingView: View {
                 .navigationTitle("Pass something on").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
                 .scrollDismissesKeyboard(.interactively)
-                .onChange(of: category) { _, value in if value == .free { price = "0" } }
+                .onChange(of: category) { old, value in
+                    if value == .free { price = "0" }
+                    else if old == .free { price = "" }
+                }
                 .task(id: photoItem) {
                     guard let photoItem else { return }
                     do {
@@ -94,7 +127,7 @@ struct CreateListingView: View {
         let chosen = cents == 0 ? Category.free : category
         if store.account != nil {
             Task {
-                await store.publishRemote(title: listingTitle, category: chosen, priceCents: cents, description: description, photo: photoData)
+                await store.publishRemote(title: listingTitle, category: chosen, priceCents: cents, description: description, photo: photoData, condition: condition)
                 dismiss()
             }
             return

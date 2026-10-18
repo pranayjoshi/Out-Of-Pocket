@@ -37,7 +37,7 @@ export function createAdsHandler({ apiKey = process.env.OPENROUTER_API_KEY, mode
         signal: AbortSignal.timeout(180000),
         body: JSON.stringify({
           model, n: 1, aspect_ratio: '21:9', output_format: 'jpeg',
-          prompt: `Create a tasteful editorial illustration for a university campus promotion in Relay, a free student marketplace. Wide banner artwork that will be center-cropped to 3:1. Keep the subject within the middle horizontal third with generous space above and below. Warm off-white, forest green, sage and muted peach palette; a calm, welcoming campus feel. Use the whole canvas with a clear focal point. No text, lettering, logos, QR codes or watermarks; headline and accessible call-to-action are rendered separately by the app. The promotional brief is: ${body.prompt.trim()}`,
+          prompt: `Create a tasteful editorial illustration for a university campus promotion in Out of Pocket, a free student marketplace. Wide banner artwork that will be center-cropped to 3:1. Keep the subject within the middle horizontal third with generous space above and below. Warm off-white, forest green, sage and muted peach palette; a calm, welcoming campus feel. Use the whole canvas with a clear focal point. No text, lettering, logos, QR codes or watermarks; headline and accessible call-to-action are rendered separately by the app. The promotional brief is: ${body.prompt.trim()}`,
         }),
       });
       if (!response.ok) {

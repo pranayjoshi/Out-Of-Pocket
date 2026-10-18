@@ -120,7 +120,7 @@ export const communityMethods = {
       this.campusScope(user, person.campus_id);
       const untilAt = until || new Date(this.now().getTime() + 7 * 24 * 3600_000).toISOString();
       this.db.prepare('UPDATE users SET restricted_until = ? WHERE id = ?').run(untilAt, person.id);
-      this.notify(person.id, { kind: 'account', title: 'Account restricted', body: why, preview: 'Your Relay account was restricted', href: '/account', dedupeKey: `suspend:${person.id}:${untilAt}` });
+      this.notify(person.id, { kind: 'account', title: 'Account restricted', body: why, preview: 'Your Out of Pocket account was restricted', href: '/account', dedupeKey: `suspend:${person.id}:${untilAt}` });
     } else if (action === 'reinstate_user') {
       const person = this.userById(targetId);
       if (!person) throw new MarketError('not_found', 'That account does not exist.', 404);
@@ -132,7 +132,7 @@ export const communityMethods = {
       this.campusScope(user, report.campus_id);
       this.db.prepare(`UPDATE reports SET status = ? WHERE id = ?`).run(action === 'dismiss_report' ? 'dismissed' : 'resolved', report.id);
     } else if (action === 'message_user') {
-      this.notify(targetId, { kind: 'support', title: 'Message from Relay support', body: why, preview: 'You have a message from Relay support', href: '/notifications', dedupeKey: `staff-msg:${targetId}:${this.iso()}` });
+      this.notify(targetId, { kind: 'support', title: 'Message from Out of Pocket support', body: why, preview: 'You have a message from Out of Pocket support', href: '/notifications', dedupeKey: `staff-msg:${targetId}:${this.iso()}` });
     } else if (action === 'close_signal') {
       this.db.prepare(`UPDATE signals SET status = 'closed' WHERE id = ?`).run(targetId);
     } else throw new MarketError('invalid_action', 'That staff action is not available.');
@@ -222,7 +222,7 @@ export const communityMethods = {
       const runAt = search.frequency === 'digest' ? new Date(this.now().getTime() + 12 * 3600_000).toISOString() : this.iso();
       this.enqueue('notify', {
         userId: search.user_id, kind: 'alert', title: 'A saved search matched', body: listing.title,
-        preview: 'A saved Relay search matched a listing', href: `/listing/${listing.id}`, dedupeKey: `alert:${search.id}:${listing.id}`,
+        preview: 'A saved Out of Pocket search matched a listing', href: `/listing/${listing.id}`, dedupeKey: `alert:${search.id}:${listing.id}`,
       }, `alert:${search.id}:${listing.id}`, runAt);
     }
     this.processJobs();
@@ -385,7 +385,7 @@ export const communityMethods = {
       INSERT INTO trades (id, proposer_id, counterparty_id, listing_a_id, listing_b_id, snapshot_a, snapshot_b, cash_cents, cash_payer_id, proposer_accepted_at, status, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'proposed', ?)
     `).run(id, actor.id, theirs.owner_id, mine.id, theirs.id, JSON.stringify(this.snapshotListing(mine, mine.price_cents)), JSON.stringify(this.snapshotListing(theirs, theirs.price_cents)), cashCents || 0, cashCents ? actor.id : null, this.iso(), this.iso());
-    this.notify(theirs.owner_id, { kind: 'trade', title: 'Trade proposed', body: mine.title, preview: 'You have a Relay trade proposal', href: `/board`, dedupeKey: `trade:${id}` });
+    this.notify(theirs.owner_id, { kind: 'trade', title: 'Trade proposed', body: mine.title, preview: 'You have an Out of Pocket trade proposal', href: `/board`, dedupeKey: `trade:${id}` });
     this.processJobs();
     return this.presentTrade(this.db.prepare('SELECT * FROM trades WHERE id = ?').get(id));
   },

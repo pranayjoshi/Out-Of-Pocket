@@ -7,6 +7,7 @@
     "ios:setup": "python3 ios/scripts/relay.py setup",
     "ios": "python3 ios/scripts/relay.py run",
     "ios:test": "python3 ios/scripts/relay.py test",
+    "ios:flow": "python3 ios/scripts/relay.py flow",
     "ios:doctor": "python3 ios/scripts/relay.py doctor",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",

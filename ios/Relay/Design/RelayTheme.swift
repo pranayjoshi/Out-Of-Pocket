@@ -1,12 +1,61 @@
 import SwiftUI
 import UIKit
+import RelayCore
+
+/// Tracks the signed-in campus so brand colors refresh everywhere they are read.
+@MainActor
+@Observable
+final class CampusAppearance {
+    static let shared = CampusAppearance()
+    var campus: Campus = .alabama
+}
+
+/// School colors. Alabama is crimson; Auburn is navy and white.
+struct CampusPalette {
+    var forest: (UInt32, UInt32)
+    var accent: (UInt32, UInt32)
+    var onForest: (UInt32, UInt32)
+    var brand: UInt32
+    var tutoring: (UInt32, UInt32)
+    var tickets: (UInt32, UInt32)
+    var rides: (UInt32, UInt32)
+
+    @MainActor
+    static var current: CampusPalette { palette(for: CampusAppearance.shared.campus) }
+
+    static func palette(for campus: Campus) -> CampusPalette {
+        switch campus {
+        case .alabama:
+            CampusPalette(
+                forest: (0x9E1B32, 0xF0A8B8),
+                accent: (0x9E1B32, 0xF0A8B8),
+                onForest: (0xFFFFFF, 0x4C1220),
+                brand: 0x9E1B32,
+                tutoring: (0xF8E6EA, 0x4A2430),
+                tickets: (0xF3D5DC, 0x5C2A38),
+                rides: (0xF7EEEA, 0x3A2A2C)
+            )
+        case .auburn:
+            CampusPalette(
+                forest: (0x03244D, 0xC5D4EE),
+                accent: (0x03244D, 0xC5D4EE),
+                onForest: (0xFFFFFF, 0x0A1C38),
+                brand: 0x03244D,
+                tutoring: (0xE6EEF8, 0x1C2C44),
+                tickets: (0xD5E2F3, 0x243650),
+                rides: (0xEEF3F8, 0x1A2838)
+            )
+        }
+    }
+}
 
 // Semantic, adaptive surfaces keep the campus palette legible in both appearances.
 enum RelayTheme {
     static let paper = adaptive(0xF6F6F2, 0x11131B)
     static let surface = adaptive(0xFFFFFF, 0x1C1F2A)
     static let soft = adaptive(0xEBEDF3, 0x282D3C)
-    static let forest = adaptive(0x4C52D9, 0xB8BCFF)
+    @MainActor
+    static var forest: Color { adaptive(CampusPalette.current.forest.0, CampusPalette.current.forest.1) }
     static let ink = adaptive(0x202337, 0xF4F4FB)
     static let secondary = adaptive(0x6B7084, 0xA7ADC3)
     static let line = adaptive(0xE3E5EC, 0x353B4D)
@@ -14,8 +63,14 @@ enum RelayTheme {
     static let peach = adaptive(0xFFE0CD, 0x553A2D)
     static let lavender = adaptive(0xE4E3FF, 0x36335A)
     static let heroInk = adaptive(0x252940, 0xF2F0FF)
-    static let onForest = adaptive(0xFFFFFF, 0x222650)
-    static let accent = adaptive(0x555ED0, 0xB8BCFF)
+    @MainActor
+    static var onForest: Color { adaptive(CampusPalette.current.onForest.0, CampusPalette.current.onForest.1) }
+    @MainActor
+    static var accent: Color { adaptive(CampusPalette.current.accent.0, CampusPalette.current.accent.1) }
+    /// Saturated school color in both appearances, for hero blocks with white type.
+    @MainActor
+    static var brand: Color { solid(CampusPalette.current.brand) }
+    static let onBrand = Color.white
     static func eventColor(_ theme: String) -> Color { theme == "peach" ? peach : theme == "lavender" ? lavender : lime }
     static func heading(_ size: CGFloat) -> Font {
         let style: Font.TextStyle
@@ -31,8 +86,12 @@ enum RelayTheme {
     static func adaptive(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(uiColor: UIColor { trait in
             let hex = trait.userInterfaceStyle == .dark ? dark : light
-            return UIColor(red: Double((hex >> 16) & 255) / 255, green: Double((hex >> 8) & 255) / 255, blue: Double(hex & 255) / 255, alpha: 1)
+            return uiColor(hex)
         })
+    }
+    static func solid(_ hex: UInt32) -> Color { Color(uiColor: uiColor(hex)) }
+    private static func uiColor(_ hex: UInt32) -> UIColor {
+        UIColor(red: Double((hex >> 16) & 255) / 255, green: Double((hex >> 8) & 255) / 255, blue: Double(hex & 255) / 255, alpha: 1)
     }
 }
 
@@ -61,11 +120,12 @@ struct Eyebrow: View {
 }
 struct RelayWordmark: View {
     var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "arrow.left.arrow.right").font(.system(size: 20, weight: .bold)).rotationEffect(.degrees(-28))
-            Text("relay").font(.system(size: 31, weight: .bold, design: .rounded)).tracking(-1.7)
-            Text(".").font(.system(size: 30, weight: .bold, design: .rounded)).foregroundStyle(RelayTheme.accent).padding(.leading, -8)
-        }.foregroundStyle(RelayTheme.forest).accessibilityElement(children: .ignore).accessibilityLabel("Relay")
+        Text("OOPs!")
+            .font(.system(size: 22, weight: .bold, design: .rounded))
+            .tracking(-0.4)
+            .lineLimit(1)
+            .foregroundStyle(RelayTheme.forest)
+            .accessibilityLabel("OOPs")
     }
 }
 struct RoundIcon: View {
@@ -177,12 +237,14 @@ enum CampusService: String, CaseIterable, Identifiable {
         case .market: "bag.fill"
         }
     }
+    @MainActor
     var color: Color {
+        let palette = CampusPalette.current
         switch self {
-        case .tutoring: RelayTheme.lavender
-        case .tickets: RelayTheme.peach
-        case .rides: RelayTheme.lime
-        case .market: RelayTheme.soft
+        case .tutoring: return RelayTheme.adaptive(palette.tutoring.0, palette.tutoring.1)
+        case .tickets: return RelayTheme.adaptive(palette.tickets.0, palette.tickets.1)
+        case .rides: return RelayTheme.adaptive(palette.rides.0, palette.rides.1)
+        case .market: return RelayTheme.soft
         }
     }
     var subtitle: String {

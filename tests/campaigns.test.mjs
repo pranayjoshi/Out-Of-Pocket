@@ -23,8 +23,9 @@ async function fixture(t) {
 test('web and offline native samples use the same campaign records', async () => {
   const native = JSON.parse(await readFile(new URL('../ios/Packages/RelayCore/Sources/RelayCore/Resources/promotions.json', import.meta.url)));
   assert.deepEqual(native, sampleAds);
-  for (const campus of ['Alabama', 'Auburn']) for (const placement of ['Discover', 'Campus board', 'My plans', 'Exchanges']) {
-    assert.equal(sampleAds.filter(ad => ad.campus === campus && ad.placements.includes(placement)).length, 1);
+  for (const placement of ['Discover', 'Campus board', 'My plans', 'Exchanges']) {
+    assert.equal(sampleAds.filter(ad => ad.campus === 'Alabama' && ad.sample !== true && ad.placements.includes(placement)).length, 2);
+    assert.equal(sampleAds.filter(ad => ad.campus === 'Auburn' && ad.placements.includes(placement)).length, 1);
   }
 });
 
@@ -39,7 +40,7 @@ test('shared feed starts with sample ads, persists writes, and excludes drafts/p
   assert.equal(saved.status, 200);
   assert.equal(saved.body.revision, 1);
   const native = await request(createCampaignHandler({ directory }), { url: '/api/ads/campaigns?published=1' });
-  assert.equal(native.body.ads.length, 2);
+  assert.equal(native.body.ads.length, 4);
   assert.ok(native.body.ads.every(ad => ad.status === 'live'));
   assert.equal((await request(handler)).body.ads[0].status, 'paused');
 });

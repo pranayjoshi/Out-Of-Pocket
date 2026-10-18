@@ -117,16 +117,17 @@ img {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-family: "Manrope", sans-serif;
   font-weight: 800;
-  font-size: 36px;
-  letter-spacing: -2px;
-  line-height: 1;
+  font-size: 28px;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 .brand-symbol {
-  width: 34px;
-  height: 34px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   transform: rotate(-30deg);
@@ -1386,9 +1387,8 @@ main {
   margin-top: 20px;
 }
 .brand.small {
-  font-size: 22px;
-  gap: 5px;
-  letter-spacing: -1px;
+  font-size: 20px;
+  letter-spacing: -0.6px;
 }
 .brand.small .brand-symbol {
   height: 22px;
@@ -2643,7 +2643,7 @@ main {
     margin-left: 199px;
   }
   .brand {
-    font-size: 32px;
+    font-size: 24px;
   }
   .sidebar-caption {
     font-size: 7px;
@@ -2877,11 +2877,11 @@ main {
     padding-left: 10px;
   }
   .brand {
-    font-size: 30px;
-    gap: 7px;
+    font-size: 22px;
   }
   .brand-symbol {
-    width: 29px;
+    width: 18px;
+    height: 18px;
   }
   .nav-item {
     font-size: 10px;
@@ -3149,7 +3149,7 @@ main {
     transform: translateX(0);
   }
   .sidebar .brand {
-    font-size: 35px;
+    font-size: 28px;
   }
   .sidebar .sidebar-caption {
     font-size: 8px;

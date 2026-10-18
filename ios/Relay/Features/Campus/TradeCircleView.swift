@@ -251,7 +251,7 @@ struct CircleTicket: View {
                 Label(circle.slot, systemImage: "clock")
                 Label("Bring your \(swap.gives). Everyone shows the code, then hands off around the circle.", systemImage: "arrow.triangle.2.circlepath")
             }.font(.subheadline).foregroundStyle(RelayTheme.secondary)
-            ShareLink(item: "Relay trading circle \(circle.code): \(circle.slot) at the \(circle.zone).") {
+            ShareLink(item: "Out of Pocket trading circle \(circle.code): \(circle.slot) at the \(circle.zone).") {
                 Label("Share", systemImage: "square.and.arrow.up")
             }.buttonStyle(RelayPrimaryButton(secondary: true))
         }

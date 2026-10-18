@@ -141,7 +141,7 @@ export default function TicketsView({
         {order.buyerId === YOU && order.status === 'reserved' && <button className="button secondary" type="button" onClick={() => run(() => { onChange(cancelOrder(state, { orderId: order.id, actorId: YOU }).state); setStatus('Hold canceled.'); })}>Cancel hold</button>}
         {asSeller && order.status === 'awaiting_transfer' && <button className="button primary" type="button" onClick={() => run(() => { onChange(reportTransfer(state, { orderId: order.id, actorId: order.sellerId }).state); setStatus('Transfer reported by the seller. The buyer still has to accept it.'); })}>I sent the transfer</button>}
         {orderEvent.transferPortalUrl && <a className="button secondary" href={orderEvent.transferPortalUrl} target="_blank" rel="noreferrer">{orderEvent.transferLabel}</a>}
-        {order.buyerId === YOU && order.status === 'transfer_reported' && <button className="button primary" type="button" onClick={() => run(() => { onChange(reportReceipt(state, { orderId: order.id, actorId: YOU }).state); setStatus('Receipt reported by you. Relay did not verify it with the university.'); })}>I accepted the ticket</button>}
+        {order.buyerId === YOU && order.status === 'transfer_reported' && <button className="button primary" type="button" onClick={() => run(() => { onChange(reportReceipt(state, { orderId: order.id, actorId: YOU }).state); setStatus('Receipt reported by you. Out of Pocket did not verify it with the university.'); })}>I accepted the ticket</button>}
         {['awaiting_transfer', 'transfer_reported', 'receipt_reported'].includes(order.status) && <button className="button secondary" type="button" onClick={() => run(() => { onChange(reportProblem(state, { orderId: order.id, actorId: asSeller ? order.sellerId : YOU }).state); setStatus('Case opened. The order was not completed.'); })}>Report a problem</button>}
         <button className="button secondary" type="button" onClick={() => onConversation({ kind: 'ticket_order', id: order.id, title: order.eventName }, true)}>Open conversation</button>
         {(order.status === 'receipt_reported' || order.status === 'completed') && orderEvent.venuePlaceId && <button className="rt-text" type="button" onClick={() => onNeedRide(orderEvent.venuePlaceId)}>Need a ride?</button>}
@@ -183,7 +183,7 @@ export default function TicketsView({
       {step === 3 && event && <>
         <p>{event.name} · {bowl || 'General admission'} · {quantity} × {price || '0'}</p>
         <p>{(() => { try { return priceBreakdown(parseDollars(price), quantity).label; } catch (caught) { return messageOf(caught); } })()}</p>
-        <p>Seller proceeds match the buyer total. Relay is not adding a fee in this demo.</p>
+        <p>Seller proceeds match the buyer total. Out of Pocket is not adding a fee in this demo.</p>
         <p>{event.transferInstructions}</p>
         <label><input type="checkbox" checked={attest} onChange={(input) => setAttest(input.target.checked)} required /> I can transfer this ticket and I am not pasting a barcode or student ID.</label>
       </>}

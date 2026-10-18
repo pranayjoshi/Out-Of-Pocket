@@ -24,10 +24,24 @@ def sim_json(*args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["setup", "run", "test", "doctor"], default="run", nargs="?")
+    parser.add_argument("action", choices=["setup", "run", "test", "flow", "doctor"], default="run", nargs="?")
     parser.add_argument("--device", help="Existing simulator UUID; defaults to a dedicated Relay iPhone")
     parser.add_argument("--restart", action="store_true", help="Restart the selected simulator before launching")
+    parser.add_argument("--only", help="For flow: comma-separated step IDs (use --list to see them)")
+    parser.add_argument("--list", action="store_true", help="List the ordered UI flow without starting Xcode")
+    parser.add_argument("--no-video", action="store_true", help="Keep screenshots and results without video")
+    parser.add_argument("--no-open", action="store_true", help="Do not open the flow report automatically")
     opts = parser.parse_args()
+    if opts.list:
+        from ui_flow import STEPS
+        for step in STEPS:
+            print(f"{step['id']:20} {step['title']}")
+        return
+    if opts.only and opts.action != "flow":
+        parser.error("--only requires the flow action")
+    if opts.only:
+        from ui_flow import select_steps
+        select_steps(opts.only)  # Reject unknown IDs before booting a simulator.
     developer = os.environ.get("DEVELOPER_DIR")
     if not developer:
         developer = subprocess.check_output(["xcode-select", "-p"], text=True).strip()
@@ -63,7 +77,8 @@ def main():
             raise RuntimeError(f"Simulator {opts.device} is unavailable.")
         device = available[0]
     else:
-        candidates = [d for d in devices.get(runtime["identifier"], []) if d["name"] == "Relay iPhone"]
+        simulator_name = "Relay iPhone"
+        candidates = [d for d in devices.get(runtime["identifier"], []) if d["name"] == simulator_name]
         if candidates:
             device = candidates[0]
         else:
@@ -74,7 +89,7 @@ def main():
             if opts.action == "doctor":
                 print("Ready. A dedicated Relay iPhone simulator will be created on first run.")
                 return
-            uuid = run("xcrun", "simctl", "create", "Relay iPhone", preferred["identifier"],
+            uuid = run("xcrun", "simctl", "create", simulator_name, preferred["identifier"],
                        runtime["identifier"], capture=True).strip()
             device = {"udid": uuid, "state": "Shutdown"}
     print(f"Simulator: {device['udid']}", flush=True)
@@ -90,10 +105,13 @@ def main():
         run("xcrun", "simctl", "bootstatus", device["udid"], "-b", timeout=600)
     except subprocess.TimeoutExpired as error:
         raise RuntimeError("Simulator first boot exceeded 10 minutes. Retry with: python3 ios/scripts/relay.py run --restart. This restarts the simulator without erasing its data.") from error
-    derived = ROOT / "work/ios-local-build"
+    derived = ROOT / ("work/ios-ui-flow-build" if opts.action == "flow" else "work/ios-local-build")
     common = ["-project", ROOT / "ios/Relay.xcodeproj", "-scheme", "Relay",
               "-destination", f"platform=iOS Simulator,id={device['udid']}",
               "-derivedDataPath", derived, "CODE_SIGNING_ALLOWED=NO"]
+    if opts.action == "flow":
+        from ui_flow import execute
+        sys.exit(execute(ROOT, common, device["udid"], opts))
     if opts.action == "test":
         run("xcrun", "swift", "test", "--package-path", ROOT / "ios/Packages/RelayCore",
             "--scratch-path", ROOT / "work/swift-xcode-build")

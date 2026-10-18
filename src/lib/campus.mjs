@@ -17,7 +17,7 @@ export const campuses = catalog.campuses;
 /** @param {string} campusId */
 export function campusById(campusId) {
   const campus = campuses.find((item) => item.campusId === campusId);
-  if (!campus) throw new DomainError('unknown_campus', 'Choose a campus Relay knows about.');
+  if (!campus) throw new DomainError('unknown_campus', 'Choose a campus Out of Pocket knows about.');
   return campus;
 }
 

@@ -23,6 +23,8 @@ struct RelayRootView: View {
                 NavigationStack { ProfileView() }
             }
         }
+        .overlay { CampusPetOverlay() }
+        .tint(RelayTheme.forest)
         .sensoryFeedback(.selection, trigger: store.selectedTab)
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }

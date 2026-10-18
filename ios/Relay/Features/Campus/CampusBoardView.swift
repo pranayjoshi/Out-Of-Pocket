@@ -36,6 +36,7 @@ struct TutoringView: View {
     @State private var selected: Listing?
     @State private var showRequest = false
     @State private var subject = "All"
+    @State private var adGap = Int.random(in: 1...2)
     private let subjects = ["All", "Math", "Computer science", "Writing"]
     private var tutors: [Listing] {
         store.listings.filter {
@@ -71,6 +72,7 @@ struct TutoringView: View {
                     EmptyContent(symbol: "graduationcap", title: "Let’s ask your campus.", message: "No tutors match these filters. Post your course and what you need help with.", actionTitle: "Request a tutor") { showRequest = true }
                 }
                 ForEach(Array(tutors.enumerated()), id: \.element.id) { index, tutor in
+                    if index == min(adGap, tutors.count - 1) { CampusPromotionPlacement(placement: "Campus board", slot: "tutoring") }
                     Button { selected = tutor } label: { TutorRow(listing: tutor) }.buttonStyle(RelayPressStyle()).relayEntrance(min(index + 1, 4))
                 }
                 Button { showRequest = true } label: {
@@ -176,15 +178,19 @@ struct MarketplaceView: View {
                 if results.isEmpty {
                     EmptyContent(symbol: "magnifyingglass", title: "No finds just yet.", message: "Try a different search or reset your filters.", actionTitle: "Reset filters") { search = ""; category = .all; freeOnly = false; sort = .recommended }
                 } else {
+                    let split = min(results.count, typeSize.isAccessibilitySize ? 2 : 4)
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 24) {
-                        ForEach(results) { listing in ListingCard(listing: listing) { selected = listing } }
+                        ForEach(Array(results.prefix(split))) { listing in ListingCard(listing: listing) { selected = listing } }
+                    }
+                    CampusPromotionPlacement(placement: "Campus board", slot: "market")
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 24) {
+                        ForEach(Array(results.dropFirst(split))) { listing in ListingCard(listing: listing) { selected = listing } }
                     }
                 }
                 NavigationLink { CommunityBoardView() } label: {
                     HStack { Label("Campus asks & trades", systemImage: "bubble.left.and.bubble.right"); Spacer(); Image(systemName: "arrow.right") }
                         .font(.subheadline.weight(.semibold)).foregroundStyle(RelayTheme.ink).relayCard()
                 }
-                CampusPromotionPlacement(placement: "Campus board")
             }.padding(22)
         }.scrollDismissesKeyboard(.interactively)
             .sheet(item: $selected) { ListingDetailView(listing: $0) }
@@ -206,6 +212,7 @@ struct CommunityBoardView: View {
     @State private var selectedEvent: String?
     @State private var showRequest = false
     @State private var relatedPost: CampusRequest?
+    @State private var adGap = Int.random(in: 1...3)
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
@@ -215,7 +222,8 @@ struct CommunityBoardView: View {
                     SectionTitle(eyebrow: "YOUR COMMUNITY", title: "Open on campus")
                     Button { showRequest = true } label: { RoundIcon(symbol: "plus") }.accessibilityLabel("Post a campus request")
                 }
-                ForEach(store.campusRequests) { request in
+                ForEach(Array(store.campusRequests.enumerated()), id: \.element.id) { index, request in
+                    if index == min(adGap, store.campusRequests.count - 1) { CampusPromotionPlacement(placement: "Campus board", slot: "community") }
                     HStack(spacing: 12) {
                         Text(String(request.person.prefix(1))).font(.subheadline).frame(width: 44, height: 44).background(RelayTheme.soft, in: Circle())
                         VStack(alignment: .leading, spacing: 7) {
@@ -227,7 +235,6 @@ struct CommunityBoardView: View {
                         Button { relatedPost = request } label: { Image(systemName: "arrow.up.right").frame(width: 44, height: 44) }.accessibilityLabel("Create a related post for \(request.title)")
                     }.padding(17).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 20))
                 }
-                CampusPromotionPlacement(placement: "Campus board")
                 SectionTitle(eyebrow: "AROUND CAMPUS", title: "Make a little time.")
                 ForEach(DemoCatalog.events.filter { $0.id != "coffee" }) { event in
                     Button { selectedEvent = event.id } label: { FlyerCard(event: event) }.buttonStyle(.plain)

@@ -1,8 +1,29 @@
-# Relay for iOS
+# Out of Pocket for iOS
 
 A native SwiftUI campus marketplace for iPhone and iPad, targeting iOS 18 and later. Uses system navigation, tabs, sheets, Photos Picker, SF Symbols, haptics, Dynamic Type, light/dark appearance, and Reduce Motion.
 
 ## Open and run
+
+### Out of Pocket UI flow
+
+Run the recorded feature walkthrough:
+
+```sh
+npm run ios:flow
+```
+
+You can also double-click **Out of Pocket UI flow.command** in this folder. This builds the UI test app once, then runs 22 independent chapters in a fixed order on the existing **Relay iPhone**, using `work/ios-ui-flow-build` for test build output. It opens a local results viewer and writes each run to `work/ui-flow/<timestamp>/`. Each chapter has a simulator video, retained screenshots, a test log, and an `.xcresult` bundle. The viewer refreshes while running; `report.json` contains machine-readable statuses and durations. Failures do not stop later chapters, and the command exits unsuccessfully if any chapter fails. Press Control-C to stop and retain completed evidence.
+
+The order covers Home and navigation → classes → marketplace search/saves/filters → listing creation and price suggestions → tutoring search/messages/requests/offers → ticket reservation and transfer → ride requests/acceptance/cancellation → listing negotiation → inspection/cancellation → payment decline/retry → completed handoff and refund → free handoff → Big Al purchases and materials → trading circles and no-match retry → promotions → Auburn inventory → campus pet behavior.
+
+```sh
+npm run ios:flow -- --list
+npm run ios:flow -- --only 04-market,09-tickets
+npm run ios:flow -- --no-video --no-open
+npm run ios:flow -- --device SIMULATOR_UUID
+```
+
+Subset runs preserve the chapter order regardless of the order supplied to `--only`. Tests use fresh in-memory sample data and simulated transactions. Pet tests exercise their existing preferences and relaunch behavior. This is native UI coverage: live account sign-in, provider-backed AI/schedule imports, photo-library selection, external maps/Uber, and real payments still need separate integration checks. The browser app and university ads administration are outside this native flow. The existing `npm run ios:test` also runs domain tests; the recorded flow runs UI tests only.
 
 From the repository root, run the first-time setup:
 
@@ -106,13 +127,19 @@ For a physical phone or hosted API, configure the full HTTPS feed URL through th
 
 Open **You → Your classes** or the classes link on Home. Choose a schedule screenshot, allow processing through OpenRouter, review classes, then save. Manual selection works offline. Classes are stored locally by university and can be cleared. Listing creation includes an optional university course picker, and Tutoring supports course search, and marketplace listings retain their optional course tags.
 
-Run the Vite service on port 5174 with server-only `OPENROUTER_API_KEY`; the simulator imports through `/api/schedule/import`. Physical devices need a hosted HTTPS endpoint configured through `RELAY_SCHEDULE_URL` or `RelayScheduleURL` in Info.plist. `OPENROUTER_SCHEDULE_MODEL` defaults to `google/gemini-2.5-flash-lite`. Relay does not persist schedule images; the selected screenshot is sent to OpenRouter and its provider only after consent. The course catalog is a starter subset of Alabama/Auburn offerings; unsupported detected codes are reported rather than silently assigned to another course.
+Run the Vite service on port 5174 with server-only `OPENROUTER_API_KEY`; the simulator imports through `/api/schedule/import`. Physical devices need a hosted HTTPS endpoint configured through `RELAY_SCHEDULE_URL` or `RelayScheduleURL` in Info.plist. `OPENROUTER_SCHEDULE_MODEL` defaults to `google/gemma-4-31b-it`. Out of Pocket does not persist schedule images; the selected screenshot is sent to OpenRouter and its provider only after consent. The course catalog is a starter subset of Alabama/Auburn offerings; unsupported detected codes are reported rather than silently assigned to another course.
 
 ## Big Al campus buying agent
 
 Open **Buy with Big Al** on Home or in **Explore → Market**. It includes course-material review, item requests, simulated price negotiations, approval, local conversation transcripts, and trade management. The four main destinations and tutoring/tickets/rides service selector are preserved; My Plan remains removed. Buying-agent negotiation and meetup data are demos, and schedule-photo selection currently loads the labeled sample schedule rather than extracting the image. Select courses manually for your actual schedule.
 
 Optional AI chat uses the server-only `OPENROUTER_API_KEY` and `OPENROUTER_AGENT_MODEL` through `/api/agent/chat`. Set `RELAY_AGENT_URL` / `RelayAgentURL` for a hosted service; the simulator defaults to localhost port 5174. Without the chat service, manual requests and local negotiations still work. Tutor and ticket listings are excluded from the item-buying pool.
+
+### Floating campus companion
+
+Home's buying-agent card is now a large floating pet above the bottom-right tab bar. Alabama gets **Al Pal**, a crimson-clad elephant; Auburn gets **Auburn Pal**, a navy-clad tiger. The companion follows the selected campus and stays available across the four main tabs. Tap it to open the existing buying, course-material, chat, and trading-circle tools. Drag it anywhere within the usable screen; its relative position survives relaunch and adapts to screen size. Long-press to pause/resume dancing or return it to the bottom right. VoiceOver offers directional move actions. Motion stops for Reduce Motion, background scenes, and the open agent sheet.
+
+The transparent pixel-art assets in `pet-al-pal.imageset` and `pet-auburn.imageset` were generated with OpenAI imagegen. The app animates them locally with bounce, sway, and squash; no media service is needed at runtime.
 
 ### Trading circles
 

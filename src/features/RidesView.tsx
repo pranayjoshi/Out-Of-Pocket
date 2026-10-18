@@ -113,8 +113,8 @@ export default function RidesView({
       const opened = window.open(link.url, '_blank', 'noopener,noreferrer');
       const recorded = recordHandoff(state, { campusId: campus.campusId, pickupId, destinationId, coordinatesIncluded: link.coordinatesIncluded });
       onChange(recorded.state);
-      setHandoffNote(opened ? link.message : 'The Uber window did not open. Copy the locations and open Uber yourself. Relay did not book a ride.');
-      setStatus(opened ? 'Opened in Uber. No ride was booked in Relay.' : 'The Uber window did not open. No ride was booked in Relay.');
+      setHandoffNote(opened ? link.message : 'The Uber window did not open. Copy the locations and open Uber yourself. Out of Pocket did not book a ride.');
+      setStatus(opened ? 'Opened in Uber. No ride was booked in Out of Pocket.' : 'The Uber window did not open. No ride was booked in Out of Pocket.');
       if (!opened) navigator.clipboard?.writeText(link.copyText).catch(() => {});
     });
   }
@@ -190,7 +190,7 @@ export default function RidesView({
         {mode === 'uber' && <p className="rt-note">{handoffNote || 'Review your pickup, fare, and booking in Uber. Returning here will not show a booked ride.'}</p>}
         <button className="button secondary" type="button" onClick={viewMap}><MapPin size={16} /> View campus map</button>
         <button className="rt-text" type="button" onClick={useLocation}>Use my location</button>
-        <p className="rt-note"><a href={campus.officialMapUrl} target="_blank" rel="noreferrer">{campus.attribution}</a>. Relay is not the university map.</p>
+        <p className="rt-note"><a href={campus.officialMapUrl} target="_blank" rel="noreferrer">{campus.attribution}</a>. Out of Pocket is not the university map.</p>
       </form>
       <div className="rt-note"><strong>Demo rides</strong>
         {state.trips.filter((item) => item.campusId === campus.campusId && item.kind === 'offer').map((item) => <button key={item.id} className="rt-text" type="button" onClick={() => openTrip(item.id)}>{presentTrip(state, item, new Date()).summary}</button>)}

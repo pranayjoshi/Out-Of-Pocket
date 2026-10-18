@@ -1,123 +1,256 @@
-# Relay
+<div align="center">
 
-The native iPhone and iPad app lives in [`ios/`](ios/README.md). Open `ios/Relay.xcodeproj` in Xcode to run the SwiftUI experience. The React app below remains available as the original browser prototype.
+<img src="ios/Relay/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="88" alt="Out of Pocket app icon">
 
-For automated iOS setup and launch, run `python3 ios/scripts/relay.py setup` once, then `python3 ios/scripts/relay.py run` on subsequent launches. You can also double-click `ios/Launch Relay.command` after setup. See the [iOS instructions](ios/README.md) for checks and simulator tests.
+# Out of Pocket
 
-A campus marketplace UI prototype built with React, TypeScript, Vite, Motion, and Lucide. Warm paper surfaces, forest-green controls, floating editorial imagery, staggered listing reveals, animated navigation, and responsive layouts establish the first product direction.
+### Campus life, handled.
+
+A little help. A way there. A reason to go.
+
+**Tutoring · Tickets · Rides · Marketplace · Your campus buying agent**
+
+[Explore the app](#explore-the-app) · [Meet Big Al](#meet-big-al) · [Run locally](#run-locally) · [Record the UI flow](#record-the-ui-flow) · [Developer notes](docs/development.md)
+
+Built with SwiftUI, React, TypeScript, and a local marketplace API.<br>
+Native iPhone & iPad app · iOS 18+ · Alabama & Auburn
+
+</div>
+
+---
+
+Out of Pocket brings the everyday parts of campus life into one place: find a tutor, pass on a ticket, share a ride, or give a good find its next chapter. Big Al helps you find materials, negotiate within your budget, and organize a trading circle. A movable campus companion keeps the agent close by.
+
+## Explore the app
+
+Click any screenshot to see it at full size. Expand the guides below to follow a feature through the app.
+
+<table>
+  <tr>
+    <th>Alabama · Make yourself at home</th>
+    <th>Auburn · Same app, your campus</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/screenshots/home-alabama.png"><img src="docs/screenshots/home-alabama.png" width="280" alt="Alabama Home with tutoring, tickets, rides, campus promotion, and Al Pal"></a></td>
+    <td align="center"><a href="docs/screenshots/home-auburn.png"><img src="docs/screenshots/home-auburn.png" width="280" alt="Auburn Home with navy campus colors and the Auburn Pal tiger"></a></td>
+  </tr>
+</table>
+
+| Start here | What you can do |
+| --- | --- |
+| **Home** | Jump into tutoring, tickets, and rides; browse campus highlights; create a post. |
+| **Explore** | Switch between Tutoring, Tickets, Rides, and Market. |
+| **Inbox** | Keep messages, activity, and handoffs together. |
+| **You** | Manage your classes, saved finds, posts, and campus preferences. |
+
+<details>
+<summary><strong>🎓 Find your study person</strong> — tutoring, course search, and study requests</summary>
+
+Open **Home → Tutoring** or **Explore → Tutoring**. Search by course, subject, or tutor, open a profile, save someone for later, and start a conversation. Need something else? Post a study request, or use **Create a post → Offer tutoring** to share what you know.
+
+Tutor messaging helps discuss goals and availability. The sample experience does not book or charge for sessions.
+
+</details>
+
+<details>
+<summary><strong>🎟 Your way in</strong> — campus events and ticket handoffs</summary>
+
+Open **Explore → Tickets**, choose an event, and review a listing. The demo walks through reservation, simulated payment, the seller reporting a transfer, and the buyer reporting receipt. You can also list a ticket through **Sell a ticket**.
+
+A reservation is a hold. Seller transfer reports and buyer receipt reports are distinct steps; neither is university verification.
+
+</details>
+
+<details>
+<summary><strong>🚗 Going your way</strong> — find a ride or share a seat</summary>
+
+Open **Explore → Rides**. Choose pickup, destination, day, departure window, and passenger count, or browse nearby sample rides. Request a seat, use the labeled driver demo control to review it, and track acceptance or cancellation. **Offer a ride** lets you publish your route, seat count, vehicle, and contribution.
+
+A request becomes a confirmed seat after driver acceptance. The Uber option continues into Uber for review and booking there.
+
+</details>
+
+<details>
+<summary><strong>🛍 Give it a next chapter</strong> — campus finds, price suggestions, and free items</summary>
+
+Open **Explore → Market** to search, filter, sort, save, and message about campus finds. Create a listing with honest condition details and an optional class number. Price suggestions provide a starting point; you choose the selling price.
+
+The handoff demo keeps partner identification, inspection, and explicit acceptance separate. Free finds have their own experience with no payment step. Paid demo handoffs also include cancellation, a sample case, return, and refund stages.
+
+</details>
+
+<details>
+<summary><strong>📅 Your semester, sorted</strong> — classes and relevant finds</summary>
+
+Open **You → Your classes** to choose classes manually, save them, and personalize marketplace recommendations. Schedule screenshot import asks for consent before sending an image to the configured AI service; review the detected classes before saving.
+
+Classes are stored by campus. Course matches suggest useful finds; check your syllabus for required materials and editions.
+
+</details>
+
+## Meet Big Al
+
+**Find it. Negotiate it. Or trade your way there.**
+
+Tap **Al Pal** or open Big Al from **Explore → Market**. Review class materials, open a trade for something you need, set your maximum, and follow the negotiation in your inbox. You confirm before locking in a deal.
+
+Have something to swap? Big Al can look for a trading circle: you give an item to one person, another person gives to the next, and the last item comes back to you. Review the proposed circle, approve it, coordinate in the group chat, and follow the meetup instructions.
+
+<table>
+  <tr><th>Your buying agent</th><th>Trading circles</th><th>Every conversation, together</th></tr>
+  <tr>
+    <td align="center"><a href="docs/screenshots/big-al.png"><img src="docs/screenshots/big-al.png" width="240" alt="Big Al agent dashboard with schedule upload, open trade, trading circle, and chat actions"></a></td>
+    <td align="center"><a href="docs/screenshots/trading-circle.png"><img src="docs/screenshots/trading-circle.png" width="240" alt="Three-person trading circle with calculator, mini fridge, Arduino kit, and meetup details"></a></td>
+    <td align="center"><a href="docs/screenshots/inbox.png"><img src="docs/screenshots/inbox.png" width="240" alt="Inbox with listing conversations and negotiated offers"></a></td>
+  </tr>
+</table>
+
+<details>
+<summary><strong>Try a short demo</strong> — from campus Home to a trading circle</summary>
+
+1. Launch the iOS app and choose Alabama or Auburn from the campus picker.
+2. Browse **Tutoring**, **Tickets**, or **Rides** from Home.
+3. Tap the campus companion to open the buying agent.
+4. Choose **Open a trade**, enter an item, and review the proposed deal and budget.
+5. Try **Start a trading circle** with a TI-84 calculator to give and an Arduino kit to receive in the Alabama sample catalog.
+6. Review the participants and item route, approve the circle, and open its group conversation.
+7. Visit **Inbox** to see your listing-linked messages and offers.
+
+Buying-agent negotiations, seller messages, and circle meetups in this experience are local simulations. These actions do not contact a real seller or make a payment.
+
+</details>
+
+<details>
+<summary><strong>Meet your campus companion</strong> — Al Pal and Auburn Pal</summary>
+
+The companion changes with your campus: an elephant for Alabama and a tiger for Auburn. Drag it out of the way, tap it to open the agent, or long-press for dancing and position controls. Its position persists across launches.
+
+</details>
+
+<details>
+<summary><strong>More screenshots</strong> — tickets and the app in the simulator</summary>
+
+<table>
+  <tr><th>Campus tickets</th><th>iPhone simulator</th></tr>
+  <tr>
+    <td align="center"><a href="docs/screenshots/tickets.png"><img src="docs/screenshots/tickets.png" width="280" alt="Campus ticket events with a sample Alabama football listing"></a></td>
+    <td align="center"><a href="docs/screenshots/simulator-preview.png"><img src="docs/screenshots/simulator-preview.png" width="280" alt="Out of Pocket running in the Relay iPhone simulator"></a></td>
+  </tr>
+</table>
+
+Screenshots supplied from the app, including sample inventory, simulated conversations, campus promotions, and campus companions.
+
+</details>
+
+[Watch the app intro](demo-video/out-of-pocket-intro.mp4)
 
 ## Run locally
 
+<details open>
+<summary><strong>Native iPhone & iPad app</strong></summary>
+
+On a Mac with full Xcode installed:
+
+```sh
+# First launch: set up the simulator, build, and open the app.
+python3 ios/scripts/relay.py setup
+
+# Subsequent launches: reuse the existing Relay iPhone.
+npm run ios
+```
+
+You can also open [`ios/Relay.xcodeproj`](ios/Relay.xcodeproj) in Xcode or double-click [`ios/Launch Relay.command`](ios/Launch%20Relay.command) after setup. The simulator sample app needs no API key or signing team. Setup can download a missing iOS runtime; see the [native setup guide](ios/README.md) for requirements and device configuration.
+
+</details>
+
+<details>
+<summary><strong>Browser app & local API</strong></summary>
+
 ```sh
 npm install
-npm run dev
+npm run dev -- --port 5174 --strictPort
 ```
 
-Open the Local URL printed by Vite. The server binds to `127.0.0.1`; Vite selects another port if the default is occupied.
+Open the local URL printed by Vite. Port **5174** also connects the iOS simulator to the local API. The browser includes the marketplace and a university promotions portal at **`/admin/ads`**.
+
+Copy [`.env.example`](.env.example) to `.env.local` if you want to configure optional AI services. Keep provider keys on the server. Browsing the native sample catalog and using local simulated flows works without a key.
+
+For the shared marketplace pilot, sign in with an approved Alabama or Auburn campus email. Local development exposes a preview email code. Payments remain sandbox transactions.
+
+</details>
+
+## Record the UI flow
+
+Run **Out of Pocket UI flow** to execute the native feature chapters in order on the current Relay iPhone and keep a reviewable record:
 
 ```sh
-npm run build
-npm test
+npm run ios:flow
 ```
 
-## Implemented
+Or double-click [`Out of Pocket UI flow.command`](ios/Out%20of%20Pocket%20UI%20flow.command). Each chapter saves a video, screenshots, test logs, and Xcode results. A local results viewer shows progress and outcomes; a failed chapter does not stop later chapters.
 
-- Searchable listings with categories, price sorting, free-item and cross-campus filters.
-- Item detail drawers, favorites, locally created listings, and campus request posts.
-- Listing-linked inbox with local messages, unread counts, offer/counteroffer history, acceptance, decline, and withdrawal. Accepted prices carry into simulated handoffs.
-- Setup plans with editable budgets, item selection, and calculated totals.
-- Campus flyer board, sample sponsorship, and event saving.
-- Simulated reservation → authorization → partner identification → inspection → explicit acceptance/payment.
-- Pre-capture cancellation and simulated case review, return, refund submission, and bank confirmation.
-- A separate no-payment experience for free items.
-- Local persistence for listings, favorites, plans, requests, flyer saves, orders, and campus selection; server-backed university promotions shared with the native simulator.
-- Native dialogs, keyboard access, form validation, reduced-motion support, and mobile navigation.
+<details>
+<summary><strong>Choose a quick check or inspect the chapter list</strong></summary>
 
-## Prototype boundaries
+```sh
+npm run ios:flow -- --list
+npm run ios:flow -- --only 01-home
+npm run ios:flow -- --only 04-market,09-tickets
+npm run ios:flow -- --no-video --no-open
+```
 
-`npm run dev` starts the browser app and a local marketplace API on `127.0.0.1:8787`, proxied at `/api/v1`. Sign in with an approved campus address (`@ua.edu`, `@crimson.ua.edu`, or `@auburn.edu`). On localhost the sign-in screen shows the email code. Campus membership comes from that email domain. The campus picker is only a browsing preference.
+Recordings and reports are written to `work/ui-flow/<timestamp>/` and remain local. Subset runs retain the planned chapter order. The flow covers navigation, classes, marketplace, listing creation, tutoring, tickets, rides, negotiation, inspection, payments and refunds, free finds, the buying agent, trading circles, promotions, campus switching, and pet behavior.
 
-Listings, messages, offers, reservations, pickup codes, and a sandbox ledger live in ignored `.relay-data/marketplace.db`. The sandbox payment token is `sandbox_pm_ok`. It does not move bank funds. Live card charges, push, and email stay off until Stripe, APNs, and SMTP are configured. Staff roles can be set with `RELAY_STAFF_EMAILS`. The ads portal at `/admin/ads` is unchanged.
+Live account services, AI providers, system photo selection, external apps, and real payments require separate integration checks. See the [UI flow instructions](ios/README.md#out-of-pocket-ui-flow).
 
-The iOS app keeps its local sample catalog until you sign in. After sign-in it reads the same API through Vite on port 5174 (`npm run dev -- --port 5174 --strictPort`). Links use `relay://listing/{id}`. Universal links need an Apple Team ID before they can open the installed app.
+</details>
 
-## Structure
+## Development
 
-- `src/App.tsx`: interactive screens and dialogs.
-- `src/data.ts`: sample campus inventory and flyers.
-- `src/styles.css`: responsive product styles and motion fallbacks.
-- `src/lib/exchange.mjs`: deterministic exchange state transitions and money labels.
-- `tests/exchange.test.mjs`: guards against premature payment, duplicate transitions, and misleading refund/free-item states.
-- `public/images`: locally stored illustrative product photography from Unsplash.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Browser prototype and local services |
+| `npm run build` | Type-check and build the browser app |
+| `npm test` | Web and server domain tests |
+| `npm run ios:doctor` | Check Xcode and simulator readiness |
+| `npm run ios:test` | Native domain and simulator UI tests |
+| `npm run ios:flow` | Ordered native UI recordings and results |
+| `python3 -m unittest discover -s ios/scripts -p test_ui_flow.py` | UI flow runner checks |
 
-## Photography
+<details>
+<summary><strong>Project map</strong></summary>
 
-Product and room imagery is sourced from Unsplash and stored locally for reliable preview rendering. Images are illustrative, not evidence of actual student inventory. Original image identifiers: `photo-1598300042247-d088f8ab3a91`, `photo-1507473885765-e6ed057f782c`, `photo-1543002588-bfa74002ed7e`, `photo-1546435770-a3e426bf472b`, `photo-1485965120184-e220f721d03e`, `photo-1485955900006-10f4d324d411`, `photo-1516035069371-29a1b244cc32`, and `photo-1616486338812-3dadae4b4ace`.
+```text
+ios/Relay/                 SwiftUI app, screens, campus themes, and assets
+ios/Packages/RelayCore/    Native models, sample catalogs, and domain tests
+ios/RelayUITests/          Native UI scenarios
+ios/scripts/               Simulator launcher and recorded UI flow
+src/                       React browser app and promotions portal
+server/                    Local marketplace and AI service endpoints
+tests/                     Browser/server domain tests
+docs/                      Screenshots, implementation notes, and feature plans
+demo-video/                App introduction video
+```
 
-Big Al sample listings and avatar in the iOS app (`ios/Relay/Resources/Assets.xcassets/bigal-*`):
+Internal Xcode targets, package names, environment variables, and the `relay://` URL scheme retain the original **Relay** name. The app is branded **Out of Pocket**.
 
-- `bigal-avatar`: The Redstone Rocket (US Army), public domain, [Flickr](https://www.flickr.com/photos/198124246@N07/54947655430)
-- `bigal-ti84`: Asimzb, CC BY, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:TI-84_Plus_graphing.jpg)
-- `bigal-arduino`: Snootlab, CC BY 2.0, [Flickr](https://www.flickr.com/photos/snootlab/6052455554)
-- `bigal-hfweb`: steakpinball, CC BY 2.0, [Flickr](https://www.flickr.com/photos/steakpinball/2218263580)
-- `bigal-clrs`: katalicia1, CC BY 2.0, [Flickr](https://www.flickr.com/photos/56352515@N00/5013251461)
-- `bigal-aima`: cowlet, CC BY 2.0, [Flickr](https://www.flickr.com/photos/17189662@N00/354911838)
-- `bigal-stats`: basykes, CC BY 2.0, [Flickr](https://www.flickr.com/photos/11399912@N00/12509097)
-- `bigal-cosmic`: alexbrn, CC BY 2.0, [Flickr](https://www.flickr.com/photos/alexbrn/4631428861)
+</details>
 
-## Big Al campus buying agent
+<details>
+<summary><strong>Demo scope, integrations, and credits</strong></summary>
 
-Open **Buy with Big Al** from iOS Home or **Explore → Market**. The four destinations and tutoring/tickets/rides navigation remain available. Select a schedule screenshot to try the labeled sample Alabama schedule (the image is not processed), or pick your actual classes manually, approve the listed materials with optional per-item maxes or a total budget, or open a trade for anything. Big Al picks the best listing and negotiates under your max on the phone (`RelayCore/BigAl.swift`), mirrors the negotiation into an Inbox thread, and waits for you to lock it in. The chat calls `POST /api/agent/chat` on the Vite server, which uses `OPENROUTER_API_KEY` and `OPENROUTER_AGENT_MODEL` (default `openai/gpt-4.1-mini`).
+The unsigned native experience uses local sample inventory. The shared marketplace pilot uses a local API and sandbox ledger; live payments, delivery infrastructure, and production hosting require configuration. Campus selection changes what you browse; verified membership comes from sign-in. University names, sample profiles, and promotions do not imply endorsement or verified availability.
 
-## University ads portal
+Read the [implementation and integration notes](docs/development.md) for marketplace setup, schedule import, AI configuration, promotions, photography credits, and operational boundaries. The [iOS guide](ios/README.md) covers simulator setup, physical devices, and native testing.
 
-Open `/admin/ads` in the React app, or choose **University ads portal** in the sidebar. The portal follows Relay’s paper-and-green design and supports events, studies, university services, and campus opportunities.
+</details>
 
-- Generate banner artwork from one prompt, or upload a JPG, PNG or WebP (up to 10 MB) and crop with zoom and position controls.
-- Both paths produce a 1,200 × 400 JPEG. Headlines, descriptions, sponsor names and calls to action are rendered as accessible text separately from the artwork.
-- The main form shows only the banner, headline and destination link. University identity, button text and initial placements use defaults. Description, sponsor, scheduling and placement overrides sit in a collapsed **More options** section.
-- Preview desktop and mobile layouts, save drafts, edit, schedule, pause/resume, and delete promotions.
-- Choose Discover, Campus board, My plans, and Exchanges placements. Each page shows at most one eligible promotion, filtered by campus and dates, with a sponsor label and dismiss button. Real preview campaigns replace the sample sponsor on Discover and Campus board.
-- Use an HTTPS destination for event tickets, registration or study details. Relay remains free for students; this flow adds no marketplace commissions or student checkout.
+---
 
-### Enable prompt generation with OpenRouter
+<div align="center">
 
-Copy `.env.example` to `.env.local`, set `OPENROUTER_API_KEY`, and restart `npm run dev`. Do not prefix this secret with `VITE_`. The Vite server calls [OpenRouter’s Image API](https://openrouter.ai/docs/guides/overview/multimodal/image-generation), with `black-forest-labs/flux.2-klein-4b` as the low-cost default. The model’s posted output price was $0.014 per megapixel when integrated. `OPENROUTER_IMAGE_MODEL` can select another model supporting the same image parameters.
+**Your campus. A little closer.**
 
-Requests generate one JPEG at `21:9`; the prompt keeps the subject centered so the browser can crop and export the standard 1,200 × 400 banner. Without a key the portal says generation is unconfigured, and uploads and sample campaigns work. API usage is billed to the configured OpenRouter account. Live paid generation has not been exercised without a key.
+[Back to top](#out-of-pocket)
 
-### Shared campaigns and native app
-
-The local server exposes `GET /api/ads/campaigns` for the admin and `GET /api/ads/campaigns?published=1` for the app. `PUT /api/ads/campaigns` validates and persists the collection atomically with revision checks to prevent stale editors from overwriting newer changes. Campaign records and image data live in ignored `.relay-data/campaigns.json`. Browser localStorage is only a cache; existing browser-only promotions are migrated into a new shared store on first load.
-
-Four clearly marked sample promotions cover both universities and all four placements from the first launch. Web fixtures in `src/lib/sampleAds.mjs` match the native `RelayCore/Resources/promotions.json`; a test checks that they agree. Real campaigns take priority over samples. The native sample card opens a preview explaining that no live event registration, study enrollment or offer exists.
-
-The iOS simulator polls `http://127.0.0.1:5174/api/ads/campaigns?published=1` every 30 seconds while active, caches successful feeds on device, and uses bundled samples on its first offline launch. Launch the Vite server on port 5174 for native integration: `npm run dev -- --port 5174 --strictPort`. Override the full feed URL with the `RELAY_CAMPAIGNS_URL` scheme environment variable or the `RelayCampaignsURL` Info.plist key. Physical iPhones need a configured HTTPS service URL; their default remains offline samples. Only Debug builds include a local-network ATS exception; release builds retain standard ATS protections.
-
-The same native card appears on Discover, Campus, Plans and Exchanges. Each placement displays at most one eligible ad, respects campus/status/schedules, names the sponsor, and lets students dismiss it for the session. Native ads never ask for an API key or call the image provider.
-
-### Production boundary
-
-This is a local development integration, bound to loopback by the dev script. Campus selection is a preview filter, not authorization. The Vite middleware is not included in a static `dist/` deployment. Before exposing the service to other users, add university sign-in and server-enforced campus roles, authenticated generation with tenant quotas, ad review, billing, managed campaign/image storage, and a production HTTPS API. No impression, click, or revenue metrics are fabricated. The existing simulated marketplace exchange/payment flow is unchanged.
-
-`tests/ads.test.mjs` covers cropping and the image endpoint with a provider stub; `tests/campaigns.test.mjs` covers shared persistence, seed parity, status filtering, input validation and conflicting saves. Native domain and simulator UI tests cover eligibility, sample previews and dismissal.
-
-## Listing conversations and negotiation
-
-Open a listing and choose **Message seller / make an offer** (or **Message seller** for a free find). The web **Messages** page and native **Inbox → Messages** keep one conversation per listing. The native **Inbox → Handoffs** section retains the exchange workflow.
-
-Messages and offer history persist locally. **Demo: act as seller** explicitly switches the simulated participant so you can reply, counter, accept, or decline. Only the recipient can accept/decline/counter; only the proposer can withdraw. Countering supersedes the previous offer. Free listings support messaging without paid offers. Pending offers must be resolved before starting a handoff, and a started handoff keeps its original amount. Accepting an offer records a price agreement; it does not charge or reserve anything. The agreed price is copied into the existing handoff/inspection/payment simulation.
-
-There is no automatic seller response, cross-device sync, push delivery, or shared chat service. Production messaging needs authenticated participants, a shared database, server-enforced membership and offer transitions, delivery infrastructure, and reporting/blocking before launch. Web and native conversation stores are independent.
-
-### Class schedules and course recommendations
-
-On web, choose **Add your schedule** in Discover or open **Your preferences**. On iOS, open **You → Your classes** or the schedule link in Discover. Select a screenshot, explicitly allow AI processing, read it, review the detected classes, then save. Classes can also be selected manually and cleared. Confirmed codes persist locally by university; switching universities uses a separate profile. The screenshot is not written to storage by Relay. The full selected image is sent to OpenRouter and its provider, so crop private details before uploading.
-
-Copy `.env.example` to `.env.local`, set server-only `OPENROUTER_API_KEY`, and restart Vite. `OPENROUTER_SCHEDULE_MODEL` defaults to `google/gemini-2.5-flash-lite`, a low-cost vision model ([OpenRouter model/pricing](https://openrouter.ai/google/gemini-2.5-flash-lite)). The import endpoint is `POST /api/schedule/import`; it validates consent, campus, image signature, 5 MB image limit, bounded output, and matched course codes, with a timeout and one concurrent provider call. Unrecognized courses are shown for review but are not saved as invented catalog entries. Missing credentials and provider failures leave manual class selection available. Vite serves the endpoint in both dev and preview; a static-only deployment needs this server route hosted separately. As with the other local APIs, add authentication and per-user quotas before public deployment.
-
-The iOS simulator uses `http://127.0.0.1:5174/api/schedule/import` by default. Run Vite on port 5174 (`npm run dev -- --port 5174`). A device requires an HTTPS endpoint configured through `RELAY_SCHEDULE_URL` or the `RelayScheduleURL` Info.plist value. Keep the OpenRouter key on the server.
-
-Every new listing can optionally select a class number for its university. The **For you** order promotes listings tagged for saved classes or matching course-related keywords and explains each match. Suggestions do not establish required materials or textbook editions. Untagged inventory remains available, and explicit price sorting takes precedence.
-
-The bundled **starter catalog** contains six courses each for Alabama and Auburn, not their full course offerings. Update `src/catalog/courses.json` and its matching native resource `ios/Packages/RelayCore/Sources/RelayCore/Resources/courses.json` together to expand it. Reference catalogs: [Alabama CS](https://catalog.ua.edu/undergraduate/engineering/computer-science/courses/), [Alabama mathematics](https://catalog.ua.edu/undergraduate/arts-sciences/mathematics/courses/), [Alabama English](https://catalog.ua.edu/undergraduate/arts-sciences/english/courses/), [Auburn computing](https://bulletin.auburn.edu/coursesofinstruction/comp/), [Auburn mathematics](https://bulletin.auburn.edu/coursesofinstruction/math/), [Auburn English](https://bulletin.auburn.edu/coursesofinstruction/engl/).
+</div>

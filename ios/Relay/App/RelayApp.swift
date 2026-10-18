@@ -7,7 +7,6 @@ struct RelayApp: App {
         WindowGroup {
             RelayRootView()
                 .environment(store)
-                .tint(RelayTheme.forest)
         }
     }
 }

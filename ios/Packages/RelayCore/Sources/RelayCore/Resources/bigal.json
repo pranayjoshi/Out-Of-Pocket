@@ -1,205 +1,541 @@
 {
- "materials": {
-  "CS 495": [
-   {
-    "title": "Human Factors and Web Development",
-    "kind": "Textbook",
-    "listingID": "bigal-hfweb"
-   },
-   {
-    "title": "Clean Architecture, Martin",
-    "kind": "Textbook",
-    "listingID": null
-   }
-  ],
-  "CS 460": [
-   {
-    "title": "Arduino Uno starter kit",
-    "kind": "Lab kit",
-    "listingID": "bigal-arduino"
-   }
-  ],
-  "CS 465": [
-   {
-    "title": "Artificial Intelligence: A Modern Approach, 4e",
-    "kind": "Textbook",
-    "listingID": "bigal-aima"
-   }
-  ],
-  "CS 470": [
-   {
-    "title": "Introduction to Algorithms, 4e",
-    "kind": "Textbook",
-    "listingID": "bigal-clrs"
-   }
-  ],
-  "GES 255": [
-   {
-    "title": "Probability and Statistics for Engineers",
-    "kind": "Textbook",
-    "listingID": "bigal-stats"
-   },
-   {
-    "title": "TI-84 Plus graphing calculator",
-    "kind": "Calculator",
-    "listingID": "bigal-ti84"
-   }
-  ],
-  "AY 101": [
-   {
-    "title": "The Cosmic Perspective, 9e",
-    "kind": "Textbook",
-    "listingID": "bigal-cosmic"
-   }
+  "materials": {
+    "CS 495": [
+      {
+        "title": "Human Factors and Web Development",
+        "kind": "Textbook",
+        "listingID": "bigal-hfweb"
+      },
+      {
+        "title": "Clean Architecture, Martin",
+        "kind": "Textbook",
+        "listingID": null
+      }
+    ],
+    "CS 460": [
+      {
+        "title": "Arduino Uno starter kit",
+        "kind": "Lab kit",
+        "listingID": "bigal-arduino"
+      }
+    ],
+    "CS 465": [
+      {
+        "title": "Artificial Intelligence: A Modern Approach, 4e",
+        "kind": "Textbook",
+        "listingID": "bigal-aima"
+      }
+    ],
+    "CS 470": [
+      {
+        "title": "Introduction to Algorithms, 4e",
+        "kind": "Textbook",
+        "listingID": "bigal-clrs"
+      }
+    ],
+    "GES 255": [
+      {
+        "title": "Probability and Statistics for Engineers",
+        "kind": "Textbook",
+        "listingID": "bigal-stats"
+      },
+      {
+        "title": "TI-84 Plus graphing calculator",
+        "kind": "Calculator",
+        "listingID": "bigal-ti84"
+      }
+    ],
+    "AY 101": [
+      {
+        "title": "The Cosmic Perspective, 9e",
+        "kind": "Textbook",
+        "listingID": "bigal-cosmic"
+      }
+    ],
+    "CS 100": [
+      {
+        "title": "Programming fundamentals workbook",
+        "kind": "Textbook",
+        "listingID": "bigal-ua-cs-100"
+      }
+    ],
+    "CS 101": [
+      {
+        "title": "Programming fundamentals workbook",
+        "kind": "Textbook",
+        "listingID": "bigal-ua-cs-101"
+      }
+    ],
+    "MATH 112": [
+      {
+        "title": "TI-84 Plus graphing calculator",
+        "kind": "Calculator",
+        "listingID": "bigal-ua-math-112"
+      }
+    ],
+    "MATH 125": [
+      {
+        "title": "TI-84 Plus graphing calculator",
+        "kind": "Calculator",
+        "listingID": "bigal-ua-math-125"
+      }
+    ],
+    "MATH 126": [
+      {
+        "title": "TI-84 Plus graphing calculator",
+        "kind": "Calculator",
+        "listingID": "bigal-ua-math-126"
+      }
+    ],
+    "EN 101": [
+      {
+        "title": "Composition handbook",
+        "kind": "Textbook",
+        "listingID": "bigal-ua-en-101"
+      }
+    ],
+    "COMP 1210": [
+      {
+        "title": "Programming fundamentals workbook",
+        "kind": "Textbook",
+        "listingID": "bigal-au-comp-1210"
+      }
+    ],
+    "COMP 1220": [
+      {
+        "title": "Programming fundamentals workbook",
+        "kind": "Textbook",
+        "listingID": "bigal-au-comp-1220"
+      }
+    ],
+    "MATH 1610": [
+      {
+        "title": "TI-84 Plus graphing calculator",
+        "kind": "Calculator",
+        "listingID": "bigal-au-math-1610"
+      }
+    ],
+    "MATH 1620": [
+      {
+        "title": "TI-84 Plus graphing calculator",
+        "kind": "Calculator",
+        "listingID": "bigal-au-math-1620"
+      }
+    ],
+    "ENGL 1100": [
+      {
+        "title": "Composition handbook",
+        "kind": "Textbook",
+        "listingID": "bigal-au-engl-1100"
+      }
+    ],
+    "ENGL 1120": [
+      {
+        "title": "Composition handbook",
+        "kind": "Textbook",
+        "listingID": "bigal-au-engl-1120"
+      }
+    ]
+  },
+  "listings": [
+    {
+      "id": "bigal-hfweb",
+      "title": "Human Factors and Web Development",
+      "category": "Textbooks",
+      "priceCents": 2200,
+      "imageName": "bigal-hfweb",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Gorgas Library",
+      "campus": "Alabama",
+      "courseCode": "CS 495",
+      "tag": "Big Al found this",
+      "description": "Used for CS 495 last spring. Some notes in pencil, otherwise clean.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-arduino",
+      "title": "Arduino Uno starter kit",
+      "category": "Lab supplies",
+      "priceCents": 1800,
+      "imageName": "bigal-arduino",
+      "seller": "Marco V.",
+      "initials": "MV",
+      "condition": "Like new",
+      "location": "Shelby Hall",
+      "campus": "Alabama",
+      "courseCode": "CS 460",
+      "tag": "Big Al found this",
+      "description": "Uno board, breadboard and jumper wires. Works fine; used for one robotics project.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-aima",
+      "title": "Artificial Intelligence: A Modern Approach, 4e",
+      "category": "Textbooks",
+      "priceCents": 5800,
+      "imageName": "bigal-aima",
+      "seller": "Hannah L.",
+      "initials": "HL",
+      "condition": "Good",
+      "location": "Gorgas Library",
+      "campus": "Alabama",
+      "courseCode": "CS 465",
+      "tag": "Big Al found this",
+      "description": "Hardcover, light wear on the corners, no highlighting.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-clrs",
+      "title": "Introduction to Algorithms, 4e",
+      "category": "Textbooks",
+      "priceCents": 5400,
+      "imageName": "bigal-clrs",
+      "seller": "Ava S.",
+      "initials": "AS",
+      "condition": "Good",
+      "location": "SEC atrium",
+      "campus": "Alabama",
+      "courseCode": "CS 470",
+      "tag": "Big Al found this",
+      "description": "The algorithms book for CS 470. Spine is a little creased.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-stats",
+      "title": "Probability and Statistics for Engineers",
+      "category": "Textbooks",
+      "priceCents": 5000,
+      "imageName": "bigal-stats",
+      "seller": "Jules R.",
+      "initials": "JR",
+      "condition": "Good",
+      "location": "Hardaway Hall",
+      "campus": "Alabama",
+      "courseCode": "GES 255",
+      "tag": "Big Al found this",
+      "description": "Needed for GES 255. A few highlighted pages in chapter 3.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ti84",
+      "title": "TI-84 Plus graphing calculator",
+      "category": "Tech",
+      "priceCents": 6500,
+      "imageName": "bigal-ti84",
+      "seller": "Riley K.",
+      "initials": "RK",
+      "condition": "Good",
+      "location": "Ferguson Center",
+      "campus": "Alabama",
+      "courseCode": "GES 255",
+      "tag": "Big Al found this",
+      "description": "Fresh batteries, screen has no scratches. Allowed on GES 255 exams.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-cosmic",
+      "title": "The Cosmic Perspective, 9e",
+      "category": "Textbooks",
+      "priceCents": 4400,
+      "imageName": "bigal-cosmic",
+      "seller": "Sam T.",
+      "initials": "ST",
+      "condition": "Good",
+      "location": "Gallalee Hall",
+      "campus": "Alabama",
+      "courseCode": "AY 101",
+      "tag": "Big Al found this",
+      "description": "Paperback for AY 101, good shape.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ua-cs-100",
+      "title": "Programming fundamentals workbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Student Center",
+      "campus": "Alabama",
+      "courseCode": "CS 100",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring CS 100. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ua-cs-101",
+      "title": "Programming fundamentals workbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Student Center",
+      "campus": "Alabama",
+      "courseCode": "CS 101",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring CS 101. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ua-math-112",
+      "title": "TI-84 Plus graphing calculator",
+      "category": "Tech",
+      "priceCents": 4800,
+      "imageName": "bigal-ti84",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Student Center",
+      "campus": "Alabama",
+      "courseCode": "MATH 112",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring MATH 112. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ua-math-125",
+      "title": "TI-84 Plus graphing calculator",
+      "category": "Tech",
+      "priceCents": 4800,
+      "imageName": "bigal-ti84",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Student Center",
+      "campus": "Alabama",
+      "courseCode": "MATH 125",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring MATH 125. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ua-math-126",
+      "title": "TI-84 Plus graphing calculator",
+      "category": "Tech",
+      "priceCents": 4800,
+      "imageName": "bigal-ti84",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Student Center",
+      "campus": "Alabama",
+      "courseCode": "MATH 126",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring MATH 126. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-ua-en-101",
+      "title": "Composition handbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "Student Center",
+      "campus": "Alabama",
+      "courseCode": "EN 101",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring EN 101. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-au-comp-1210",
+      "title": "Programming fundamentals workbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "RBD Library",
+      "campus": "Auburn",
+      "courseCode": "COMP 1210",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring COMP 1210. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-au-comp-1220",
+      "title": "Programming fundamentals workbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "RBD Library",
+      "campus": "Auburn",
+      "courseCode": "COMP 1220",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring COMP 1220. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-au-math-1610",
+      "title": "TI-84 Plus graphing calculator",
+      "category": "Tech",
+      "priceCents": 4800,
+      "imageName": "bigal-ti84",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "RBD Library",
+      "campus": "Auburn",
+      "courseCode": "MATH 1610",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring MATH 1610. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-au-math-1620",
+      "title": "TI-84 Plus graphing calculator",
+      "category": "Tech",
+      "priceCents": 4800,
+      "imageName": "bigal-ti84",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "RBD Library",
+      "campus": "Auburn",
+      "courseCode": "MATH 1620",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring MATH 1620. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-au-engl-1100",
+      "title": "Composition handbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "RBD Library",
+      "campus": "Auburn",
+      "courseCode": "ENGL 1100",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring ENGL 1100. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    },
+    {
+      "id": "bigal-au-engl-1120",
+      "title": "Composition handbook",
+      "category": "Textbooks",
+      "priceCents": 1800,
+      "imageName": "books",
+      "seller": "Dev P.",
+      "initials": "DP",
+      "condition": "Good",
+      "location": "RBD Library",
+      "campus": "Auburn",
+      "courseCode": "ENGL 1120",
+      "tag": "Sample course material",
+      "description": "Sample material for exploring ENGL 1120. Confirm your instructor\u2019s required title, edition and permitted calculator before buying. Artwork is illustrative.",
+      "checks": [
+        "Edition and title match",
+        "No missing pages or parts",
+        "Condition is as described"
+      ],
+      "isOwnListing": false
+    }
   ]
- },
- "listings": [
-  {
-   "id": "bigal-hfweb",
-   "title": "Human Factors and Web Development",
-   "category": "Textbooks",
-   "priceCents": 2200,
-   "imageName": "bigal-hfweb",
-   "seller": "Dev P.",
-   "initials": "DP",
-   "condition": "Good",
-   "location": "Gorgas Library",
-   "campus": "Alabama",
-   "courseCode": "CS 495",
-   "tag": "Big Al found this",
-   "description": "Used for CS 495 last spring. Some notes in pencil, otherwise clean.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  },
-  {
-   "id": "bigal-arduino",
-   "title": "Arduino Uno starter kit",
-   "category": "Lab supplies",
-   "priceCents": 1800,
-   "imageName": "bigal-arduino",
-   "seller": "Marco V.",
-   "initials": "MV",
-   "condition": "Like new",
-   "location": "Shelby Hall",
-   "campus": "Alabama",
-   "courseCode": "CS 460",
-   "tag": "Big Al found this",
-   "description": "Uno board, breadboard and jumper wires. Works fine; used for one robotics project.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  },
-  {
-   "id": "bigal-aima",
-   "title": "Artificial Intelligence: A Modern Approach, 4e",
-   "category": "Textbooks",
-   "priceCents": 5800,
-   "imageName": "bigal-aima",
-   "seller": "Hannah L.",
-   "initials": "HL",
-   "condition": "Good",
-   "location": "Gorgas Library",
-   "campus": "Alabama",
-   "courseCode": "CS 465",
-   "tag": "Big Al found this",
-   "description": "Hardcover, light wear on the corners, no highlighting.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  },
-  {
-   "id": "bigal-clrs",
-   "title": "Introduction to Algorithms, 4e",
-   "category": "Textbooks",
-   "priceCents": 5400,
-   "imageName": "bigal-clrs",
-   "seller": "Ava S.",
-   "initials": "AS",
-   "condition": "Good",
-   "location": "SEC atrium",
-   "campus": "Alabama",
-   "courseCode": "CS 470",
-   "tag": "Big Al found this",
-   "description": "The algorithms book for CS 470. Spine is a little creased.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  },
-  {
-   "id": "bigal-stats",
-   "title": "Probability and Statistics for Engineers",
-   "category": "Textbooks",
-   "priceCents": 5000,
-   "imageName": "bigal-stats",
-   "seller": "Jules R.",
-   "initials": "JR",
-   "condition": "Good",
-   "location": "Hardaway Hall",
-   "campus": "Alabama",
-   "courseCode": "GES 255",
-   "tag": "Big Al found this",
-   "description": "Needed for GES 255. A few highlighted pages in chapter 3.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  },
-  {
-   "id": "bigal-ti84",
-   "title": "TI-84 Plus graphing calculator",
-   "category": "Tech",
-   "priceCents": 6500,
-   "imageName": "bigal-ti84",
-   "seller": "Riley K.",
-   "initials": "RK",
-   "condition": "Good",
-   "location": "Ferguson Center",
-   "campus": "Alabama",
-   "courseCode": "GES 255",
-   "tag": "Big Al found this",
-   "description": "Fresh batteries, screen has no scratches. Allowed on GES 255 exams.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  },
-  {
-   "id": "bigal-cosmic",
-   "title": "The Cosmic Perspective, 9e",
-   "category": "Textbooks",
-   "priceCents": 4400,
-   "imageName": "bigal-cosmic",
-   "seller": "Sam T.",
-   "initials": "ST",
-   "condition": "Good",
-   "location": "Gallalee Hall",
-   "campus": "Alabama",
-   "courseCode": "AY 101",
-   "tag": "Big Al found this",
-   "description": "Paperback for AY 101, good shape.",
-   "checks": [
-    "Edition and title match",
-    "No missing pages or parts",
-    "Condition is as described"
-   ],
-   "isOwnListing": false
-  }
- ]
 }

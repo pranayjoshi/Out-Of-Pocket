@@ -58,7 +58,7 @@ struct ScheduleTradesSheet: View {
                             .background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 10))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Choose a schedule screenshot").font(.body.weight(.medium)).foregroundStyle(RelayTheme.ink)
-                            Text("Demo: loads a sample Alabama schedule; the image is not processed").font(.footnote).foregroundStyle(RelayTheme.secondary)
+                            Text("Demo: loads sample classes for your campus; the image is not processed").font(.footnote).foregroundStyle(RelayTheme.secondary)
                         }
                     }
                 }.accessibilityIdentifier("bigal-schedule-photo")
@@ -112,7 +112,7 @@ struct ScheduleTradesSheet: View {
             try? await Task.sleep(for: .seconds(1.4))
             // Demo: any schedule reads as the Fall 2026 load.
             let allowed = Set(UniversityCourse.courses(for: store.campus).map(\.code))
-            load(BigAl.demoSchedule.filter { allowed.contains($0) })
+            load((store.campus == .alabama ? BigAl.demoSchedule : ["COMP 1210", "MATH 1610", "ENGL 1100"]).filter { allowed.contains($0) })
         }
     }
 

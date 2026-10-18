@@ -47,7 +47,7 @@ struct ProfileView: View {
                 }.padding(21).background(RelayTheme.surface, in: RoundedRectangle(cornerRadius: 23))
                 VStack(alignment: .leading, spacing: 13) {
                     Label("Made for your pace", systemImage: "hand.raised").font(.subheadline.weight(.semibold))
-                    Text("Relay follows your device’s light and dark appearance, Dynamic Type, and Reduce Motion settings. Listing photos stay on this device. Schedule screenshots are sent for AI processing only when you allow it.")
+                    Text("Out of Pocket follows your device’s light and dark appearance, Dynamic Type, and Reduce Motion settings. Listing photos stay on this device. Schedule screenshots are sent for AI processing only when you allow it.")
                         .font(.caption).foregroundStyle(RelayTheme.secondary).lineSpacing(4)
                 }.padding(21).background(RelayTheme.soft, in: RoundedRectangle(cornerRadius: 23))
                 if let account = store.account {
@@ -134,10 +134,10 @@ struct SafetyView: View {
                             }
                         }
                     }
-                    DemoNotice(text: "Relay does not monitor meetings or provide an emergency response service. In an emergency, use your local emergency services.")
+                    DemoNotice(text: "Out of Pocket does not monitor meetings or provide an emergency response service. In an emergency, use your local emergency services.")
                     Button("That feels like a good start") { dismiss() }.buttonStyle(RelayPrimaryButton())
                 }.foregroundStyle(RelayTheme.ink).padding(23)
-            }.background(RelayTheme.paper).navigationTitle("The Relay way").navigationBarTitleDisplayMode(.inline)
+            }.background(RelayTheme.paper).navigationTitle("The Out of Pocket way").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }.presentationDragIndicator(.visible)
     }
@@ -166,7 +166,7 @@ struct ScheduleView: View {
                 PhotosPicker("Choose schedule screenshot", selection: $photo, matching: .images).disabled(busy)
                 if imageData != nil { Label("Screenshot ready", systemImage: "checkmark.circle") }
                 Toggle("Allow sending this screenshot to OpenRouter and its model provider", isOn: $consent).disabled(busy)
-                Text("Crop out personal details first. Relay does not save this image. Only confirmed class codes stay on your device. Provider data policies apply to the uploaded image.").font(.caption).foregroundStyle(.secondary)
+                Text("Crop out personal details first. Out of Pocket does not save this image. Only confirmed class codes stay on your device. Provider data policies apply to the uploaded image.").font(.caption).foregroundStyle(.secondary)
                 Button(busy ? "Reading schedule…" : "Read screenshot") {
                     importTask = Task { await readSchedule() }
                 }.disabled(busy || imageData == nil || !consent)
@@ -178,7 +178,7 @@ struct ScheduleView: View {
                 ForEach(UniversityCourse.courses(for: editingCampus)) { course in
                     Toggle(isOn: Binding(get: { draft.contains(course.code) }, set: { if $0 { draft.insert(course.code) } else { draft.remove(course.code) } })) {
                         VStack(alignment: .leading) { Text(course.code).font(.subheadline.weight(.semibold)); Text(course.title).font(.caption) }
-                    }.disabled(busy)
+                    }.disabled(busy).accessibilityIdentifier("schedule-course-\(course.code)")
                 }
                 Button("Save classes") { store.saveCourses(Array(draft), for: editingCampus); message = "Classes saved. Your For you finds now use these classes." }.disabled(busy)
                 Button("Clear classes", role: .destructive) { draft = []; store.saveCourses([], for: editingCampus); imageData = nil; consent = false; message = "Saved classes removed." }.disabled(busy)

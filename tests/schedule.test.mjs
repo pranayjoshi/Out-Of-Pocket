@@ -36,12 +36,12 @@ test('imports require configuration, consent, allowed campus, image bytes and sa
   assert.equal((await request(handler, input, { method: 'GET' })).status, 405);
   assert.equal((await request(handler, 'x'.repeat(8 * 1024 * 1024 + 1))).status, 413);
 });
-test('imports use low-cost vision model and return only matched codes and unknown codes for review', async () => {
+test('imports use Gemma vision model and return only matched codes and unknown codes for review', async () => {
   const handler = createScheduleHandler({ apiKey: 'secret', fetchImpl: async (url, options) => {
     assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions');
     assert.equal(options.headers.Authorization, 'Bearer secret');
     const payload = JSON.parse(options.body);
-    assert.equal(payload.model, 'google/gemini-2.5-flash-lite');
+    assert.equal(payload.model, 'google/gemma-4-31b-it');
     assert.equal(payload.max_tokens, 1200);
     assert.equal(payload.messages[1].content[1].image_url.url, image);
     return provider(['CS100', 'CS 100', 'COMP 1210'])();

@@ -5,12 +5,98 @@ final class RelayUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    override func tearDownWithError() throws {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = "chapter-final-state"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    @MainActor
+    func testCampusPetMovesPersistsAndOpensTrades() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-pet-reset", "-pet-still"]
+        app.launch()
+        let pet = app.buttons["campus-pet"]
+        XCTAssertTrue(pet.waitForExistence(timeout: 10))
+        XCTAssertTrue(pet.label.contains("Al Pal"))
+        let original = pet.frame
+        XCTAssertGreaterThan(original.midX, app.frame.midX)
+        XCTAssertGreaterThan(original.midY, app.frame.midY)
+        saveScreenshot("pet-al-pal-home")
+
+        let destination = pet.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .withOffset(CGVector(dx: -150, dy: -260))
+        pet.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.1, thenDragTo: destination)
+        XCTAssertLessThan(pet.frame.midX, original.midX - 50)
+        XCTAssertLessThan(pet.frame.midY, original.midY - 100)
+        let moved = pet.frame
+        saveScreenshot("pet-dragged")
+        app.terminate()
+        app.launchArguments = ["-ui-testing", "-pet-still"]
+        app.launch()
+        XCTAssertTrue(pet.waitForExistence(timeout: 10))
+        XCTAssertEqual(pet.frame.midX, moved.midX, accuracy: 5)
+        XCTAssertEqual(pet.frame.midY, moved.midY, accuracy: 5)
+
+        pet.press(forDuration: 1.2)
+        app.buttons["Return to bottom right"].tap()
+        XCTAssertEqual(pet.frame.midX, original.midX, accuracy: 5)
+        pet.press(forDuration: 1.2)
+        app.buttons["Pause dancing"].tap()
+        XCTAssertTrue((pet.value as? String)?.contains("Resting") == true)
+
+        app.buttons["Select campus, currently University of Alabama"].tap()
+        app.buttons["Auburn University"].tap()
+        XCTAssertTrue(pet.label.contains("Auburn Pal"))
+        saveScreenshot("pet-auburn-home")
+        app.tabBars.buttons["Explore"].tap()
+        XCTAssertTrue(pet.exists)
+        pet.tap()
+        XCTAssertTrue(app.buttons["bigal-open-trade"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["bigal-circle"].exists)
+        saveScreenshot("pet-buy-and-swap")
+        app.buttons["close-pet-agent"].tap()
+        XCTAssertTrue(pet.waitForExistence(timeout: 5))
+        pet.press(forDuration: 1.2)
+        app.buttons["Start dancing"].tap()
+    }
+
+    @MainActor
+    func testAuburnInventoryAndInlineAds() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        app.buttons["Select campus, currently University of Alabama"].tap()
+        app.buttons["Auburn University"].tap()
+        app.buttons["home-Tutoring"].tap()
+        XCTAssertTrue(app.staticTexts["6 tutors"].waitForExistence(timeout: 5))
+        let ad = app.buttons["open-campus-promotion"].firstMatch
+        scrollTo(ad, in: app)
+        XCTAssertTrue(ad.exists)
+        saveScreenshot("sample-auburn-tutors-ad")
+        app.buttons["service-Tickets"].tap()
+        XCTAssertTrue(app.buttons["ticket-event-event-au-0"].waitForExistence(timeout: 5))
+        scrollTo(ad, in: app)
+        XCTAssertTrue(ad.exists)
+        saveScreenshot("sample-auburn-tickets-ad")
+        app.buttons["service-Rides"].tap()
+        XCTAssertTrue(app.staticTexts["Going your way."].waitForExistence(timeout: 5))
+        scrollTo(app.buttons["find-ride"], in: app)
+        XCTAssertTrue(app.buttons["find-ride"].exists)
+        let ride = app.buttons["ride-ride-au-1-0"]
+        scrollTo(ride, in: app)
+        XCTAssertTrue(ride.exists)
+        saveScreenshot("sample-auburn-rides-ad")
+    }
+
     @MainActor
     func testTradingCircleApprovalChatAndLeave() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
-        app.buttons["bigal-entry"].tap()
+        app.buttons["campus-pet"].tap()
         let start = app.buttons["bigal-circle"]
         scrollTo(start, in: app); start.tap()
         let gives = app.textFields["swap-gives"]
@@ -44,7 +130,7 @@ final class RelayUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
-        app.buttons["bigal-entry"].tap()
+        app.buttons["campus-pet"].tap()
         let start = app.buttons["bigal-circle"]
         scrollTo(start, in: app); start.tap()
         let gives = app.textFields["swap-gives"]
@@ -63,9 +149,9 @@ final class RelayUITests: XCTestCase {
     @MainActor
     func testBigAlTradeFromHomePreservesExploreServices() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-ui-testing"]
+        app.launchArguments = ["-ui-testing", "-pet-reset", "-pet-still"]
         app.launch()
-        let entry = app.buttons["bigal-entry"]
+        let entry = app.buttons["campus-pet"]
         XCTAssertTrue(entry.waitForExistence(timeout: 10))
         entry.tap()
         XCTAssertTrue(app.buttons["bigal-open-trade"].waitForExistence(timeout: 5))
@@ -74,7 +160,9 @@ final class RelayUITests: XCTestCase {
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         item.tap(); item.typeText("Artificial Intelligence: A Modern Approach")
         app.buttons["bigal-submit-trade"].tap()
-        XCTAssertTrue(app.staticTexts["Ready for you"].waitForExistence(timeout: 15))
+        let ready = app.staticTexts["Ready for you"]
+        scrollTo(ready, in: app)
+        XCTAssertTrue(ready.waitForExistence(timeout: 15))
         let trade = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "bigal-trade-")).firstMatch
         scrollTo(trade, in: app); trade.tap()
         let lock = app.buttons["bigal-lock"]
@@ -89,6 +177,7 @@ final class RelayUITests: XCTestCase {
         let messages = app.buttons["bigal-message-seller"]
         scrollTo(messages, in: app); messages.tap()
         XCTAssertTrue(app.descendants(matching: .any)["message-input"].firstMatch.waitForExistence(timeout: 5))
+        app.navigationBars.firstMatch.swipeDown()
         app.tabBars.buttons["Explore"].tap()
         XCTAssertTrue(app.buttons["service-Tutoring"].waitForExistence(timeout: 5))
         app.buttons["service-Tickets"].tap()
@@ -128,25 +217,21 @@ final class RelayUITests: XCTestCase {
         app.buttons["service-Market"].tap()
         let promotion = app.descendants(matching: .any)["campus-promotion-Campus board"].firstMatch
         scrollTo(promotion, in: app)
-        XCTAssertTrue(promotion.exists)
-        let open = app.buttons["open-campus-promotion"]
-        scrollTo(open, in: app)
-        open.tap()
-        XCTAssertTrue(app.staticTexts["SAMPLE CAMPUS PROMOTION"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["This is an example ad. There is no live event registration, study enrollment, payment or offer."].exists)
-        saveScreenshot("ads-sample-detail")
-        app.buttons["Done"].tap()
-        let dismiss = app.buttons["Dismiss campus promotion"]
-        scrollTo(dismiss, in: app)
+        let open = app.buttons["open-campus-promotion"].firstMatch
+        XCTAssertTrue(open.exists)
+        XCTAssertEqual(app.buttons.matching(identifier: "open-campus-promotion").count, 1)
         saveScreenshot("ads-campus-placement")
+        let dismiss = app.buttons["Dismiss campus promotion"].firstMatch
+        scrollTo(dismiss, in: app)
         dismiss.tap()
-        XCTAssertFalse(promotion.exists)
+        XCTAssertFalse(app.buttons["open-campus-promotion"].exists)
+
     }
 
     @MainActor
     func testDiscoveryAndNativeTabs() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-ui-testing"]
+        app.launchArguments = ["-ui-testing", "-pet-reset", "-pet-still"]
         app.launch()
         XCTAssertTrue(app.descendants(matching: .any)["discovery-intro"].waitForExistence(timeout: 10))
         for title in ["Home", "Explore", "Inbox", "You"] { XCTAssertTrue(app.tabBars.buttons[title].exists) }
@@ -159,7 +244,9 @@ final class RelayUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your way in."].waitForExistence(timeout: 5))
         saveScreenshot("03-tickets")
         app.buttons["service-Rides"].tap()
-        XCTAssertTrue(app.buttons["find-ride"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Going your way."].waitForExistence(timeout: 5))
+        scrollTo(app.buttons["find-ride"], in: app)
+        XCTAssertTrue(app.buttons["find-ride"].exists)
         saveScreenshot("04-rides")
         app.tabBars.buttons["Inbox"].tap()
         XCTAssertTrue(app.staticTexts["Keep it moving."].waitForExistence(timeout: 5))
@@ -340,6 +427,222 @@ final class RelayUITests: XCTestCase {
         let prepare = app.buttons["prepare-exchange"]
         XCTAssertTrue(prepare.waitForExistence(timeout: 5))
         XCTAssertTrue(prepare.label.contains("$35"))
+    }
+
+    @MainActor
+    func testFlowClassesSaveAndClear() throws {
+        let app = flowApp()
+        app.tabBars.buttons["You"].tap()
+        app.buttons.containing(.staticText, identifier: "Your classes").firstMatch.tap()
+        XCTAssertTrue(app.buttons["Read screenshot"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Read screenshot"].isEnabled)
+        let course = app.switches["schedule-course-CS 100"]
+        scrollTo(course, in: app); course.tap()
+        XCTAssertEqual(course.value as? String, "1")
+        let save = app.buttons["Save classes"]
+        scrollTo(save, in: app); save.tap()
+        scrollUpTo(app.staticTexts["schedule-status"], in: app)
+        XCTAssertTrue(app.staticTexts["schedule-status"].label.contains("Classes saved"))
+        saveScreenshot("classes-saved")
+        app.navigationBars.buttons.firstMatch.tap()
+        app.buttons.containing(.staticText, identifier: "Your classes").firstMatch.tap()
+        scrollTo(course, in: app)
+        XCTAssertEqual(course.value as? String, "1")
+        let clear = app.buttons["Clear classes"]
+        scrollTo(clear, in: app); clear.tap()
+        scrollUpTo(app.staticTexts["schedule-status"], in: app)
+        XCTAssertTrue(app.staticTexts["schedule-status"].label.contains("Saved classes removed"))
+        scrollTo(course, in: app)
+        XCTAssertEqual(course.value as? String, "0")
+    }
+
+    @MainActor
+    func testFlowMarketSearchSaveAndFilters() throws {
+        let app = flowApp()
+        app.tabBars.buttons["Explore"].tap()
+        app.buttons["service-Market"].tap()
+        let search = app.textFields["Search campus finds"]
+        scrollTo(search, in: app); search.tap(); search.typeText("zz-no-such-find")
+        let empty = app.staticTexts["No finds just yet."]
+        scrollTo(empty, in: app)
+        XCTAssertTrue(empty.exists)
+        app.buttons["Reset filters"].tap()
+        scrollUpTo(search, in: app); search.tap(); search.typeText("reading chair\n")
+        let chair = app.buttons["Your new favorite reading chair"]
+        scrollTo(chair, in: app); chair.tap()
+        XCTAssertTrue(app.buttons["Save this find"].waitForExistence(timeout: 5))
+        app.buttons["Save this find"].tap()
+        saveScreenshot("market-saved-find")
+        app.buttons["Done"].tap()
+        app.tabBars.buttons["You"].tap()
+        app.buttons.containing(.staticText, identifier: "Your saved finds").firstMatch.tap()
+        XCTAssertTrue(chair.waitForExistence(timeout: 5))
+        app.tabBars.buttons["Explore"].tap()
+        scrollUpTo(app.buttons["Clear search"], in: app); app.buttons["Clear search"].tap()
+        let filter = app.buttons["Filter"]
+        scrollTo(filter, in: app); filter.tap()
+        app.switches["Free finds only"].tap()
+        saveScreenshot("market-free-filter")
+        app.buttons["Done"].tap()
+        let plant = app.buttons["A tiny roommate, no rent required"]
+        scrollTo(plant, in: app)
+        XCTAssertTrue(plant.exists)
+        XCTAssertFalse(chair.exists)
+    }
+
+    @MainActor
+    func testFlowPublishListingWithPredictedPrice() throws {
+        let app = flowApp()
+        app.buttons["Create a post"].tap()
+        app.buttons.containing(.staticText, identifier: "Sell an item").firstMatch.tap()
+        let title = app.textFields["listing-title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        let publish = app.buttons["publish-listing"]
+        scrollTo(publish, in: app)
+        XCTAssertFalse(publish.isEnabled)
+        scrollUpTo(title, in: app); title.tap(); title.typeText("Reading chair for a new chapter")
+        let predicted = app.buttons["use-predicted-price"]
+        scrollTo(predicted, in: app)
+        XCTAssertTrue(app.staticTexts["predicted-price"].exists)
+        saveScreenshot("listing-price-prediction")
+        predicted.tap()
+        let price = app.textFields["selling-price"]
+        scrollTo(price, in: app); price.tap()
+        let existing = price.value as? String ?? ""
+        price.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existing.count) + "35")
+        let details = app.descendants(matching: .any)["listing-details"].firstMatch
+        scrollTo(details, in: app); details.tap(); details.typeText("Sturdy frame with clean fabric. Sample listing for the recorded UI flow.")
+        scrollTo(publish, in: app)
+        XCTAssertTrue(publish.isEnabled)
+        publish.tap()
+        XCTAssertTrue(app.tabBars.buttons["Explore"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["You"].tap()
+        let posts = app.buttons.containing(.staticText, identifier: "My posts").firstMatch
+        scrollTo(posts, in: app); posts.tap()
+        let listing = app.buttons.containing(.staticText, identifier: "Reading chair for a new chapter").firstMatch
+        scrollTo(listing, in: app); listing.tap()
+        XCTAssertTrue(app.staticTexts["$35"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["reserve-listing"].isEnabled)
+        saveScreenshot("listing-published")
+    }
+
+    @MainActor
+    func testFlowTicketReservationAndTransfer() throws {
+        let app = flowApp()
+        app.buttons["home-Tickets"].tap()
+        let event = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ticket-event-")).firstMatch
+        XCTAssertTrue(event.waitForExistence(timeout: 5)); event.tap()
+        let listing = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ticket-listing-")).firstMatch
+        scrollTo(listing, in: app); listing.tap()
+        tapFlowButton("Reserve ticket", in: app)
+        XCTAssertTrue(app.buttons["Simulate payment"].waitForExistence(timeout: 5))
+        saveScreenshot("ticket-reserved")
+        tapFlowButton("Simulate payment", in: app)
+        let seller = app.switches["Demo: act as seller"]
+        scrollTo(seller, in: app); seller.tap()
+        tapFlowButton("I sent the transfer", in: app)
+        tapFlowButton("I accepted the ticket", in: app)
+        let receipt = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Receipt reported by you.")).firstMatch
+        scrollTo(receipt, in: app)
+        XCTAssertTrue(receipt.exists)
+        saveScreenshot("ticket-receipt-reported")
+    }
+
+    @MainActor
+    func testFlowRideRequestAcceptAndCancel() throws {
+        let app = flowApp()
+        app.buttons["home-Rides"].tap()
+        let ride = app.buttons["ride-ride-ua-1-0"]
+        scrollTo(ride, in: app); ride.tap()
+        tapFlowButton("Request seat", in: app)
+        XCTAssertTrue(app.staticTexts["Waiting for driver. A request is not a confirmed seat."].firstMatch.waitForExistence(timeout: 5))
+        saveScreenshot("ride-seat-requested")
+        let driver = app.switches["Demo: act as driver"]
+        scrollTo(driver, in: app); driver.tap()
+        tapFlowButton("Accept", in: app)
+        let confirmed = app.staticTexts["Seat confirmed"]
+        scrollUpTo(confirmed, in: app)
+        XCTAssertTrue(confirmed.exists)
+        saveScreenshot("ride-seat-confirmed")
+        tapFlowButton("Cancel seat", in: app)
+        let canceled = app.staticTexts["Seat canceled."]
+        scrollTo(canceled, in: app)
+        XCTAssertTrue(canceled.exists)
+        XCTAssertFalse(confirmed.exists)
+    }
+
+    @MainActor
+    func testFlowPaidHandoffAndRefund() throws {
+        let app = flowApp(arguments: ["-open-exchange-demo"])
+        completeFlowInspection(in: app, checks: ["Fabric and frame match the photos", "Chair is stable and comfortable", "Disclosed marks are acceptable"])
+        tapFlowButton("accept-exchange", in: app)
+        XCTAssertTrue(app.staticTexts["A new story begins."].waitForExistence(timeout: 5))
+        saveScreenshot("handoff-payment-complete")
+        tapFlowButton("Explore a post-handoff issue", in: app)
+        XCTAssertTrue(app.staticTexts["Your sample case is open."].waitForExistence(timeout: 5))
+        tapFlowButton("Simulate approved case & verified return", in: app)
+        XCTAssertTrue(app.staticTexts["Your sample refund is pending."].waitForExistence(timeout: 5))
+        saveScreenshot("refund-pending")
+        tapFlowButton("Simulate bank confirmation", in: app)
+        XCTAssertTrue(app.staticTexts["Back where it belongs."].waitForExistence(timeout: 5))
+        saveScreenshot("refund-bank-confirmed")
+    }
+
+    @MainActor
+    func testFlowFreeHandoff() throws {
+        let app = flowApp()
+        app.tabBars.buttons["Explore"].tap()
+        app.buttons["service-Market"].tap()
+        let search = app.textFields["Search campus finds"]
+        scrollTo(search, in: app); search.tap(); search.typeText("tiny roommate\n")
+        let plant = app.buttons["A tiny roommate, no rent required"]
+        scrollTo(plant, in: app); plant.tap()
+        tapFlowButton("reserve-listing", in: app)
+        XCTAssertTrue(app.buttons["prepare-exchange"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["payment-method-applePay"].exists)
+        completeFlowInspection(in: app, checks: ["Plant and pot match the photo", "No visible pests", "You can transport it safely"])
+        tapFlowButton("accept-exchange", in: app)
+        XCTAssertTrue(app.staticTexts["A new story begins."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Explore a post-handoff issue"].exists)
+        saveScreenshot("free-handoff-complete")
+    }
+
+    @MainActor
+    private func flowApp(arguments: [String] = []) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-pet-reset", "-pet-still"] + arguments
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 10))
+        return app
+    }
+
+    @MainActor
+    private func tapFlowButton(_ identifier: String, in app: XCUIApplication) {
+        let button = app.buttons[identifier].firstMatch
+        scrollTo(button, in: app)
+        XCTAssertTrue(button.isEnabled)
+        button.tap()
+    }
+
+    @MainActor
+    private func completeFlowInspection(in app: XCUIApplication, checks: [String]) {
+        tapFlowButton("prepare-exchange", in: app)
+        let code = app.textFields["partner-code"]
+        XCTAssertTrue(code.waitForExistence(timeout: 5))
+        code.tap(); code.typeText("2418")
+        tapFlowButton("identify-exchange", in: app)
+        for check in checks { tapFlowButton(check, in: app) }
+        tapFlowButton("complete-inspection", in: app)
+        saveScreenshot("inspection-complete")
+    }
+
+    @MainActor
+    private func scrollUpTo(_ element: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<8 {
+            if element.isHittable { return }
+            app.swipeDown()
+        }
+        XCTAssertTrue(element.isHittable)
     }
 
     @MainActor

@@ -20,6 +20,7 @@ struct AppSnapshot: Codable {
     var rideDemo: RideLedger?
     var ticketDemo: TicketLedger?
     var baselineApplied: Bool?
+    var demoCatalogVersion: Int?
     // Big Al (optional so earlier saved data still decodes)
     var agentTrades: [AgentTrade]?
     var agentBudgetCents: Int?
@@ -46,6 +47,7 @@ final class RelayStore {
     private(set) var catalog: [Listing] = []
     var promotions: [CampusPromotion] = CampusPromotion.samples
     var dismissedPromotionIDs: Set<String> = []
+    let promotionSessionSeed = UInt64.random(in: 0...UInt64.max)
     var selectedTab: RelayTab = .discover
     var selectedService: CampusService = .tutoring
     var inboxPane = "messages"
@@ -65,6 +67,7 @@ final class RelayStore {
 
     var account: MarketplaceAccount?
     var remoteListings: [Listing]?
+    var remotePriceComparisons: [Listing] = []
     var remoteThreads: [ListingConversation]?
     var remoteExchanges: [Exchange]?
     var deepLink: DeepLink?
@@ -130,6 +133,7 @@ final class RelayStore {
             }
         }
         snapshot = loaded
+        CampusAppearance.shared.campus = loaded.campus
         persistenceError = startupError
         if !ProcessInfo.processInfo.arguments.contains("-ui-testing"), let token = SessionVault.load() {
             account = MarketplaceAccount(token: token, userId: "", displayName: "Signed in", campus: snapshot.campus.rawValue, badge: "")
@@ -143,7 +147,15 @@ final class RelayStore {
 
     /// Fills empty local demo areas once. Existing messages, plans, and saves stay put.
     private func installBaselineIfNeeded() {
-        guard !Self.uiTesting, snapshot.baselineApplied != true else { return }
+        guard !Self.uiTesting else { return }
+        if (snapshot.demoCatalogVersion ?? 0) < 2 {
+            update { state in
+                let existing = Set(state.requests.map(\.id))
+                state.requests.append(contentsOf: DemoCatalog.requests.filter { !existing.contains($0.id) })
+                state.demoCatalogVersion = 2
+            }
+        }
+        guard snapshot.baselineApplied != true else { return }
         let byID = Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
         guard let headphones = byID["headphones"], let books = byID["books"], let table = byID["side-table"] else { return }
         let meeting = Calendar.current.date(byAdding: .hour, value: 26, to: Date()) ?? Date()
@@ -380,6 +392,7 @@ final class RelayStore {
             let orders: [RemoteReservation] = try await MarketplaceAPI.get("/reservations", token: token)
             account = MarketplaceAccount(token: token, userId: me.id, displayName: me.displayName, campus: me.campus, badge: me.campusVerification?.badge ?? "")
             remoteListings = page.items.compactMap { $0.listing(mine: $0.mine == true) }
+            remotePriceComparisons = page.items.filter { $0.source == "live" }.compactMap { $0.listing(mine: $0.mine == true) }
             var hydrated: [ListingConversation] = []
             conversationServerID = [:]
             offerServerID = [:]
@@ -477,6 +490,7 @@ final class RelayStore {
         let token = account?.token
         account = nil
         remoteListings = nil
+        remotePriceComparisons = []
         remoteThreads = nil
         remoteExchanges = nil
         reservationByLocalID = [:]
@@ -486,8 +500,8 @@ final class RelayStore {
         if let token { Task { try? await MarketplaceAPI.postVoid("/auth/logout", token: token) } }
     }
 
-    func publishRemote(title: String, category: RelayCore.Category, priceCents: Int, description: String, photo: Data?) async {
-        guard let token = account?.token else { publish(Listing(title: title, category: category, priceCents: priceCents, imageName: "room", description: description, isOwnListing: true)); return }
+    func publishRemote(title: String, category: RelayCore.Category, priceCents: Int, description: String, photo: Data?, condition: String = "Good") async {
+        guard let token = account?.token else { publish(Listing(title: title, category: category, priceCents: priceCents, imageName: "room", condition: condition, description: description, isOwnListing: true)); return }
         do {
             var photoIds: [String] = []
             if let photo {
@@ -495,7 +509,7 @@ final class RelayStore {
                 photoIds = [uploaded.id]
             }
             let created: RemoteListing = try await MarketplaceAPI.post("/listings", token: token, body: [
-                "title": title, "description": description, "category": category.rawValue, "condition": "Good",
+                "title": title, "description": description, "category": category.rawValue, "condition": condition,
                 "priceCents": priceCents, "area": "Campus area", "status": "draft", "categoryDetails": categoryDetails(category)
             ])
             if !photoIds.isEmpty { let _: RemoteListing = try await MarketplaceAPI.post("/listings/\(created.id)/photos", token: token, body: ["photoIds": photoIds]) }
@@ -504,7 +518,7 @@ final class RelayStore {
             notify("Your listing is live for other signed-in students.")
         } catch {
             notify("The listing stayed on this device because the upload didn’t finish.")
-            publish(Listing(title: title, category: category, priceCents: priceCents, imageName: "room", description: description, isOwnListing: true))
+            publish(Listing(title: title, category: category, priceCents: priceCents, imageName: "room", condition: condition, description: description, isOwnListing: true))
         }
     }
 
@@ -534,6 +548,7 @@ final class RelayStore {
 
     func update(_ mutation: (inout AppSnapshot) -> Void) {
         mutation(&snapshot)
+        CampusAppearance.shared.campus = snapshot.campus
         guard let url = persistenceURL, !Self.uiTesting else { return }
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -603,6 +618,7 @@ struct MarketplacePage: Decodable { var items: [RemoteListing] }
 struct RemoteListing: Decodable {
     var id: String; var title: String; var description: String; var category: String; var condition: String
     var priceCents: Int; var originalPriceCents: Int?; var campus: String; var area: String?; var mine: Bool?; var saved: Bool?
+    var source: String?
     var seller: Seller; var photos: [Photo]
     struct Seller: Decodable { var displayName: String; var initials: String }
     struct Photo: Decodable { var url: String }

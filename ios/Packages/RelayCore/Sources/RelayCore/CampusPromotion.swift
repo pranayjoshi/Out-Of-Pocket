@@ -32,6 +32,19 @@ public struct CampusPromotion: Codable, Identifiable, Sendable {
             && (start.isEmpty || start <= today) && (end.isEmpty || today <= end) && destination != nil
     }
 
+    /// Stable for a browsing session, independent of feed order. Dismissing a card
+    /// leaves its slot empty rather than replacing it with another campaign.
+    public static func inline(in feed: [CampusPromotion], campus: Campus, placement: String,
+                              slot: String, seed: UInt64, dismissed: Set<String> = [], on date: Date = Date()) -> CampusPromotion? {
+        let visible = feed.filter { $0.isVisible(campus: campus, placement: placement, on: date) }
+        let notices = visible.filter { $0.sample != true }
+        let candidates = (notices.isEmpty ? visible : notices).sorted { $0.id < $1.id }
+        guard !candidates.isEmpty else { return nil }
+        let hash = (campus.rawValue + placement + slot).utf8.reduce(seed) { ($0 ^ UInt64($1)) &* 1099511628211 }
+        let selected = candidates[Int(hash % UInt64(candidates.count))]
+        return dismissed.contains(selected.id) ? nil : selected
+    }
+
     public static var samples: [CampusPromotion] {
         guard let url = Bundle.module.url(forResource: "promotions", withExtension: "json"),
               let data = try? Data(contentsOf: url),

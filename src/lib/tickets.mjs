@@ -379,14 +379,14 @@ export function checklist(order, event) {
     { id: 'payment', label: 'Payment', actor: 'You', state: order.status === 'expired' ? 'blocked' : done(0), detail: order.payment === 'simulated' ? 'Demo payment recorded. No card was charged.' : 'Simulate payment to continue. No money moves.' },
     { id: 'transfer', label: 'Seller transfer', actor: 'Seller', state: done(1), detail: order.transferReport || 'The seller reports the transfer. That report is not proof the ticket moved.' },
     { id: 'portal', label: portal, actor: 'You', state: done(2), detail: event?.transferInstructions || 'Accept the ticket in the official system.' },
-    { id: 'receipt', label: 'Receipt', actor: 'You', state: order.status === 'completed' ? 'done' : done(3), detail: order.confirmation || 'Report receipt yourself. Relay will not mark this university verified.' },
+    { id: 'receipt', label: 'Receipt', actor: 'You', state: order.status === 'completed' ? 'done' : done(3), detail: order.confirmation || 'Report receipt yourself. Out of Pocket will not mark this university verified.' },
   ];
 }
 
 /** @param {number} cents @param {number} quantity */
 export function priceBreakdown(cents, quantity) {
   const total = cents * quantity;
-  return { priceCents: cents, quantity, buyerTotalCents: total, sellerProceedsCents: total, platformFeeCents: 0, label: `${formatCents(total)} total · no Relay fee in this demo` };
+  return { priceCents: cents, quantity, buyerTotalCents: total, sellerProceedsCents: total, platformFeeCents: 0, label: `${formatCents(total)} total · no Out of Pocket fee in this demo` };
 }
 
 export { formatCents, YOU };

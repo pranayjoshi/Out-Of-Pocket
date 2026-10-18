@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeftRight, Bell, Compass, Heart, LayoutGrid, Menu, MessageCircle, Shield, Store, X } from "lucide-react";
 import { ApiError, api, money, saveSession, sessionToken, toBase64, type Listing, type Reservation, type User } from "./api";
 import "../market.css";
+import { PriceSuggestion } from "../features/PriceSuggestion";
+import { parseSellingPrice } from "../lib/pricing.mjs";
 import { DemoCampus } from "../features/DemoCampus";
 import { CampusShortcuts } from "../features/CampusShortcuts";
 import ActivityPanel from "../features/ActivityPanel";
@@ -88,8 +90,8 @@ export function MarketApp() {
     <div className="app-shell">
       <a className="skip-link" href="#main-content">Skip to campus content</a>
       <aside className={`sidebar ${menu ? "is-open" : ""}`}>
-        <button className="brand-button" onClick={() => { go("/"); setMenu(false); }} aria-label="Relay home">
-          <span className="brand">relay<span className="brand-period">.</span></span>
+        <button className="brand-button" onClick={() => { go("/"); setMenu(false); }} aria-label="OOPs home">
+          <span className="brand">OOPs!</span>
         </button>
         <div className="sidebar-caption">A LITTLE MORE LOCAL.</div>
         <nav className="main-nav" aria-label="Main navigation">
@@ -406,7 +408,10 @@ function Sell({ me, id, toast }: { me: User | null; id?: string; toast: (message
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Dorm & living");
   const [condition, setCondition] = useState("Good");
-  const [price, setPrice] = useState("20");
+  const [price, setPrice] = useState("");
+  const [comparisons, setComparisons] = useState<Listing[]>([]);
+  const [checkingPrices, setCheckingPrices] = useState(false);
+  const [priceUnavailable, setPriceUnavailable] = useState(false);
   const [area, setArea] = useState("North campus");
   const [details, setDetails] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<string[]>([]);
@@ -418,11 +423,23 @@ function Sell({ me, id, toast }: { me: User | null; id?: string; toast: (message
       setPrice(String(item.priceCents / 100)); setArea(item.area || ""); setDetails(Object.fromEntries(Object.entries(item.categoryDetails).map(([key, value]) => [key, String(value)])));
     }).catch(() => undefined);
   }, [id]);
+  useEffect(() => {
+    let current = true;
+    setComparisons([]); setCheckingPrices(true); setPriceUnavailable(false);
+    const params = new URLSearchParams({ category, campus: me?.campus || "", limit: "50" });
+    api<{ items: Listing[] }>(`/listings?${params}`).then((page) => {
+      if (current) setComparisons(page.items);
+    }).catch(() => { if (current) setPriceUnavailable(true); })
+      .finally(() => { if (current) setCheckingPrices(false); });
+    return () => { current = false; };
+  }, [category, me?.campus]);
   const fields = detailFields(category);
   async function save(status: "draft" | "active") {
     setError("");
     try {
-      const body = { title, description, category, condition, priceCents: Math.round(Number(price) * 100), area, categoryDetails: numberize(details), status: "draft", crossCampus: false };
+      const priceCents = category === "Free stuff" ? 0 : parseSellingPrice(price);
+      if (priceCents === null) { setError("Enter a selling price from $0 to $10,000 with at most two decimal places."); return; }
+      const body = { title, description, category, condition, priceCents, area, categoryDetails: numberize(details), status: "draft", crossCampus: false };
       const listing = id ? await api<Listing>(`/listings/${id}`, { method: "PATCH", body }) : await api<Listing>("/listings", { body });
       if (photos.length) await api(`/listings/${listing.id}/photos`, { body: { photoIds: photos } });
       if (status === "active" && listing.status !== "active") await api(`/listings/${listing.id}/transition`, { body: { status: "active" } });
@@ -436,9 +453,10 @@ function Sell({ me, id, toast }: { me: User | null; id?: string; toast: (message
       <p className="notice">Signed in as {me?.displayName}. The listing belongs to your verified campus, {me?.campus}.</p>
       <label>Title<input value={title} onChange={(event) => setTitle(event.target.value)} required /></label>
       <label>Description<textarea value={description} onChange={(event) => setDescription(event.target.value)} required /></label>
-      <label>Category<select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.filter((item) => item !== "All finds").map((item) => <option key={item}>{item}</option>)}</select></label>
+      <label>Category<select value={category} onChange={(event) => { setCategory(event.target.value); if (category === "Free stuff" || event.target.value === "Free stuff") setPrice(""); }}>{categories.filter((item) => item !== "All finds").map((item) => <option key={item}>{item}</option>)}</select></label>
       <label>Condition<input value={condition} onChange={(event) => setCondition(event.target.value)} /></label>
-      <label>Price in dollars<input value={price} onChange={(event) => setPrice(event.target.value)} /></label>
+      <PriceSuggestion title={title} category={category} condition={condition} campus={me?.campus || ""} id={id} listings={comparisons} onUse={setPrice} loading={checkingPrices} unavailable={priceUnavailable} />
+      <label>Your selling price ($) · 0 means free<input type="number" min="0" max="10000" step="0.01" inputMode="decimal" required value={category === "Free stuff" ? "0" : price} disabled={category === "Free stuff"} onChange={(event) => setPrice(event.target.value)} placeholder="Enter your own price" /></label>
       <label>Campus area<input value={area} onChange={(event) => setArea(event.target.value)} /></label>
       {fields.map((field) => <label key={field}>{field}<input value={details[field] || ""} onChange={(event) => setDetails({ ...details, [field]: event.target.value })} /></label>)}
       <label>Photos<input type="file" accept="image/jpeg,image/png" multiple onChange={async (event) => {
